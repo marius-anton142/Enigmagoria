@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using UnityEngine.Tilemaps;
 
 public class PlayerScript : MonoBehaviour
@@ -6,6 +7,10 @@ public class PlayerScript : MonoBehaviour
     public float moveSpeed = 5.0f;
     public float tileSize = 1.0f;
     public Tilemap tilemapFloor;
+
+    public bool allowContinuousMove = false;
+    public float continuousMoveCooldown = 0.2f;
+    private bool canMove = true;
 
     public GameObject DungeonManager, DijkstraMap;
     public Vector3 targetPosition;
@@ -73,19 +78,29 @@ public class PlayerScript : MonoBehaviour
     public void MoveLeft() { Move(Vector3.left); }
     public void MoveRight() { Move(Vector3.right); }
 
-    private void Move(Vector3 direction)
+    public void Move(Vector3 direction)
     {
-        if (!isMoving)
+        if (allowContinuousMove && !canMove) return;
+
+        Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
+        if (!isMoving && tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
         {
-            Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
-            if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
+            targetPosition = transform.position + direction * tileSize; // Set new target position
+            isMoving = true;
+            spriteRenderer.flipX = direction == Vector3.left;
+            animator.SetBool("IsWalking", true);
+
+            if (allowContinuousMove)
             {
-                targetPosition = transform.position + direction * tileSize; // Set new target position
-                isMoving = true;
-                // Flip sprite if moving left/right
-                spriteRenderer.flipX = direction == Vector3.left;
-                animator.SetBool("IsWalking", true);
+                StartCoroutine(MoveCooldown());
             }
         }
+    }
+
+    private IEnumerator MoveCooldown()
+    {
+        canMove = false;
+        yield return new WaitForSeconds(continuousMoveCooldown);
+        canMove = true;
     }
 }
