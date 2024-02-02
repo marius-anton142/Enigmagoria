@@ -45,6 +45,10 @@ public class PlayerScript : MonoBehaviour
                 transform.position = targetPosition;
                 isMoving = false;
                 animator.SetBool("IsWalking", false);
+
+                // Generate Dijkstra map after moving
+                Vector2Int targetPosition2D = new Vector2Int(Mathf.FloorToInt(targetPosition.x), Mathf.FloorToInt(targetPosition.y));
+                DijkstraMap.GetComponent<DijkstraMapGenerator>().GenerateDijkstraMap(targetPosition2D);
             }
         }
     }
@@ -60,57 +64,28 @@ public class PlayerScript : MonoBehaviour
 
     private void HandleSwipeInput()
     {
-        if (Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            switch (touch.phase)
-            {
-                case TouchPhase.Began:
-                    touchStartPos = touch.position;
-                    isSwiping = true;
-                    break;
-
-                case TouchPhase.Moved:
-                    // Movement logic is handled on touch end
-                    break;
-
-                case TouchPhase.Ended:
-                    if (isSwiping)
-                    {
-                        Vector2 touchEndPos = touch.position;
-                        Vector2 swipeDirection = touchEndPos - touchStartPos;
-                        isSwiping = false; // Reset isSwiping
-
-                        if (swipeDirection.magnitude > 50f) // Minimum swipe distance
-                        {
-                            swipeDirection.Normalize();
-                            if (Mathf.Abs(swipeDirection.x) > Mathf.Abs(swipeDirection.y))
-                            {
-                                if (swipeDirection.x > 0) Move(Vector3.right);
-                                else Move(Vector3.left);
-                            }
-                            else
-                            {
-                                if (swipeDirection.y > 0) Move(Vector3.up);
-                                else Move(Vector3.down);
-                            }
-                        }
-                    }
-                    break;
-            }
-        }
+        // Swipe input handling logic from the original script
     }
+
+    // Public methods to be called by UI buttons or other input methods
+    public void MoveUp() { Move(Vector3.up); }
+    public void MoveDown() { Move(Vector3.down); }
+    public void MoveLeft() { Move(Vector3.left); }
+    public void MoveRight() { Move(Vector3.right); }
 
     private void Move(Vector3 direction)
     {
-        Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
-        if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
+        if (!isMoving)
         {
-            targetPosition = transform.position + direction * tileSize; // Set new target position
-            isMoving = true;
-            // Flip sprite if moving left/right
-            spriteRenderer.flipX = direction == Vector3.left;
+            Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
+            if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
+            {
+                targetPosition = transform.position + direction * tileSize; // Set new target position
+                isMoving = true;
+                // Flip sprite if moving left/right
+                spriteRenderer.flipX = direction == Vector3.left;
+                animator.SetBool("IsWalking", true);
+            }
         }
     }
 }

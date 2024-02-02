@@ -89,7 +89,13 @@ public class Enemy01Script : MonoBehaviour
         }
 
         // Determine the movement direction based on the next cell's position
-        Vector2Int direction = nextCell - currentCell;
+        Vector2Int direction;
+        if (smallestDistance != 0) {
+            direction = nextCell - currentCell;
+        } else
+        {
+            direction = Vector2Int.zero;
+        }
 
         if (direction == Vector2Int.up)
         {
