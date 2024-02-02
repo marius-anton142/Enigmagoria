@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6165312461f79eb44848a79f0415b5e9, type: 3}
+  m_Name: HpRegenPotionItem
+  m_EditorClassIdentifier: 
+  displayName: HpRegenPotion
+  icon: {fileID: 412873802, guid: 7c9344df3a03c614fb1e2992bd427eab, type: 3}
+  maxStackSize: 3
+  itemType: Active
+  hpRegenQuantity: 0.5
