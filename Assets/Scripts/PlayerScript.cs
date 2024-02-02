@@ -3,9 +3,8 @@ using UnityEngine.Tilemaps;
 
 public class PlayerScript : MonoBehaviour
 {
-    public float moveSpeed = 5.0f; // Adjust this for movement speed
-    public float tileSize = 1.0f;  // Adjust this to match your tile size
-    private Rigidbody2D rb;
+    public float moveSpeed = 5.0f;
+    public float tileSize = 1.0f;
     public Tilemap tilemapFloor;
 
     public GameObject DungeonManager, DijkstraMap;
@@ -14,6 +13,7 @@ public class PlayerScript : MonoBehaviour
 
     private Vector2 touchStartPos;
     private bool isSwiping = false;
+
     private Animator animator;
     SpriteRenderer spriteRenderer;
 
@@ -21,109 +21,41 @@ public class PlayerScript : MonoBehaviour
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        targetPosition = transform.position; // Initialize targetPosition
     }
 
     private void Update()
     {
-        HandleSwipeInput();
+        HandleMovement();
+        if (!isMoving) // Only check for input if not currently moving
+        {
+            CheckForInput();
+            HandleSwipeInput(); // Handle swipe inputs
+        }
+    }
+
+    private void HandleMovement()
+    {
         if (isMoving)
         {
-            transform.position = Vector3.Lerp(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
             animator.SetBool("IsWalking", true);
-
-            // Check if we're close enough to the target position to stop lerping
-            if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
+            if (Vector3.Distance(transform.position, targetPosition) < 0.001f) // Check for movement completion
             {
                 transform.position = targetPosition;
-                Vector2Int targetPosition2D = new Vector2Int(Mathf.FloorToInt(targetPosition.x), Mathf.FloorToInt(targetPosition.y));
-                DijkstraMap.GetComponent<DijkstraMapGenerator>().GenerateDijkstraMap(targetPosition2D);
                 isMoving = false;
-
                 animator.SetBool("IsWalking", false);
-
-                //Debug.Log(DijkstraMap.GetComponent<DijkstraMapGenerator>().GetDijkstraValue(new Vector2Int(a, b)));
-                //Debug.Log(targetPosition2D);
-            }
-        }
-
-        // Check for input and call movement functions
-        if (!isMoving)
-        {
-            if (Input.GetKeyDown(KeyCode.W))
-            {
-                MoveUp();
-            }
-            else if (Input.GetKeyDown(KeyCode.S))
-            {
-                MoveDown();
-            }
-            else if (Input.GetKeyDown(KeyCode.D))
-            {
-                MoveRight();
-            }
-            else if (Input.GetKeyDown(KeyCode.A))
-            {
-                MoveLeft();
             }
         }
     }
 
-    // Move the player up by one tile
-    public void MoveUp()
+    private void CheckForInput()
     {
-        if (!isMoving)
-        {
-            Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + Vector3.up * tileSize);
-            if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + Vector3.up * tileSize))
-            {
-                targetPosition = transform.position + Vector3.up * tileSize;
-                isMoving = true;
-            }
-        }
-    }
-
-    // Move the player down by one tile
-    public void MoveDown()
-    {
-        if (!isMoving)
-        {
-            Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position - Vector3.up * tileSize);
-            if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position - Vector3.up * tileSize))
-            {
-                targetPosition = transform.position - Vector3.up * tileSize;
-                isMoving = true;
-            }
-        }
-    }
-
-    // Move the player right by one tile
-    public void MoveRight()
-    {
-        if (!isMoving)
-        {
-            Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + Vector3.right * tileSize);
-            if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + Vector3.right * tileSize))
-            {
-                targetPosition = transform.position + Vector3.right * tileSize;
-                isMoving = true;
-                spriteRenderer.flipX = false;
-            }
-        }
-    }
-
-    // Move the player left by one tile
-    public void MoveLeft()
-    {
-        if (!isMoving)
-        {
-            Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position - Vector3.right * tileSize);
-            if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position - Vector3.right * tileSize))
-            {
-                targetPosition = transform.position - Vector3.right * tileSize;
-                isMoving = true;
-                spriteRenderer.flipX = true;
-            }
-        }
+        // Use GetKeyDown to ensure movement is triggered only once per key press
+        if (Input.GetKeyDown(KeyCode.W)) Move(Vector3.up);
+        if (Input.GetKeyDown(KeyCode.S)) Move(Vector3.down);
+        if (Input.GetKeyDown(KeyCode.D)) Move(Vector3.right);
+        if (Input.GetKeyDown(KeyCode.A)) Move(Vector3.left);
     }
 
     private void HandleSwipeInput()
@@ -140,48 +72,45 @@ public class PlayerScript : MonoBehaviour
                     break;
 
                 case TouchPhase.Moved:
+                    // Movement logic is handled on touch end
                     break;
 
                 case TouchPhase.Ended:
-                    Vector2 touchEndPos = touch.position;
-                    Vector2 swipeDirection = touchEndPos - touchStartPos;
-
-                    if (isSwiping && swipeDirection.magnitude > 50f)
+                    if (isSwiping)
                     {
-                        swipeDirection.Normalize();
+                        Vector2 touchEndPos = touch.position;
+                        Vector2 swipeDirection = touchEndPos - touchStartPos;
+                        isSwiping = false; // Reset isSwiping
 
-                        if (Mathf.Abs(swipeDirection.x) > Mathf.Abs(swipeDirection.y))
+                        if (swipeDirection.magnitude > 50f) // Minimum swipe distance
                         {
-                            if (swipeDirection.x > 0)
+                            swipeDirection.Normalize();
+                            if (Mathf.Abs(swipeDirection.x) > Mathf.Abs(swipeDirection.y))
                             {
-                                MoveRight();
+                                if (swipeDirection.x > 0) Move(Vector3.right);
+                                else Move(Vector3.left);
                             }
                             else
                             {
-                                MoveLeft();
-                            }
-                        }
-                        else
-                        {
-                            if (swipeDirection.y > 0)
-                            {
-                                MoveUp();
-                            }
-                            else
-                            {
-                                MoveDown();
+                                if (swipeDirection.y > 0) Move(Vector3.up);
+                                else Move(Vector3.down);
                             }
                         }
                     }
-                    else
-                    {
-                        // If the swipe was not detected, treat it as a tap
-                        MoveUp();
-                    }
-
-                    isSwiping = false;
                     break;
             }
+        }
+    }
+
+    private void Move(Vector3 direction)
+    {
+        Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
+        if (tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
+        {
+            targetPosition = transform.position + direction * tileSize; // Set new target position
+            isMoving = true;
+            // Flip sprite if moving left/right
+            spriteRenderer.flipX = direction == Vector3.left;
         }
     }
 }
