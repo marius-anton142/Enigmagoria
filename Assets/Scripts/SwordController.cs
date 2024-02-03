@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 public class SwordController : MonoBehaviour
 {
@@ -25,7 +27,7 @@ public class SwordController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown && !isAttacking)
+        if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown && !isAttacking && !IsPointerOverUIObject())
         {
             isResetting = false;
             StartAttack();
@@ -135,5 +137,19 @@ public class SwordController : MonoBehaviour
         // Adjust the rotation to include the additional angle as well
         float angleForRotation = adjustedAngle + angleOffset; // Include additionalAngle in rotation
         transform.rotation = Quaternion.AngleAxis(angleForRotation, Vector3.forward);
+    }
+
+    private bool IsPointerOverUIObject()
+    {
+        // Check for current touch (mobile) or mouse input position
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current)
+        {
+            position = new Vector2(Input.mousePosition.x, Input.mousePosition.y)
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+
+        return results.Count > 0; // Return true if any UI element was hit
     }
 }
