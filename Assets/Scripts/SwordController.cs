@@ -16,23 +16,20 @@ public class SwordController : MonoBehaviour
     public float adjustedAngle;
     public float additionalAngleValue = 20f;
 
-    private float lastAttackTime = -1f; // Track the last attack time
-    private bool isAttacking = false; // Is the sword currently attacking
     private float targetAngleOffset; // Target angle for the current attack phase
     public float additionalAngle = 0f; // Additional angle to be applied during an attack
     private float additionalAngleLatest = 0f;
 
+    private float lastAttackTime = -1f; // Track the last attack time
+    private bool isAttacking = false; // Is the sword currently attacking
+    private Vector3 direction = new Vector3(0, 0, 0);
+
     private bool isResetting = false;
     private float resetStartTime; // Time when resetting starts
-    private Vector3 direction = new Vector3(0, 0, 0);
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && Time.time >= lastAttackTime + attackCooldown && !isAttacking && !IsPointerOverUIObject())
-        {
-            isResetting = false;
-            StartAttack();
-        }
+        HandleInput();
 
         if (isAttacking)
         {
@@ -50,12 +47,35 @@ public class SwordController : MonoBehaviour
             }
 
             PerformAttack();
-        } else
+        }
+        else
         {
             HandleResetting();
         }
 
-        FollowMouse();
+        FollowInput();
+    }
+
+    void HandleInput()
+    {
+        // Handle mouse input for non-touch devices
+        if (Input.GetMouseButtonDown(0) && !IsPointerOverUIObject() && Time.time >= lastAttackTime + attackCooldown && !isAttacking)
+        {
+            StartAttack();
+        }
+
+        // Handle touch input for touch-enabled devices
+        if (Input.touchCount > 0 && Time.time >= lastAttackTime + attackCooldown && !isAttacking)
+        {
+            foreach (Touch touch in Input.touches)
+            {
+                if (touch.phase == TouchPhase.Began && !IsPointerOverUIObject(touch))
+                {
+                    StartAttack();
+                    break; // Exit the loop once a suitable touch is found and used to start an attack
+                }
+            }
+        }
     }
 
     void StartAttack()
@@ -63,8 +83,7 @@ public class SwordController : MonoBehaviour
         lastAttackTime = Time.time;
         isAttacking = true;
         isResetting = false;
-
-        // Determine the target angle offset based on the attack phase
+        // Initialize additional logic for starting the attack here if necessary
         if (isAttackPhaseOne)
         {
             targetAngleOffset = angleOffset - 240; // Adjust values as needed
@@ -113,46 +132,72 @@ public class SwordController : MonoBehaviour
         }
     }
 
-    void FollowMouse()
+    void FollowInput()
     {
-        if (!IsPointerOverUIObject())
+        Vector3 inputPosition = Vector3.zero;
+
+        if (Input.touchCount > 0)
         {
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            mousePosition.z = 0;
-
-            direction = (mousePosition - player.transform.position).normalized;
+            foreach (Touch touch in Input.touches)
+            {
+                if ((touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Began) && !IsPointerOverUIObject(touch))
+                {
+                    inputPosition = Camera.main.ScreenToWorldPoint(touch.position);
+                    inputPosition.z = 0;
+                    direction = (inputPosition - player.transform.position).normalized;
+                    break;
+                }
+            }
         }
-        // Calculate the base angle from the direction
-        baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        else if (!IsPointerOverUIObject())
+        {
+            inputPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            inputPosition.z = 0;
+            direction = (inputPosition - player.transform.position).normalized;
+        }
 
-        // Add the additionalAngle to the base angle for both position and rotation adjustment
-        adjustedAngle = baseAngle + additionalAngle;
+        if (direction != Vector3.zero)
+        {
+            // Calculate the base angle from the direction
+            baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-        // Convert the adjusted angle back to radians for direction calculation
-        float adjustedAngleRadians = adjustedAngle * Mathf.Deg2Rad;
+            // Add the additionalAngle to the base angle for both position and rotation adjustment
+            adjustedAngle = baseAngle + additionalAngle;
 
-        // Create a new direction vector based on the adjusted angle
-        Vector3 adjustedDirection = new Vector3(Mathf.Cos(adjustedAngleRadians), Mathf.Sin(adjustedAngleRadians), 0);
+            // Convert the adjusted angle back to radians for direction calculation
+            float adjustedAngleRadians = adjustedAngle * Mathf.Deg2Rad;
 
-        // Apply the additional angle for both position and rotation
-        transform.position = player.transform.position + adjustedDirection * distanceFromPlayer;
+            // Create a new direction vector based on the adjusted angle
+            Vector3 adjustedDirection = new Vector3(Mathf.Cos(adjustedAngleRadians), Mathf.Sin(adjustedAngleRadians), 0);
 
-        // Adjust the rotation to include the additional angle as well
-        float angleForRotation = adjustedAngle + angleOffset; // Include additionalAngle in rotation
-        transform.rotation = Quaternion.AngleAxis(angleForRotation, Vector3.forward);
+            // Apply the additional angle for both position and rotation
+            transform.position = player.transform.position + adjustedDirection * distanceFromPlayer;
+
+            // Adjust the rotation to include the additional angle as well
+            float angleForRotation = adjustedAngle + angleOffset; // Include additionalAngle in rotation
+            transform.rotation = Quaternion.AngleAxis(angleForRotation, Vector3.forward);
+        }
     }
 
     private bool IsPointerOverUIObject()
     {
-        // Check for current touch (mobile) or mouse input position
         PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current)
         {
             position = new Vector2(Input.mousePosition.x, Input.mousePosition.y)
         };
-
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        return results.Count > 0;
+    }
 
-        return results.Count > 0; // Return true if any UI element was hit
+    private bool IsPointerOverUIObject(Touch touch)
+    {
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current)
+        {
+            position = new Vector2(touch.position.x, touch.position.y)
+        };
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        return results.Count > 0;
     }
 }
