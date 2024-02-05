@@ -20,10 +20,11 @@ public class SwordController : MonoBehaviour
     private bool isAttacking = false; // Is the sword currently attacking
     private float targetAngleOffset; // Target angle for the current attack phase
     public float additionalAngle = 0f; // Additional angle to be applied during an attack
-    public float additionalAngleLatest = 0f;
+    private float additionalAngleLatest = 0f;
 
     private bool isResetting = false;
     private float resetStartTime; // Time when resetting starts
+    private Vector3 direction = new Vector3(0, 0, 0);
 
     void Update()
     {
@@ -114,11 +115,13 @@ public class SwordController : MonoBehaviour
 
     void FollowMouse()
     {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = 0;
+        if (!IsPointerOverUIObject())
+        {
+            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            mousePosition.z = 0;
 
-        Vector3 direction = (mousePosition - player.transform.position).normalized;
-
+            direction = (mousePosition - player.transform.position).normalized;
+        }
         // Calculate the base angle from the direction
         baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 

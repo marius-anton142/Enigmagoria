@@ -1609,10 +1609,10 @@ TextureImporter:
       name: Tileset_Player_70
       rect:
         serializedVersion: 2
-        x: 304
-        y: 416
-        width: 16
-        height: 32
+        x: 307
+        y: 433
+        width: 10
+        height: 24
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -3352,10 +3352,10 @@ TextureImporter:
       name: Tileset_Player_153
       rect:
         serializedVersion: 2
-        x: 320
-        y: 320
-        width: 16
-        height: 32
+        x: 324
+        y: 337
+        width: 8
+        height: 30
       alignment: 9
       pivot: {x: 0.5, y: 0.1}
       border: {x: 0, y: 0, z: 0, w: 0}
