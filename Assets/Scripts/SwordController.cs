@@ -83,6 +83,7 @@ public class SwordController : MonoBehaviour
         lastAttackTime = Time.time;
         isAttacking = true;
         isResetting = false;
+
         // Initialize additional logic for starting the attack here if necessary
         if (isAttackPhaseOne)
         {
@@ -110,6 +111,12 @@ public class SwordController : MonoBehaviour
             isAttacking = false;
             isResetting = true; // Start resetting after the attack
             resetStartTime = Time.time; // Mark the start time for the reset
+        } else if (percentageComplete >= .4f)
+        {
+            GetComponent<BoxCollider2D>().enabled = false;
+        } else if (percentageComplete >= .1f)
+        {
+            GetComponent<BoxCollider2D>().enabled = true;
         }
     }
 

@@ -4,7 +4,11 @@ using UnityEngine.Tilemaps;
 
 public class PlayerScript : MonoBehaviour
 {
+    public string state = "alive";
     public float moveSpeed = 5.0f;
+    public float hp = 100;
+    public bool immune = false;
+    public float immunityDuration = 1f;
     public float tileSize = 1.0f;
     public Tilemap tilemapFloor;
 
@@ -37,6 +41,34 @@ public class PlayerScript : MonoBehaviour
             CheckForInput();
             HandleSwipeInput(); // Handle swipe inputs
         }
+    }
+
+    public void TakeDamage(float damage)
+    {
+        immune = true;
+        hp -= damage;
+
+        if (hp <= 0)
+        {
+            SetStateToDead();
+        }
+        else
+        {
+            StartCoroutine(ResetImmunityAfterDelay());
+        }
+    }
+
+    void SetStateToDead()
+    {
+        state = "dead";
+
+        DungeonManager.GetComponent<DungeonGenerationScript>().RestartScene();
+    }
+
+    IEnumerator ResetImmunityAfterDelay()
+    {
+        yield return new WaitForSeconds(immunityDuration);
+        immune = false;
     }
 
     private void HandleMovement()

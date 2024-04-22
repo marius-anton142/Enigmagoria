@@ -5,10 +5,14 @@ using UnityEngine.Tilemaps;
 
 public class Enemy01Script : MonoBehaviour
 {
+    public string state = "idle";
     public GameObject DijkstraMap, DungeonManager;
     public float moveSpeed = 5.0f;
     public int rangeMovement = 10;
-    public float tileSize = 1.0f;  // Adjust this to match your tile size
+    public float damage;
+    public float hp = 100;
+    public GameObject player;
+    public float tileSize = 1.0f;
     private Rigidbody2D rb;
     public Tilemap tilemapFloor;
 
@@ -26,6 +30,8 @@ public class Enemy01Script : MonoBehaviour
 
     private void Start()
     {
+        player = GameObject.FindGameObjectWithTag("Player");
+
         InvokeRepeating("NextStep", 5.0f, Random.Range(0.4f, 0.6f));
         targetPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
     }
@@ -49,6 +55,76 @@ public class Enemy01Script : MonoBehaviour
                 //Debug.Log(targetPosition2D);
             }
         }
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("WeaponMelee"))
+        {
+            TakeDamage(50);
+        }
+    }
+
+    public void TakeDamage(float damage)
+    {
+        hp -= damage;
+
+        if (hp <= 0)
+        {
+            SetStateToDead();
+        }
+        else
+        {
+            Vector3 playerPosition = player.transform.position;
+            Vector3 enemyPosition = transform.position;
+
+            // Stop any ongoing movement
+            isMoving = false;  // Reset movement status
+            transform.position = targetPosition;  // Snap to last valid target position if currently moving
+
+            // Reset the movement timer
+            CancelInvoke("NextStep");  // Cancel the currently scheduled invocations
+            InvokeRepeating("NextStep", 1.0f, Random.Range(0.4f, 0.6f));  // Reschedule the invocation
+
+            // Calculate differences
+            float xDiff = playerPosition.x - enemyPosition.x;
+            float yDiff = playerPosition.y - enemyPosition.y;
+
+            // Determine the direction to move the enemy based on the player's position
+            if (Mathf.Abs(xDiff) > Mathf.Abs(yDiff))
+            {
+                if (xDiff > 0)
+                {
+                    // Player is to the right, move enemy left
+                    MoveLeft();
+                }
+                else
+                {
+                    // Player is to the left, move enemy right
+                    MoveRight();
+                }
+            }
+            else
+            {
+                if (yDiff > 0)
+                {
+                    // Player is above, move enemy down
+                    MoveDown();
+                }
+                else
+                {
+                    // Player is below, move enemy up
+                    MoveUp();
+                }
+            }
+        }
+    }
+
+
+    void SetStateToDead()
+    {
+        state = "dead";
+        Destroy(gameObject);
     }
 
     public int getCurrentDistance(Vector2Int targetPosition2D)
@@ -90,7 +166,8 @@ public class Enemy01Script : MonoBehaviour
 
         // Determine the movement direction based on the next cell's position
         Vector2Int direction;
-        if (smallestDistance != 0) {
+
+        if (smallestDistance != 0 || smallestDistance == 0 && player.GetComponent<PlayerScript>().immune == false) {
             direction = nextCell - currentCell;
         } else
         {
@@ -100,18 +177,45 @@ public class Enemy01Script : MonoBehaviour
         if (direction == Vector2Int.up)
         {
             MoveUp();
+            if (smallestDistance == 0)
+            {
+                StartCoroutine(MoveWithDelay(Vector3.up, moveSpeed / 370));
+            }
         }
         else if (direction == Vector2Int.down)
         {
             MoveDown();
+            if (smallestDistance == 0)
+            {
+                StartCoroutine(MoveWithDelay(Vector3.down, moveSpeed / 370));
+            }
         }
         else if (direction == Vector2Int.right)
         {
             MoveRight();
+            if (smallestDistance == 0)
+            {
+                StartCoroutine(MoveWithDelay(Vector3.right, moveSpeed / 370));
+            }
         }
         else if (direction == Vector2Int.left)
         {
             MoveLeft();
+            if (smallestDistance == 0)
+            {
+                StartCoroutine(MoveWithDelay(Vector3.left, moveSpeed / 370));
+            }
+        }
+    }
+
+    IEnumerator MoveWithDelay(Vector3 direction, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (player.GetComponent<PlayerScript>().immune == false)
+        {
+            player.GetComponent<PlayerScript>().Move(direction);
+            player.GetComponent<PlayerScript>().TakeDamage(damage);
         }
     }
 

@@ -75,10 +75,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02adcc3b03a76a242ab7b966ad7fe28d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  state: idle
   DijkstraMap: {fileID: 0}
   DungeonManager: {fileID: 0}
   moveSpeed: 35
   rangeMovement: 7
+  damage: 20
+  hp: 200
+  player: {fileID: 0}
   tileSize: 1
   tilemapFloor: {fileID: 0}
   targetPosition: {x: 0, y: 0, z: 0}
