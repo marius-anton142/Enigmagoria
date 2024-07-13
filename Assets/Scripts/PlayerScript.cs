@@ -118,6 +118,25 @@ public class PlayerScript : MonoBehaviour
         if (!isMoving && tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
         {
             targetPosition = transform.position + direction * tileSize; // Set new target position
+            Debug.Log(targetPosition);
+            if (direction == Vector3.up)
+            {
+                targetPosition.y = Mathf.Ceil((targetPosition.y - 0.5f) * 2f) / 2f;
+            }
+            else if (direction == Vector3.down)
+            {
+                targetPosition.y = Mathf.Floor((targetPosition.y + 0.5f) * 2f) / 2f;
+            }
+            else if (direction == Vector3.right)
+            {
+                targetPosition.x = Mathf.Ceil((targetPosition.x - 0.5f) * 2f) / 2f;
+            }
+            else if (direction == Vector3.left)
+            {
+                targetPosition.x = Mathf.Floor((targetPosition.x + 0.5f) * 2f) / 2f;
+            }
+
+            Debug.Log(targetPosition);
             isMoving = true;
             spriteRenderer.flipX = direction == Vector3.left;
             animator.SetBool("IsWalking", true);
@@ -134,5 +153,22 @@ public class PlayerScript : MonoBehaviour
         canMove = false;
         yield return new WaitForSeconds(continuousMoveCooldown);
         canMove = true;
+    }
+
+    float RoundToNearestHalf(float value)
+    {
+        if (GetDecimalPart(value) > 0.5f && GetDecimalPart(value) < 1f)
+        {
+            value = Mathf.Floor(value) - 0.5f;
+        } else
+        {
+            value = Mathf.Floor(value) + 0.5f;
+        }
+        return value;
+    }
+
+    float GetDecimalPart(float value)
+    {
+        return value - Mathf.Floor(value);
     }
 }

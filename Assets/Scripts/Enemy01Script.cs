@@ -120,7 +120,6 @@ public class Enemy01Script : MonoBehaviour
         }
     }
 
-
     void SetStateToDead()
     {
         state = "dead";

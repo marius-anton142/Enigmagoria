@@ -1660,7 +1660,9 @@ public class DungeonGenerationScript : MonoBehaviour
                     if (rb.GetComponent<SpriteRenderer>().bounds.size.x < minWidthFinal || rb.GetComponent<SpriteRenderer>().bounds.size.y < minHeightFinal)
                     {
                         rectanglesToDelete.Add(rectangle);
-                    } else {
+                    } 
+                    else 
+                    {
                         Vector2 roundedPos = new Vector2(Mathf.Round(rb.position.x), Mathf.Round(rb.position.y));
                         rb.isKinematic = true;
                         rb.position = roundedPos;
@@ -1740,7 +1742,6 @@ public class DungeonGenerationScript : MonoBehaviour
                 Dictionary<int, HashSet<int>> minimalSpanningTree = GetMinimalSpanningTree(graph);
                 //Add extra edges to the tree to make the dungeon more more circular
                 Dictionary<int, HashSet<int>> extraEdgesGraph = AddExtraEdges(graph, minimalSpanningTree, extraEdgesPercentage);
-
 
                 int lineIndex = 0;
                 foreach (var nodePair in extraEdgesGraph)
