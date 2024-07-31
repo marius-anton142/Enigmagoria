@@ -117,23 +117,23 @@ public class PlayerScript : MonoBehaviour
         Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
         if (!isMoving && tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
         {
-            targetPosition = transform.position + direction * tileSize; // Set new target position
+            targetPosition = transform.position; // Set new target position
             Debug.Log(targetPosition);
             if (direction == Vector3.up)
             {
-                targetPosition.y = Mathf.Ceil((targetPosition.y - 0.5f) * 2f) / 2f;
+                targetPosition.y = Mathf.Floor(targetPosition.y - 0.5f) + 1.5f;
             }
             else if (direction == Vector3.down)
             {
-                targetPosition.y = Mathf.Floor((targetPosition.y + 0.5f) * 2f) / 2f;
+                targetPosition.y = Mathf.Ceil(targetPosition.y + 0.5f) - 1.5f;
             }
             else if (direction == Vector3.right)
             {
-                targetPosition.x = Mathf.Ceil((targetPosition.x - 0.5f) * 2f) / 2f;
+                targetPosition.x = Mathf.Floor(targetPosition.x - 0.5f) + 1.5f;
             }
             else if (direction == Vector3.left)
             {
-                targetPosition.x = Mathf.Floor((targetPosition.x + 0.5f) * 2f) / 2f;
+                targetPosition.x = Mathf.Ceil(targetPosition.x + 0.5f) - 1.5f;
             }
 
             Debug.Log(targetPosition);

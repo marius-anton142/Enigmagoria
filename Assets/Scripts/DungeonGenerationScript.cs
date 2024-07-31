@@ -42,14 +42,18 @@ public class DungeonGenerationScript : MonoBehaviour
     Vector3 tileSize = new Vector3(1,1,1);
 
     public Tilemap tilemapFloor, tilemapFloorWalls, tilemapDecoratives, tilemapWalls;
-    public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight, tileWallLeft, tileWallRight;
+    public Tile tileFloor01, tileBricks01, tileWallUpper, tileWallUpperLeft, tileWallUpperRight, tileWallLowerLeft, tileWallLowerRight;
     public Tile tileFloor02, tileFloor03, tileFloor04;
     public Tile tileCornerUpperLeft, tileCornerUpperRight, tileCornerLowerLeft, tileCornerLowerRight, tileCorner02LowerLeft, tileCorner02LowerRight;
     public Tile tileBricks02, tileBricks03;
     public Tile tileCarpet01Upper, tileCarpet01UpperLeft, tileCarpet01UpperRight, tileCarpet01Lower, tileCarpet01LowerLeft, tileCarpet01LowerRight, tileCarpet01Left, tileCarpet01Right, tileCarpet01Center;
     public Tile tileCarpet02Upper, tileCarpet02UpperLeft, tileCarpet02UpperRight, tileCarpet02Lower, tileCarpet02LowerLeft, tileCarpet02LowerRight, tileCarpet02Left, tileCarpet02Right, tileCarpet02Center;
 
+    [Header("Wall Tiles")]
+    [SerializeField] private Tile tileWallHorizontal;
+    [SerializeField] private Tile tileWallHorizontalUpLeft, tileWallHorizontalUpRight, tileWallHorizontalDownLeft, tileWallHorizontalDownRight, tileWallLeft, tileWallRight, tileWallCornerUpLeft, tileWallCornerUpRight, tileWallBase, tileWallBaseCornerLeft, tileWallBaseCornerRight, tileWallBaseDownLeft, tileWallBaseDownRight, tileWallBaseUpLeft, tileWallBaseUpRight;
 
+    [Header("Others")]
     //Prefabs
     [SerializeField] private GameObject ChestPrefab;
     [SerializeField] private GameObject[] Enemies;
@@ -1619,6 +1623,113 @@ public class DungeonGenerationScript : MonoBehaviour
         return;
     }
 
+    private void ClearWalls(Vector3Int position)
+    {
+        Vector3Int[] neighbors = new Vector3Int[]
+        {
+        new Vector3Int(-1,  2, 0), new Vector3Int(0,  2, 0), new Vector3Int(1,  2, 0),
+        new Vector3Int(-1,  1, 0), new Vector3Int(0,  1, 0), new Vector3Int(1,  1, 0),
+        new Vector3Int(-1,  0, 0),                          new Vector3Int(1,  0, 0),
+        new Vector3Int(-1, -1, 0), new Vector3Int(0, -1, 0), new Vector3Int(1, -1, 0)
+        };
+
+        tilemapWalls.SetTile(position, null);
+        foreach (var neighbor in neighbors)
+        {
+            tilemapWalls.SetTile(position + neighbor, null);
+        }
+    }
+
+    private void BuildWall(Vector3Int position)
+    {
+        Vector3Int[] neighbors = new Vector3Int[]
+        {
+        new Vector3Int(-1,  2, 0), new Vector3Int(0,  2, 0), new Vector3Int(1,  2, 0),
+        new Vector3Int(-1,  1, 0), new Vector3Int(0,  1, 0), new Vector3Int(1,  1, 0),
+        new Vector3Int(-1,  0, 0),                          new Vector3Int(1,  0, 0),
+        new Vector3Int(-1, -1, 0), new Vector3Int(0, -1, 0), new Vector3Int(1, -1, 0),
+        new Vector3Int(-1, -2, 0), new Vector3Int(0, -2, 0), new Vector3Int(1, -2, 0)
+        };
+
+        foreach (var neighbor in neighbors)
+        {
+            Vector3Int neighborPos = position + neighbor;
+
+            // Conditions
+            bool center = tilemapFloor.GetTile(neighborPos) != null;
+            bool right = tilemapFloor.GetTile(neighborPos + new Vector3Int(1, 0, 0)) != null;
+            bool left = tilemapFloor.GetTile(neighborPos + new Vector3Int(-1, 0, 0)) != null;
+            bool up = tilemapFloor.GetTile(neighborPos + new Vector3Int(0, 1, 0)) != null;
+            bool down = tilemapFloor.GetTile(neighborPos + new Vector3Int(0, -1, 0)) != null;
+            bool upleft = tilemapFloor.GetTile(neighborPos + new Vector3Int(-1, 1, 0)) != null;
+            bool upright = tilemapFloor.GetTile(neighborPos + new Vector3Int(1, 1, 0)) != null;
+            bool downleft = tilemapFloor.GetTile(neighborPos + new Vector3Int(-1, -1, 0)) != null;
+            bool downright = tilemapFloor.GetTile(neighborPos + new Vector3Int(1, -1, 0)) != null;
+
+            PlaceWallTile(neighborPos, center, right, left, up, down, upleft, upright, downleft, downright);
+        }
+    }
+
+    private void PlaceWallTile(Vector3Int pos, bool center, bool right, bool left, bool up, bool down, bool upleft, bool upright, bool downleft, bool downright)
+    {
+        if (downright && !center && !right && !left && !up && !down && !upleft && !upright && !downleft)
+        {
+            tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallCornerUpLeft);
+            tilemapWalls.SetTile(pos, tileWallLeft);
+        }
+        else if (downleft && !center && !right && !left && !up && !down && !upleft && !upright && !downright)
+        {
+            tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallCornerUpRight);
+            tilemapWalls.SetTile(pos, tileWallRight);
+        }
+        else if (upright && !center && !right && !left && !up && !down && !upleft && !downleft && !downright)
+        {
+            tilemapWalls.SetTile(pos, tileWallBaseCornerLeft);
+        }
+        else if (upleft && !center && !right && !left && !up && !down && !upright && !downleft && !downright)
+        {
+            tilemapWalls.SetTile(pos, tileWallBaseCornerRight);
+        }
+        else if (right && !center && !left && !up && !down && !upleft && !downleft)
+        {
+            tilemapWalls.SetTile(pos, tileWallLeft);
+        }
+        else if (left && !center && !right && !up && !down && !upright && !downright)
+        {
+            tilemapWalls.SetTile(pos, tileWallRight);
+        }
+        else if (down && !center && !right && !left && !up && !upleft && !upright)
+        {
+            tilemapWalls.SetTile(pos, tileWallBase);
+            tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
+        }
+        else if (up && !center && !right && !left && !down && !downleft && !downright)
+        {
+            tilemapWalls.SetTile(pos, tileWallBase);
+            tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
+        }
+    }
+
+    private void BuildFloor(Vector3Int position)
+    {
+        TileBase tileToPaint = getRandomTileFloor();
+        tilemapFloor.SetTile(position, tileToPaint);
+        ClearWalls(position);
+        BuildWall(position);
+    }
+
+    private void BuildSquare(Vector3Int startPos, int width, int height)
+    {
+        for (int i = 1; i < width; ++i)
+        {
+            for (int j = 1; j < height; ++j)
+            {
+                Vector3Int tilePos = startPos + new Vector3Int(i, j, 0);
+                BuildFloor(tilePos);
+            }
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.R))
@@ -1766,7 +1877,7 @@ public class DungeonGenerationScript : MonoBehaviour
                     --roomsToDraw;
 
                     Rigidbody2D rb = rectangle.GetComponent<Rigidbody2D>();
-                    Vector3Int startPos = tilemapFloor.WorldToCell(rb.position);
+                    Vector3Int startPos = tilemapFloor.WorldToCell(rb.position) + new Vector3Int(1, 2, 0);
 
                     Vector3 tileSize = tilemapFloor.cellSize;
                     Vector3Int sizeInTiles = new Vector3Int(
@@ -1774,6 +1885,11 @@ public class DungeonGenerationScript : MonoBehaviour
                         Mathf.RoundToInt(rb.GetComponent<SpriteRenderer>().bounds.size.y / tileSize.y),
                         1);
 
+                    //Build rooms
+
+                    BuildSquare(startPos, sizeInTiles.x - 2, sizeInTiles.y - 2);
+
+                    /*
                     //Floor
                     for (int i = 1; i < sizeInTiles.x - 1; ++i)
                     {
@@ -1823,8 +1939,10 @@ public class DungeonGenerationScript : MonoBehaviour
                     tilemapWalls.SetTile(tilePos2, tileWallLowerLeft);
                     tilePos2 = startPos + new Vector3Int(sizeInTiles.x - 1, 1, 0);
                     tilemapWalls.SetTile(tilePos2, tileWallLowerRight);
+                    */
                 }
 
+                /*
                 //GENERATE HALLWAYS
                 HashSet<string> nodePairs = new HashSet<string>();
 
@@ -2225,7 +2343,9 @@ public class DungeonGenerationScript : MonoBehaviour
                         }
                     }
                 }
+                */
 
+                
                 //DEACTIVATE ROOM RECTANGLES
                 foreach (GameObject rectangle in rectangles)
                 {
