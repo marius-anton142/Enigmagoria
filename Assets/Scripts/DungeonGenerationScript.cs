@@ -1630,7 +1630,7 @@ public class DungeonGenerationScript : MonoBehaviour
         new Vector3Int(-1,  2, 0), new Vector3Int(0,  2, 0), new Vector3Int(1,  2, 0),
         new Vector3Int(-1,  1, 0), new Vector3Int(0,  1, 0), new Vector3Int(1,  1, 0),
         new Vector3Int(-1,  0, 0),                          new Vector3Int(1,  0, 0),
-        new Vector3Int(-1, -1, 0), new Vector3Int(0, -1, 0), new Vector3Int(1, -1, 0)
+        new Vector3Int(-1, -1, 0), new Vector3Int(0, -1, 0), new Vector3Int(1, -1, 0),
         };
 
         tilemapWalls.SetTile(position, null);
@@ -1655,7 +1655,6 @@ public class DungeonGenerationScript : MonoBehaviour
         {
             Vector3Int neighborPos = position + neighbor;
 
-            // Conditions
             bool center = tilemapFloor.GetTile(neighborPos) != null;
             bool right = tilemapFloor.GetTile(neighborPos + new Vector3Int(1, 0, 0)) != null;
             bool left = tilemapFloor.GetTile(neighborPos + new Vector3Int(-1, 0, 0)) != null;
@@ -1677,33 +1676,43 @@ public class DungeonGenerationScript : MonoBehaviour
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallCornerUpLeft);
             tilemapWalls.SetTile(pos, tileWallLeft);
         }
-        else if (downleft && !center && !right && !left && !up && !down && !upleft && !upright && !downright)
+        else if (!downright && !center && !right && !left && !up && !down && !upleft && !upright && downleft)
         {
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallCornerUpRight);
             tilemapWalls.SetTile(pos, tileWallRight);
         }
-        else if (upright && !center && !right && !left && !up && !down && !upleft && !downleft && !downright)
+        else if (!downright && !center && !right && !left && !up && !down && !upleft && upright && !downleft)
         {
             tilemapWalls.SetTile(pos, tileWallBaseCornerLeft);
         }
-        else if (upleft && !center && !right && !left && !up && !down && !upright && !downleft && !downright)
+        else if (!downright && !center && !right && !left && !up && !down && upleft && !upright && !downleft)
         {
             tilemapWalls.SetTile(pos, tileWallBaseCornerRight);
         }
-        else if (right && !center && !left && !up && !down && !upleft && !downleft)
+        else if (downright && !center && right && !left && !up && down && upleft && !upright && downleft)
+        {
+            tilemapWalls.SetTile(pos, tileWallHorizontalDownRight);
+            tilemapWalls.SetTile(pos, tileWallBaseDownRight);
+        }
+        else if (downright && !center && !right && left && !up && down && upleft && !upright && downleft)
+        {
+            tilemapWalls.SetTile(pos, tileWallHorizontalDownLeft);
+            tilemapWalls.SetTile(pos, tileWallBaseDownLeft);
+        }
+        else if (!center && right && !left && !up && !down && !upleft && !downleft)
         {
             tilemapWalls.SetTile(pos, tileWallLeft);
         }
-        else if (left && !center && !right && !up && !down && !upright && !downright)
+        else if (!downright && !center && !right && left && !up && !down && !upright)
         {
             tilemapWalls.SetTile(pos, tileWallRight);
         }
-        else if (down && !center && !right && !left && !up && !upleft && !upright)
+        else if (!center && !right && !left && !up && down && !upleft && !upright)
         {
             tilemapWalls.SetTile(pos, tileWallBase);
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
         }
-        else if (up && !center && !right && !left && !down && !downleft && !downright)
+        else if (!downright && !center && !right && !left && up && !down && !downleft)
         {
             tilemapWalls.SetTile(pos, tileWallBase);
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
@@ -2354,5 +2363,4 @@ public class DungeonGenerationScript : MonoBehaviour
             }
         }
     }
-
 }
