@@ -10,6 +10,7 @@ using System.Linq;
 public class DungeonGenerationScript01 : MonoBehaviour
 {
     [SerializeField] private int numRooms;
+    [SerializeField] private int roomsPlaced;
     [SerializeField] private float[] chanceTileFloors = new float[5];
 
     [Header("Tile Maps")]
@@ -380,8 +381,9 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     public void InstantiateRoom(Room room, Vector3Int startPosition)
     {
+        rooms.Add(room);
         room.SetPosition(startPosition);
-
+        ++roomsPlaced;
         foreach (Vector3Int tileCoord in room.FloorTileCoordinates)
         {
             Vector3Int tilePosition = startPosition + tileCoord;
@@ -426,7 +428,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         Room newRoom = new Room(floorTileCoordinates);
-        rooms.Add(newRoom);
         return new Room(floorTileCoordinates);
     }
 
@@ -462,18 +463,18 @@ public class DungeonGenerationScript01 : MonoBehaviour
         // Create and place the initial room
         Room initialRoom = CreateSquareRoom(6, 6);
         InstantiateRoom(initialRoom, pos01);
-        rooms.Add(initialRoom);
 
-        for (int n = 1; n < numRooms; n++)
+        for (int n = 0; n < numRooms; n++)
         {
-            int randomWidth = 10;
-            int randomHeight = 9;
+            int randomWidth = Random.Range(4, 11);
+            int randomHeight = Random.Range(4, 11);
             Room room1 = CreateSquareRoom(randomWidth, randomHeight);
             bool roomPlaced = false;
 
-            // Create a list of all existing room indices and shuffle them
             List<int> roomIndices = Enumerable.Range(0, rooms.Count).ToList();
+            Debug.Log("Room indices before shuffle: " + string.Join(", ", roomIndices));
             ShuffleList(roomIndices);
+            Debug.Log("Room indices after shuffle: " + string.Join(", ", roomIndices));
 
             foreach (int roomIndex in roomIndices)
             {
@@ -483,7 +484,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 List<Vector3Int>[] room0ConnectionPoints = GetConnectionPoints(room0, 2);
                 List<Vector3Int>[] room1ConnectionPoints = GetConnectionPoints(room1, 2);
 
-                // Create a list of sides [0, 1, 2, 3] and shuffle them
                 List<int> sides = new List<int> { 0, 1, 2, 3 };
                 ShuffleList(sides);
 
@@ -492,8 +492,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     List<Vector3Int> room0Sides = room0ConnectionPoints[side];
                     List<Vector3Int> room1Sides = room1ConnectionPoints[(side + 2) % 4];
 
-                    // Create a list of lengths [3, 4, ..., 10] and shuffle them
-                    List<int> lengths = Enumerable.Range(3, 1).ToList();
+                    List<int> lengths = new List<int> { 3, 4, 5, 6 };
                     ShuffleList(lengths);
 
                     foreach (int length in lengths)
@@ -553,10 +552,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                     posHallway = offset + room0Point + new Vector3Int(1, 0, 0);
                                     posHallwayEnd = posHallway + new Vector3Int(length, 0, 0);
 
-                                    Debug.Log(offset);
-                                    Debug.Log(room0Point);
-                                    Debug.Log(posHallway);
-                                    Debug.Log(posHallwayEnd);
+                                    //Debug.Log(offset);
+                                    //Debug.Log(room0Point);
+                                    //Debug.Log(posHallway);
+                                    //Debug.Log(posHallwayEnd);
 
                                     if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
                                         CheckBuildHallwayHorizontal(posHallway, length, 2))
@@ -574,13 +573,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     }
                     if (roomPlaced) break;
                 }
-                if (roomPlaced)
-                {
-                    rooms.Add(room1);  // Add newly placed room to the list
-                    break;
-                }
+                if (roomPlaced) break;
             }
         }
+
+        Debug.Log(roomsPlaced);
     }
 
     private void ShuffleList<T>(List<T> list, int seed = 0)
@@ -595,5 +592,4 @@ public class DungeonGenerationScript01 : MonoBehaviour
             list[randomIndex] = temp;
         }
     }
-
 }
