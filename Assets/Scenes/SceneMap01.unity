@@ -26310,7 +26310,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c8e710563037f149b20fe85b4591d18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRooms: 25
+  numRooms: 20
   roomsPlaced: 0
   chanceTileFloors:
   - 1

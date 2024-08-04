@@ -501,38 +501,83 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return new Room(floorTileCoordinates);
     }
 
-    private Room CreateRoomIrregular(int maxSteps, int stepSize)
+    private Room CreateRoomIrregular(int maxSteps, int iterations, int stepSize)
     {
         List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
         HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
-
-        // Start at the center of the designated room area
-        Vector3Int currentPos = new Vector3Int(0, 0, 0);
-        AddTiles(floorTileCoordinates, currentPos, stepSize);
-        visited.Add(currentPos);
-
-        // Perform a random walk
-        for (int i = 0; i < maxSteps; i++)
+        //int k = 0;
+        for (int i = 0; i < iterations; i++)
         {
-            Vector3Int nextPos = GetNextPosition(currentPos, stepSize);
-
-            // Check if nextPos is within bounds and not visited yet
-            if (!visited.Contains(nextPos))
+            // Start at the center of the designated room area
+            Vector3Int currentPos = new Vector3Int(0, 0, 0);
+            if (!visited.Contains(currentPos))
             {
-                AddTiles(floorTileCoordinates, nextPos, stepSize);
-                visited.Add(nextPos);
-                currentPos = nextPos;
+                AddTiles(floorTileCoordinates, currentPos, stepSize);
+                visited.Add(currentPos);
+            }
+
+            // Perform a random walk
+            for (int j = 0; j < maxSteps; j++)
+            {
+                Vector3Int nextPos = GetNextPosition(currentPos, stepSize);
+                if (!visited.Contains(nextPos))
+                {
+                    // Check if nextPos is valid
+                    if (CheckAddTiles(floorTileCoordinates, nextPos, stepSize))
+                    {
+                        currentPos = nextPos;
+                        AddTiles(floorTileCoordinates, nextPos, stepSize);
+                        visited.Add(nextPos);
+                        //k++;
+                    }
+                    else
+                    {
+                        // Try other directions if initial nextPos is invalid
+                        bool validMove = false;
+                        List<int> directions = new List<int> { 0, 1, 2, 3 };
+                        ShuffleList(directions); // Shuffle to randomize direction checks
+
+                        foreach (int direction in directions)
+                        {
+                            nextPos = GetNextPosition(currentPos, stepSize, direction);
+
+                            if (!visited.Contains(nextPos) && CheckAddTiles(floorTileCoordinates, nextPos, stepSize))
+                            {
+                                AddTiles(floorTileCoordinates, nextPos, stepSize);
+                                visited.Add(nextPos);
+                                currentPos = nextPos;
+                                validMove = true;
+                                //k++;
+                                break; // Break loop if a valid move is found
+                            }
+                        }
+                    }
+                } 
+                else
+                {
+                    currentPos = nextPos;
+                    //k++;
+                }
             }
         }
-
+        /*
+        Debug.Log("A");
+        Debug.Log(k);
+        Debug.Log(maxSteps * iterations);
+        Debug.Log("B");
+        */
         Room newRoom = new Room(floorTileCoordinates);
         return newRoom;
     }
 
-    private Vector3Int GetNextPosition(Vector3Int currentPos, int stepSize)
+    private Vector3Int GetNextPosition(Vector3Int currentPos, int stepSize, int direction = -1)
     {
-        // Generate a random direction
-        int direction = Random.Range(0, 4);
+        // Generate a random direction if not specified
+        if (direction == -1)
+        {
+            direction = Random.Range(0, 4);
+        }
+
         Vector3Int nextPos = currentPos;
 
         switch (direction)
@@ -568,6 +613,82 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 }
             }
         }
+    }
+
+    private bool CheckAddTiles(List<Vector3Int> tiles, Vector3Int centerPos, int stepSize)
+    {
+        Vector3Int[] neighborsVertical = new Vector3Int[]
+        {
+        new Vector3Int(0,  3, 0),
+        new Vector3Int(0,  2, 0),
+        new Vector3Int(0,  1, 0),
+        };
+
+        Vector3Int[] neighborsHorizontal = new Vector3Int[]
+        {
+        new Vector3Int(2,  0, 0),
+        new Vector3Int(1,  0, 0),
+        };
+
+        for (int x = -2; x < stepSize + 2; x++)
+        {
+            Vector3Int tilePos = centerPos + new Vector3Int(x, stepSize - 1, 0);
+            if (!tiles.Contains(tilePos + neighborsVertical[2]) && (tiles.Contains(tilePos + neighborsVertical[1]) || tiles.Contains(tilePos + neighborsVertical[0])))
+            {
+                return false;
+            }
+
+            tilePos = centerPos + new Vector3Int(x, 0, 0);
+            if (!tiles.Contains(tilePos - neighborsVertical[2]) && (tiles.Contains(tilePos - neighborsVertical[1]) || tiles.Contains(tilePos - neighborsVertical[0])))
+            {
+                return false;
+            }
+        }
+
+        for (int y = 0; y < stepSize; y++)
+        {
+            Vector3Int tilePos = centerPos + new Vector3Int(stepSize - 1, y, 0);
+            if (!tiles.Contains(tilePos + neighborsHorizontal[1]) && tiles.Contains(tilePos + neighborsHorizontal[0]))
+            {
+                return false;
+            }
+
+            tilePos = centerPos + new Vector3Int(0, y, 0);
+            if (!tiles.Contains(tilePos - neighborsHorizontal[1]) && tiles.Contains(tilePos - neighborsHorizontal[0]))
+            {
+                return false;
+            }
+        }
+
+        /*
+        Vector3Int tilePosCornerDownLeft = centerPos + new Vector3Int(0, 0, 0);
+        Vector3Int tilePosCornerUpLeft = centerPos + new Vector3Int(0, stepSize - 1, 0);
+        Vector3Int tilePosCornerDownRight = centerPos + new Vector3Int(stepSize - 1, 0, 0);
+        Vector3Int tilePosCornerUpRight = centerPos + new Vector3Int(stepSize - 1, stepSize - 1, 0);
+
+        if (!tiles.Contains(tilePosCornerDownLeft + new Vector3Int(0, -1, 0)) && !tiles.Contains(tilePosCornerDownLeft + new Vector3Int(0, -2, 0)) && tiles.Contains(tilePosCornerDownLeft + new Vector3Int(-1, -3, 0)))
+        {
+            return false;
+        }
+
+        if (!tiles.Contains(tilePosCornerUpLeft + new Vector3Int(0, 1, 0)) && !tiles.Contains(tilePosCornerUpLeft + new Vector3Int(0, 2, 0)) && tiles.Contains(tilePosCornerUpLeft + new Vector3Int(-1, 3, 0)))
+        {
+            return false;
+        }
+
+        if (!tiles.Contains(tilePosCornerDownRight + new Vector3Int(0, -1, 0)) && !tiles.Contains(tilePosCornerDownRight + new Vector3Int(0, -2, 0)) && tiles.Contains(tilePosCornerDownRight + new Vector3Int(1, -3, 0)))
+        {
+            return false;
+        }
+
+        if (!tiles.Contains(tilePosCornerUpRight + new Vector3Int(0, 1, 0)) && !tiles.Contains(tilePosCornerUpRight + new Vector3Int(0, 2, 0)) && tiles.Contains(tilePosCornerUpRight + new Vector3Int(1, 3, 0)))
+        {
+            return false;
+        }
+
+        */
+
+        return true;
     }
 
     private void TryBuildAdditionalHallways(Room currentRoom, Room neighborRoom)
@@ -740,41 +861,35 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void BuildRooms()
     {
-        Vector3Int pos01 = new Vector3Int(0, 0, 0);
-
-        // Create and place the initial room
-        Room initialRoom = CreateRoomSquare(5, 5);
-        InstantiateRoom(initialRoom, pos01);
-
         for (int n = 0; n < numRooms; n++)
         {
             Room room1 = null;
 
-            if (Random.value < 0.15f)
+            if (Random.value < 0.1f)
             {
-                int[] widthOptions = { 6, 8, 10};
-                int[] heightOptions = { 6, 8, 10};
+                int[] widthOptions = { 6, 8, 10 };
+                int[] heightOptions = { 6, 8, 10 };
                 int[] roomSquareOptions = { 3, 4, 5, 6, 7 };
-                int[] otherOptions = { 2, 3, 4, 5, 6 };
+                int[] otherOptions = { 2, 4, 6 };
 
                 int randomWidth = widthOptions[Random.Range(0, widthOptions.Length)];
                 int randomHeight = heightOptions[Random.Range(0, heightOptions.Length)];
                 int randomSquareSize = roomSquareOptions[Random.Range(0, roomSquareOptions.Length)];
                 int randomOtherSize = otherOptions[Random.Range(0, otherOptions.Length)];
-                
+
                 room1 = CreateRoomPlus(randomWidth, randomHeight, randomSquareSize, randomOtherSize);
             }
             else if (Random.value < 0.5f)
             {
-                int randomWidth = Random.Range(4, 8);
-                int randomHeight = Random.Range(4, 8);
-                room1 = CreateRoomSquare(randomWidth * 2, randomHeight * 2);
+                int randomWidth = Random.Range(5, 9);
+                int randomHeight = Random.Range(5, 9);
+                room1 = CreateRoomSquare(randomWidth, randomHeight);
             }
             else
             {
-                room1 = CreateRoomIrregular(10, 4);
+                room1 = CreateRoomIrregular(6, 8, 2);
             }
 
             Room room0 = null;
@@ -918,6 +1033,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 TryBuildAdditionalHallways(room1, room0);
             }
         }
+    }
+
+    private void Start()
+    {
+        Vector3Int pos01 = new Vector3Int(0, 0, 0);
+
+        // Create and place the initial room
+        Room initialRoom = CreateRoomSquare(5, 5);
+        InstantiateRoom(initialRoom, pos01);
+
+        BuildRooms();
     }
 
     private void ShuffleList<T>(List<T> list, int seed = 0)
