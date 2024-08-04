@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -51,7 +52,7 @@ public class DijkstraMapGenerator : MonoBehaviour
             Vector2Int neighbor = cell + offset;
 
             // Check if the neighbor is within the bounds of your grid and if it's a floor cell
-            if (IsFloor(neighbor) && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(neighbor))
+            if (IsFloor(neighbor)/* && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(neighbor)*/)
             {
                 neighbors.Add(neighbor);
             }

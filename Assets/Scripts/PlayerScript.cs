@@ -115,7 +115,7 @@ public class PlayerScript : MonoBehaviour
         if (allowContinuousMove && !canMove) return;
 
         Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
-        if (!isMoving && tilemapFloor.GetTile(cellPosition) != null && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize))
+        if (!isMoving && tilemapFloor.GetTile(cellPosition) != null/* && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize)*/)
         {
             targetPosition = transform.position; // Set new target position
             Debug.Log(targetPosition);

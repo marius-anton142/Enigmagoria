@@ -214,6 +214,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
         BuildWall(position);
     }
 
+    private void ClearFloor(Vector3Int position)
+    {
+        tilemapFloor.SetTile(position, null);
+        ClearWalls(position);
+    }
+
     private bool CheckBuildFloor(Vector3Int position, string type = "default")
     {
         return CheckBuildWall(position, type);
@@ -391,6 +397,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    public void ClearRoom(Room room)
+    {
+        rooms.Remove(room);
+        roomsPlaced--;
+        foreach (Vector3Int tileCoord in room.FloorTileCoordinates)
+        {
+            Vector3Int tilePosition = room.GetPosition() + tileCoord;
+            ClearFloor(tilePosition);
+        }
+    }
+
     public bool CheckInstantiateRoom(Room room, Vector3Int startPosition)
     {
         Vector3Int[] neighbors = new Vector3Int[]
@@ -415,7 +432,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return true;
     }
 
-    private Room CreateSquareRoom(int width, int height)
+    private Room CreateRoomSquare(int width, int height)
     {
         List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
 
@@ -429,6 +446,128 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         Room newRoom = new Room(floorTileCoordinates);
         return new Room(floorTileCoordinates);
+    }
+
+    private Room CreateRoomPlus(int centralWidth, int centralHeight, int armLength, int armWidth)
+    {
+        List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
+
+        // Add the central part
+        for (int x = 0; x < centralWidth; x++)
+        {
+            for (int y = 0; y < centralHeight; y++)
+            {
+                floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+            }
+        }
+
+        // Calculate start positions for the arms
+        int centralStartX = (centralWidth - armWidth) / 2;
+        int centralStartY = (centralHeight - armWidth) / 2;
+
+        // Add the vertical arms (top and bottom)
+        for (int x = centralStartX; x < centralStartX + armWidth; x++)
+        {
+            // Top arm
+            for (int y = centralHeight; y < centralHeight + armLength; y++)
+            {
+                floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+            }
+
+            // Bottom arm
+            for (int y = -armLength; y < 0; y++)
+            {
+                floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+            }
+        }
+
+        // Add the horizontal arms (left and right)
+        for (int y = centralStartY; y < centralStartY + armWidth; y++)
+        {
+            // Right arm
+            for (int x = centralWidth; x < centralWidth + armLength; x++)
+            {
+                floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+            }
+
+            // Left arm
+            for (int x = -armLength; x < 0; x++)
+            {
+                floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+            }
+        }
+
+        // Create the room with the calculated floor tiles
+        return new Room(floorTileCoordinates);
+    }
+
+    private Room CreateRoomIrregular(int maxSteps, int stepSize)
+    {
+        List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
+
+        // Start at the center of the designated room area
+        Vector3Int currentPos = new Vector3Int(0, 0, 0);
+        AddTiles(floorTileCoordinates, currentPos, stepSize);
+        visited.Add(currentPos);
+
+        // Perform a random walk
+        for (int i = 0; i < maxSteps; i++)
+        {
+            Vector3Int nextPos = GetNextPosition(currentPos, stepSize);
+
+            // Check if nextPos is within bounds and not visited yet
+            if (!visited.Contains(nextPos))
+            {
+                AddTiles(floorTileCoordinates, nextPos, stepSize);
+                visited.Add(nextPos);
+                currentPos = nextPos;
+            }
+        }
+
+        Room newRoom = new Room(floorTileCoordinates);
+        return newRoom;
+    }
+
+    private Vector3Int GetNextPosition(Vector3Int currentPos, int stepSize)
+    {
+        // Generate a random direction
+        int direction = Random.Range(0, 4);
+        Vector3Int nextPos = currentPos;
+
+        switch (direction)
+        {
+            case 0: // Up
+                nextPos += new Vector3Int(0, stepSize, 0);
+                break;
+            case 1: // Down
+                nextPos += new Vector3Int(0, -stepSize, 0);
+                break;
+            case 2: // Left
+                nextPos += new Vector3Int(-stepSize, 0, 0);
+                break;
+            case 3: // Right
+                nextPos += new Vector3Int(stepSize, 0, 0);
+                break;
+        }
+
+        return nextPos;
+    }
+
+    private void AddTiles(List<Vector3Int> tiles, Vector3Int centerPos, int stepSize)
+    {
+        // Add a block of tiles with size stepSize x stepSize centered around centerPos
+        for (int x = 0; x < stepSize; x++)
+        {
+            for (int y = 0; y < stepSize; y++)
+            {
+                Vector3Int tilePos = centerPos + new Vector3Int(x, y, 0);
+                if (!tiles.Contains(tilePos))  // Prevent duplicate tiles
+                {
+                    tiles.Add(tilePos);
+                }
+            }
+        }
     }
 
     private void TryBuildAdditionalHallways(Room currentRoom, Room neighborRoom)
@@ -462,12 +601,40 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private Vector3 CalculateCenterOfMass(Room room)
+    {
+        List<Vector3Int> floorTiles = room.FloorTileCoordinates;
+        if (floorTiles == null || floorTiles.Count == 0)
+        {
+            return Vector3.zero; // Return zero vector if no tiles are present
+        }
+
+        float sumX = 0f;
+        float sumY = 0f;
+        float sumZ = 0f;
+
+        foreach (Vector3Int tile in floorTiles)
+        {
+            sumX += tile.x;
+            sumY += tile.y;
+            sumZ += tile.z;
+        }
+
+        int tileCount = floorTiles.Count;
+        return new Vector3(sumX / tileCount, sumY / tileCount, sumZ / tileCount);
+    }
+
+    private Vector3 CalculateCenterOfMassPosition(Room room)
+    {
+        return CalculateCenterOfMass(room) + room.GetPosition();
+    }
+
     // Helper function to calculate the Euclidean distance between two rooms
     private float CalculateDistance(Room room1, Room room2)
     {
-        Vector3Int pos1 = room1.GetPosition();
-        Vector3Int pos2 = room2.GetPosition();
-        return Vector3.Distance(new Vector3(pos1.x, pos1.y, pos1.z), new Vector3(pos2.x, pos2.y, pos2.z));
+        Vector3 center1 = CalculateCenterOfMass(room1);
+        Vector3 center2 = CalculateCenterOfMass(room2);
+        return Vector3.Distance(center1, center2);
     }
 
     // Function to find the closest rooms to the given room
@@ -578,14 +745,38 @@ public class DungeonGenerationScript01 : MonoBehaviour
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
 
         // Create and place the initial room
-        Room initialRoom = CreateSquareRoom(6, 6);
+        Room initialRoom = CreateRoomSquare(5, 5);
         InstantiateRoom(initialRoom, pos01);
 
         for (int n = 0; n < numRooms; n++)
         {
-            int randomWidth = Random.Range(4, 11);
-            int randomHeight = Random.Range(4, 11);
-            Room room1 = CreateSquareRoom(randomWidth, randomHeight);
+            Room room1 = null;
+
+            if (Random.value < 0.15f)
+            {
+                int[] widthOptions = { 6, 8, 10};
+                int[] heightOptions = { 6, 8, 10};
+                int[] roomSquareOptions = { 3, 4, 5, 6, 7 };
+                int[] otherOptions = { 2, 3, 4, 5, 6 };
+
+                int randomWidth = widthOptions[Random.Range(0, widthOptions.Length)];
+                int randomHeight = heightOptions[Random.Range(0, heightOptions.Length)];
+                int randomSquareSize = roomSquareOptions[Random.Range(0, roomSquareOptions.Length)];
+                int randomOtherSize = otherOptions[Random.Range(0, otherOptions.Length)];
+                
+                room1 = CreateRoomPlus(randomWidth, randomHeight, randomSquareSize, randomOtherSize);
+            }
+            else if (Random.value < 0.5f)
+            {
+                int randomWidth = Random.Range(4, 8);
+                int randomHeight = Random.Range(4, 8);
+                room1 = CreateRoomSquare(randomWidth * 2, randomHeight * 2);
+            }
+            else
+            {
+                room1 = CreateRoomIrregular(10, 4);
+            }
+
             Room room0 = null;
             bool roomPlaced = false;
 
@@ -632,9 +823,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, length))
                                     {
                                         InstantiateRoom(room1, posHallwayEnd - room1Point);
-                                        roomPlaced = true;
-                                        BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, length);
-                                        break;
+
+                                        if (CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, length))
+                                        {
+                                            roomPlaced = true;
+                                            BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, length);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            ClearRoom(room1);
+                                        }
                                     }
                                 }
                                 else if (side == 1) // Left
@@ -646,9 +845,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2))
                                     {
                                         InstantiateRoom(room1, posHallwayEnd - room1Point);
-                                        roomPlaced = true;
-                                        BuildSquare(posHallway + new Vector3Int(1, 0, 0), length, 2);
-                                        break;
+
+                                        if (CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2))
+                                        {
+                                            roomPlaced = true;
+                                            BuildSquare(posHallway + new Vector3Int(1, 0, 0), length, 2);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            ClearRoom(room1);
+                                        }
                                     }
                                 }
                                 else if (side == 2) // Up
@@ -660,9 +867,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         CheckBuildHallwayVertical(posHallway, 2, length))
                                     {
                                         InstantiateRoom(room1, posHallwayEnd - room1Point);
-                                        roomPlaced = true;
-                                        BuildSquare(posHallway, 2, length);
-                                        break;
+
+                                        if (CheckBuildHallwayVertical(posHallway, 2, length))
+                                        {
+                                            roomPlaced = true;
+                                            BuildSquare(posHallway, 2, length);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            ClearRoom(room1);
+                                        }
                                     }
                                 }
                                 else if (side == 3) // Right
@@ -674,9 +889,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         CheckBuildHallwayHorizontal(posHallway, length, 2))
                                     {
                                         InstantiateRoom(room1, posHallwayEnd - room1Point);
-                                        roomPlaced = true;
-                                        BuildSquare(posHallway, length, 2);
-                                        break;
+
+                                        if (CheckBuildHallwayHorizontal(posHallway, length, 2))
+                                        {
+                                            roomPlaced = true;
+                                            BuildSquare(posHallway, length, 2);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            ClearRoom(room1);
+                                        }
                                     }
                                 }
                             }
@@ -689,7 +912,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 if (roomPlaced) break;
             }
             Debug.Log(roomsPlaced);
-            
+
             if (roomPlaced)
             {
                 TryBuildAdditionalHallways(room1, room0);
