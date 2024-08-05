@@ -753,8 +753,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     // Helper function to calculate the Euclidean distance between two rooms
     private float CalculateDistance(Room room1, Room room2)
     {
-        Vector3 center1 = CalculateCenterOfMass(room1);
-        Vector3 center2 = CalculateCenterOfMass(room2);
+        Vector3 center1 = CalculateCenterOfMassPosition(room1);
+        Vector3 center2 = CalculateCenterOfMassPosition(room2);
         return Vector3.Distance(center1, center2);
     }
 
@@ -775,74 +775,161 @@ public class DungeonGenerationScript01 : MonoBehaviour
         List<Vector3Int>[] room0ConnectionPoints = GetConnectionPoints(room0, 2);
         List<Vector3Int>[] room1ConnectionPoints = GetConnectionPoints(room1, 2);
 
-        // Shuffle sides and lengths to introduce randomness
-        List<int> sides = new List<int> { 0, 1, 2, 3 };
-        ShuffleList(sides);
-
-        List<int> lengths = new List<int> { 3, 4, 5, 6 };
-        ShuffleList(lengths);
+        List<int> hallwayTypes = new List<int> { 0, 1 };
+        ShuffleList(hallwayTypes);
 
         // Try to build a hallway
-        foreach (int side in sides)
-        {
-            List<Vector3Int> room0Sides = room0ConnectionPoints[side];
-            List<Vector3Int> room1Sides = room1ConnectionPoints[(side + 2) % 4];
-
-            ShuffleList(room0Sides);
-            ShuffleList(room1Sides);
-
-            foreach (int length in lengths)
+        foreach (int hallwayType in hallwayTypes) {
+            if (hallwayType == 0)
             {
-                foreach (var room0Point in room0Sides)
+                List<int> sides = new List<int> { 0, 1, 2, 3 };
+                ShuffleList(sides);
+
+                List<int> lengths = new List<int> { 3, 4, 5, 6, 7, 8, 9 };
+                ShuffleList(lengths);
+
+                foreach (int side in sides)
                 {
-                    foreach (var room1Point in room1Sides)
+                    List<Vector3Int> room0Sides = room0ConnectionPoints[side];
+                    List<Vector3Int> room1Sides = room1ConnectionPoints[(side + 2) % 4];
+
+                    ShuffleList(room0Sides);
+                    ShuffleList(room1Sides);
+
+                    foreach (int length in lengths)
                     {
-                        Vector3Int posHallway = Vector3Int.zero;
-                        Vector3Int posHallwayEnd = Vector3Int.zero;
-                        Vector3Int offset = room0.GetPosition();
-
-                        if (side == 0) // Down
+                        foreach (var room0Point in room0Sides)
                         {
-                            posHallway = offset + room0Point + new Vector3Int(0, -length - 1, 0);
-                            posHallwayEnd = posHallway;
-
-                            if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, length))
+                            foreach (var room1Point in room1Sides)
                             {
-                                BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, length);
-                                return true;
+                                if (room0.GetPosition().x + room0Point.x != room1.GetPosition().x + room1Point.x && room0.GetPosition().y + room0Point.y != room1.GetPosition().y + room1Point.y)
+                                {
+                                    continue;
+                                }
+
+                                Vector3Int posHallway = Vector3Int.zero;
+                                Vector3Int posHallwayEnd = Vector3Int.zero;
+                                Vector3Int offset = room0.GetPosition();
+
+                                if (side == 0) // Down
+                                {
+                                    posHallway = offset + room0Point + new Vector3Int(0, -length - 1, 0);
+                                    posHallwayEnd = posHallway;
+
+                                    if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, length))
+                                    {
+                                        BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, length);
+                                        return true;
+                                    }
+                                }
+                                else if (side == 1) // Left
+                                {
+                                    posHallway = offset + room0Point + new Vector3Int(-length - 1, 0, 0);
+                                    posHallwayEnd = posHallway;
+
+                                    if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2))
+                                    {
+                                        BuildSquare(posHallway + new Vector3Int(1, 0, 0), length, 2);
+                                        return true;
+                                    }
+                                }
+                                else if (side == 2) // Up
+                                {
+                                    posHallway = offset + room0Point + new Vector3Int(0, 1, 0);
+                                    posHallwayEnd = posHallway + new Vector3Int(0, length, 0);
+
+                                    if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayVertical(posHallway, 2, length))
+                                    {
+                                        BuildSquare(posHallway, 2, length);
+                                        return true;
+                                    }
+                                }
+                                else if (side == 3) // Right
+                                {
+                                    posHallway = offset + room0Point + new Vector3Int(1, 0, 0);
+                                    posHallwayEnd = posHallway + new Vector3Int(length, 0, 0);
+
+                                    if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayHorizontal(posHallway, length, 2))
+                                    {
+                                        BuildSquare(posHallway, length, 2);
+                                        return true;
+                                    }
+                                }
                             }
                         }
-                        else if (side == 1) // Left
-                        {
-                            posHallway = offset + room0Point + new Vector3Int(-length - 1, 0, 0);
-                            posHallwayEnd = posHallway;
+                    }
+                }
+            }
+            else if (hallwayType == 1)
+            {
+                List<int> sides0 = new List<int> { 0, 2 };
+                ShuffleList(sides0);
+                List<int> sides1 = new List<int> { 1, 3 };
+                ShuffleList(sides1);
 
-                            if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2))
-                            {
-                                BuildSquare(posHallway + new Vector3Int(1, 0, 0), length, 2);
-                                return true;
-                            }
-                        }
-                        else if (side == 2) // Up
-                        {
-                            posHallway = offset + room0Point + new Vector3Int(0, 1, 0);
-                            posHallwayEnd = posHallway + new Vector3Int(0, length, 0);
+                List<int> lengths = new List<int> { 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+                ShuffleList(lengths);
 
-                            if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayVertical(posHallway, 2, length))
-                            {
-                                BuildSquare(posHallway, 2, length);
-                                return true;
-                            }
-                        }
-                        else if (side == 3) // Right
-                        {
-                            posHallway = offset + room0Point + new Vector3Int(1, 0, 0);
-                            posHallwayEnd = posHallway + new Vector3Int(length, 0, 0);
+                foreach (int side0 in sides0)
+                {
+                    foreach (int side1 in sides1)
+                    {
+                        List<Vector3Int> room0Sides = room0ConnectionPoints[side0];
+                        List<Vector3Int> room1Sides = room1ConnectionPoints[side1];
 
-                            if (room1.GetPosition() == posHallwayEnd - room1Point && CheckBuildHallwayHorizontal(posHallway, length, 2))
+                        ShuffleList(room0Sides);
+                        ShuffleList(room1Sides);
+
+                        foreach (var room0Point in room0Sides)
+                        {
+                            foreach (var room1Point in room1Sides)
                             {
-                                BuildSquare(posHallway, length, 2);
-                                return true;
+                                if (side0 == 0)
+                                {
+                                    Vector3Int posHallway = Vector3Int.zero;
+                                    Vector3Int posHallwayEnd = Vector3Int.zero;
+                                    Vector3Int offset = room0.GetPosition();
+
+                                    if (side1 == 3)
+                                    {
+                                        if (room0Point.x + room0.GetPosition().x <= room1Point.x + room1.GetPosition().x || room0Point.y + room0.GetPosition().y <= room1Point.y + room1.GetPosition().y)
+                                        {
+                                            continue;
+                                        }
+
+                                        posHallway = offset + room0Point + new Vector3Int(0, -1 * (room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y) - 1, 0);
+                                        Vector3Int posHallwayEnd0 = posHallway;
+                                        Vector3Int posHallwayEnd1 = room1.GetPosition() + room1Point + new Vector3Int(1, 0, 0);
+
+                                        if (CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y) &&
+                                            CheckBuildHallwayHorizontal(posHallwayEnd1, room0Point.x + room0.GetPosition().x - room1Point.x - room1.GetPosition().x + 1, 2))
+                                        {
+                                            BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y);
+                                            BuildSquare(posHallwayEnd1, room0Point.x + room0.GetPosition().x - room1Point.x - room1.GetPosition().x + 1, 2);
+                                            return true;
+                                        }
+                                    }
+                                    else if (side1 == 1)
+                                    {
+                                        if (room0Point.x + room0.GetPosition().x >= room1Point.x + room1.GetPosition().x || room0Point.y + room0.GetPosition().y <= room1Point.y + room1.GetPosition().y)
+                                        {
+                                            continue;
+                                        }
+
+                                        posHallway = offset + room0Point + new Vector3Int(0, -1 * (room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y) - 1, 0);
+                                        Vector3Int posHallwayEnd0 = posHallway;
+                                        Vector3Int posHallwayEnd1 = room1.GetPosition() + room1Point + new Vector3Int(-1, 0, 0);
+
+                                        if (CheckBuildHallwayVertical(posHallway, 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y + 1) &&
+                                            CheckBuildHallwayHorizontal(posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2))
+                                        {
+                                            BuildSquare(posHallway, 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y + 1);
+                                            BuildSquare(posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2);
+
+                                            return true;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -861,35 +948,42 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
-    private void BuildRooms()
+    private void BuildRooms(int iteration = 0)
     {
         for (int n = 0; n < numRooms; n++)
         {
             Room room1 = null;
 
-            if (Random.value < 0.1f)
+            if (iteration == 0)
             {
-                int[] widthOptions = { 6, 8, 10 };
-                int[] heightOptions = { 6, 8, 10 };
-                int[] roomSquareOptions = { 3, 4, 5, 6, 7 };
-                int[] otherOptions = { 2, 4, 6 };
+                if (Random.value < .05f)
+                {
+                    int[] widthOptions = { 6, 8, 10 };
+                    int[] heightOptions = { 6, 8, 10 };
+                    int[] roomSquareOptions = { 3, 4, 5, 6, 7 };
+                    int[] otherOptions = { 2, 4, 6 };
 
-                int randomWidth = widthOptions[Random.Range(0, widthOptions.Length)];
-                int randomHeight = heightOptions[Random.Range(0, heightOptions.Length)];
-                int randomSquareSize = roomSquareOptions[Random.Range(0, roomSquareOptions.Length)];
-                int randomOtherSize = otherOptions[Random.Range(0, otherOptions.Length)];
+                    int randomWidth = widthOptions[Random.Range(0, widthOptions.Length)];
+                    int randomHeight = heightOptions[Random.Range(0, heightOptions.Length)];
+                    int randomSquareSize = roomSquareOptions[Random.Range(0, roomSquareOptions.Length)];
+                    int randomOtherSize = otherOptions[Random.Range(0, otherOptions.Length)];
 
-                room1 = CreateRoomPlus(randomWidth, randomHeight, randomSquareSize, randomOtherSize);
+                    room1 = CreateRoomPlus(randomWidth, randomHeight, randomSquareSize, randomOtherSize);
+                }
+                else if (Random.value < .5f)
+                {
+                    int randomWidth = Random.Range(5, 9);
+                    int randomHeight = Random.Range(5, 9);
+                    room1 = CreateRoomSquare(randomWidth, randomHeight);
+                }
+                else
+                {
+                    room1 = CreateRoomIrregular(6, 8, 2);
+                }
             }
-            else if (Random.value < 0.5f)
+            else if (iteration == 1)
             {
-                int randomWidth = Random.Range(5, 9);
-                int randomHeight = Random.Range(5, 9);
-                room1 = CreateRoomSquare(randomWidth, randomHeight);
-            }
-            else
-            {
-                room1 = CreateRoomIrregular(6, 8, 2);
+                room1 = CreateRoomSquare(4, 2);
             }
 
             Room room0 = null;
@@ -925,6 +1019,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
                         {
                             foreach (var room1Point in room1Sides)
                             {
+                                if (room0Point.x != room1Point.x && room0Point.y != room1Point.y)
+                                {
+                                    continue;
+                                }
+
                                 Vector3Int posHallway = Vector3Int.zero;
                                 Vector3Int posHallwayEnd = Vector3Int.zero;
                                 Vector3Int offset = room0.GetPosition();
@@ -1043,7 +1142,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         Room initialRoom = CreateRoomSquare(5, 5);
         InstantiateRoom(initialRoom, pos01);
 
-        BuildRooms();
+        BuildRooms(0);
     }
 
     private void ShuffleList<T>(List<T> list, int seed = 0)
