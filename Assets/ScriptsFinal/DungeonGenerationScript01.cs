@@ -920,11 +920,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         Vector3Int posHallwayEnd0 = posHallway;
                                         Vector3Int posHallwayEnd1 = room1.GetPosition() + room1Point + new Vector3Int(-1, 0, 0);
 
-                                        if (CheckBuildHallwayVertical(posHallway, 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y + 1) &&
+                                        if (CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y) &&
                                             CheckBuildHallwayHorizontal(posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2))
                                         {
-                                            BuildSquare(posHallway, 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y + 1);
-                                            BuildSquare(posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2);
+                                            BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y);
+                                            BuildSquare(posHallwayEnd0 + new Vector3Int(0, 1, 0), room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2);
 
                                             return true;
                                         }
