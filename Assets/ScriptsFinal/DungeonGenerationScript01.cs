@@ -1028,7 +1028,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 }
                 if (minLength < maxLHallwayLength)
                 {
-                    Debug.Log(minLength);
+                    //Debug.Log(minLength);
                     BuildSquare((Vector3Int)bestParams[0], (int)bestParams[1], (int)bestParams[2]);
                     BuildSquare((Vector3Int)bestParams[3], (int)bestParams[4], (int)bestParams[5]);
                     return true;
