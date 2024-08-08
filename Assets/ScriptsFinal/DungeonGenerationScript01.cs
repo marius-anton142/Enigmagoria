@@ -10,6 +10,7 @@ using System.Linq;
 public class DungeonGenerationScript01 : MonoBehaviour
 {
     [SerializeField] private int numRooms;
+    [SerializeField] private int maxLHallwayLength;
     [SerializeField] private int roomsPlaced;
     [SerializeField] private float chanceAnyTileFloors;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
@@ -728,7 +729,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private void TryBuildAdditionalHallways(Room currentRoom, Room neighborRoom)
     {
         // Get a random variable between 1 and 3 to determine how many hallways to attempt
-        int hallwayAttempts = Random.Range(1, 4);
+        int hallwayAttempts = Random.Range(1, 5);
 
         if (hallwayAttempts == 1)
         {
@@ -748,7 +749,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 hallwaysBuilt++;
 
                 if ((hallwayAttempts == 2 && hallwaysBuilt >= 1) ||
-                    (hallwayAttempts == 3 && hallwaysBuilt >= 2))
+                    (hallwayAttempts == 3 && hallwaysBuilt >= 2) ||
+                    (hallwayAttempts == 4 && hallwaysBuilt >= 3))
                 {
                     break; // Stop once the required number of hallways is built
                 }
@@ -901,8 +903,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 List<int> sides1 = new List<int> { 1, 3 };
                 ShuffleList(sides1);
 
-                List<int> lengths = new List<int> { 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-                ShuffleList(lengths);
+                int minLength = int.MaxValue;
+                List<object> bestParams = new List<object>();
 
                 foreach (int side0 in sides0)
                 {
@@ -938,9 +940,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         if (CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y) &&
                                             CheckBuildHallwayHorizontal(posHallwayEnd1, room0Point.x + room0.GetPosition().x - room1Point.x - room1.GetPosition().x + 1, 2))
                                         {
-                                            BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y);
-                                            BuildSquare(posHallwayEnd1, room0Point.x + room0.GetPosition().x - room1Point.x - room1.GetPosition().x + 1, 2);
-                                            return true;
+                                            int length = Mathf.Abs(room0.GetPosition().y + room0Point.y - room1.GetPosition().y - room1Point.y) + Mathf.Abs(room0.GetPosition().x + room0Point.x - room1.GetPosition().x - room1Point.x);
+                                            if (length < minLength)
+                                            {
+                                                minLength = length;
+                                                bestParams = new List<object> { posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y, posHallwayEnd1, room0Point.x + room0.GetPosition().x - room1Point.x - room1.GetPosition().x + 1, 2 };
+                                            }
                                         }
                                     }
                                     else if (side1 == 1)
@@ -951,22 +956,82 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         }
 
                                         posHallway = offset + room0Point + new Vector3Int(0, -1 * (room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y) - 1, 0);
-                                        Vector3Int posHallwayEnd0 = posHallway;
+                                        Vector3Int posHallwayEnd0 = room1.GetPosition() + room1Point + new Vector3Int(-(room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x), 0, 0);
                                         Vector3Int posHallwayEnd1 = room1.GetPosition() + room1Point + new Vector3Int(-1, 0, 0);
 
                                         if (CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y) &&
                                             CheckBuildHallwayHorizontal(posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2))
                                         {
-                                            BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y);
-                                            BuildSquare(posHallwayEnd0 + new Vector3Int(0, 1, 0), room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2);
+                                            int length = -1 + Mathf.Abs(room0.GetPosition().y + room0Point.y - room1.GetPosition().y - room1Point.y) + Mathf.Abs(room0.GetPosition().x + room0Point.x - room1.GetPosition().x - room1Point.x);
+                                            if (length < minLength)
+                                            {
+                                                minLength = length;
+                                                bestParams = new List<object> { posHallway + new Vector3Int(0, 1, 0), 2, room0Point.y + room0.GetPosition().y - room1Point.y - room1.GetPosition().y, posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2 };
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (side0 == 2)
+                                {
+                                    Vector3Int posHallway = Vector3Int.zero;
+                                    Vector3Int posHallwayEnd = Vector3Int.zero;
+                                    Vector3Int offset = room0.GetPosition();
 
-                                            return true;
+                                    if (side1 == 3)
+                                    {
+                                        if (room0Point.x + room0.GetPosition().x <= room1Point.x + room1.GetPosition().x || room0Point.y + room0.GetPosition().y >= room1Point.y + room1.GetPosition().y)
+                                        {
+                                            continue;
+                                        }
+
+                                        posHallway = offset + room0Point + new Vector3Int(0, 1, 0);
+                                        Vector3Int posHallwayEnd0 = posHallway;
+                                        Vector3Int posHallwayEnd1 = room1.GetPosition() + room1Point + new Vector3Int(1, 0, 0);
+
+                                        if (CheckBuildHallwayVertical(posHallway, 2, room1Point.y + room1.GetPosition().y - room0Point.y - room0.GetPosition().y + 1) &&
+                                            CheckBuildHallwayHorizontal(posHallwayEnd1, room0Point.x + room0.GetPosition().x - room1Point.x - room1.GetPosition().x + 1, 2))
+                                        {
+                                            int length = 1 + Mathf.Abs(room0.GetPosition().y + room0Point.y - room1.GetPosition().y - room1.GetPosition().y) + Mathf.Abs(room0.GetPosition().x + room0Point.x - room1.GetPosition().x - room1Point.x);
+                                            if (length < minLength)
+                                            {
+                                                minLength = length;
+                                                bestParams = new List<object> { posHallway, 2, room1Point.y + room1.GetPosition().y - room0Point.y - room0.GetPosition().y + 1, posHallwayEnd1, room0Point.x + room0.GetPosition().x - room1Point.x - room1.GetPosition().x + 1, 2 };
+                                            }
+                                        }
+                                    }
+                                    else if (side1 == 1)
+                                    {
+                                        if (room0Point.x + room0.GetPosition().x >= room1Point.x + room1.GetPosition().x || room0Point.y + room0.GetPosition().y >= room1Point.y + room1.GetPosition().y)
+                                        {
+                                            continue;
+                                        }
+
+                                        posHallway = offset + room0Point + new Vector3Int(0, 1, 0);
+                                        Vector3Int posHallwayEnd0 = room1.GetPosition() + room1Point + new Vector3Int(-(room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x), 0, 0);
+                                        Vector3Int posHallwayEnd1 = room1.GetPosition() + room1Point + new Vector3Int(-(room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x), 0, 0);
+
+                                        if (CheckBuildHallwayVertical(posHallway, 2, room1Point.y + room1.GetPosition().y - room0Point.y - room0.GetPosition().y + 1) &&
+                                            CheckBuildHallwayHorizontal(posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2))
+                                        {
+                                            int length = Mathf.Abs(room0.GetPosition().y + room0Point.y - room1.GetPosition().y - room1.GetPosition().y) + Mathf.Abs(room0.GetPosition().x + room0Point.x - room1.GetPosition().x - room1Point.x);
+                                            if (length < minLength)
+                                            {
+                                                minLength = length;
+                                                bestParams = new List<object> { posHallway, 2, room1Point.y + room1.GetPosition().y - room0Point.y - room0.GetPosition().y + 1, posHallwayEnd0, room1Point.x + room1.GetPosition().x - room0Point.x - room0.GetPosition().x, 2 };
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                }
+                if (minLength < maxLHallwayLength)
+                {
+                    Debug.Log(minLength);
+                    BuildSquare((Vector3Int)bestParams[0], (int)bestParams[1], (int)bestParams[2]);
+                    BuildSquare((Vector3Int)bestParams[3], (int)bestParams[4], (int)bestParams[5]);
+                    return true;
                 }
             }
         }
@@ -1084,7 +1149,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
             foreach (Vector3Int corner in corners)
             {
-                Debug.Log(corner);
                 switch (cornerType.ToLower())
                 {
                     case "downleft":
@@ -1167,7 +1231,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
                     room1 = CreateRoomPlus(randomWidth, randomHeight, randomSquareSize, randomOtherSize);
                 }
-                else if (Random.value < .5f)
+                else if (Random.value < .4f)
                 {
                     int randomWidth = Random.Range(5, 9);
                     int randomHeight = Random.Range(5, 9);
@@ -1322,7 +1386,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 }
                 if (roomPlaced) break;
             }
-            Debug.Log(roomsPlaced);
 
             if (roomPlaced)
             {
