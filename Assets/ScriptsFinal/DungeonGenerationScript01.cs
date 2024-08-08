@@ -11,19 +11,24 @@ public class DungeonGenerationScript01 : MonoBehaviour
 {
     [SerializeField] private int numRooms;
     [SerializeField] private int roomsPlaced;
+    [SerializeField] private float chanceAnyTileFloors;
+    [SerializeField] private float chanceAnyTileWallBaseBroken;
+    [SerializeField] private float chanceTileFloorCornerBroken;
     [SerializeField] private float[] chanceTileFloors = new float[5];
+    [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
     [SerializeField] private Tilemap tilemapWalls, tilemapWallColliders;
 
-    [Header("Fall Tiles")]
+    [Header("Floor Tiles")]
     [SerializeField] private Tile tileFloor01;
     [SerializeField] private Tile tileFloor02, tileFloor03, tileFloor04, tileFloor05;
 
     [Header("Wall Tiles")]
     [SerializeField] private Tile tileWallHorizontal;
-    [SerializeField] private Tile tileWallHorizontalUpLeft, tileWallHorizontalUpRight, tileWallHorizontalDownLeft, tileWallHorizontalDownRight, tileWallLeft, tileWallRight, tileWallCornerUpLeft, tileWallCornerUpRight, tileWallBase, tileWallBaseCornerLeft, tileWallBaseCornerRight, tileWallBaseDownLeft, tileWallBaseDownRight, tileWallBaseUpLeft, tileWallBaseUpRight;
+    [SerializeField] private Tile tileWallHorizontalUpLeft, tileWallHorizontalUpRight, tileWallHorizontalDownLeft, tileWallHorizontalDownRight, tileWallLeft, tileWallRight, tileWallCornerUpLeft, tileWallCornerUpRight, tileWallBase, tileWallBaseCornerLeft, tileWallBaseCornerRight, tileWallBaseDownLeft, tileWallBaseDownRight, tileWallBaseUpLeft, tileWallBaseUpRight, tileWallBaseBroken01, tileWallBaseBroken02;
+    [SerializeField] private Tile tileFloorBrokenUpLeft, tileFloorBrokenUpRight, tileFloorBrokenDownLeft, tileFloorBrokenDownRight;
 
     private List<Room> rooms = new List<Room>();
 
@@ -31,21 +36,24 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         TileBase tileToPaint;
 
-        if (Random.value > chanceTileFloors[4])
+        if (Random.value > chanceAnyTileFloors)
         {
-            tileToPaint = tileFloor05;
-        }
-        else if (Random.value > chanceTileFloors[3])
-        {
-            tileToPaint = tileFloor04;
-        }
-        else if (Random.value > chanceTileFloors[2])
-        {
-            tileToPaint = tileFloor03;
-        }
-        else if (Random.value > chanceTileFloors[1])
-        {
-            tileToPaint = tileFloor02;
+            if (Random.value > chanceTileFloors[4])
+            {
+                tileToPaint = tileFloor05;
+            }
+            else if (Random.value > chanceTileFloors[3])
+            {
+                tileToPaint = tileFloor04;
+            }
+            else if (Random.value > chanceTileFloors[2])
+            {
+                tileToPaint = tileFloor03;
+            }
+            else
+            {
+                tileToPaint = tileFloor02;
+            }
         }
         else
         {
@@ -196,13 +204,39 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
         else if (!center && !right && !left && !up && down && !upleft && !upright)
         {
-            tilemapWalls.SetTile(pos, tileWallBase);
+            SetTileWalls(pos, "base");
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
         }
         else if (!downright && !center && !right && !left && up && !down && !downleft)
         {
-            tilemapWalls.SetTile(pos, tileWallBase);
+            SetTileWalls(pos, "base");
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
+        }
+    }
+
+    private void SetTileWalls(Vector3Int pos, string type)
+    {
+        if (type == "base")
+        {
+            TileBase tileToPaint;
+
+            if (Random.value > chanceAnyTileWallBaseBroken)
+            {
+                if (Random.value > chanceTileWallBaseBroken[2])
+                {
+                    tileToPaint = tileWallBaseBroken02;
+                }
+                else
+                {
+                    tileToPaint = tileWallBaseBroken01;
+                }
+            }
+            else
+            {
+                tileToPaint = tileWallBase;
+            }
+
+            tilemapWalls.SetTile(pos, tileToPaint);
         }
     }
 
@@ -940,6 +974,169 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return false;
     }
 
+    public List<Vector3Int> GetFloorCorner2x2(Room room, string missingCorner)
+    {
+        List<Vector3Int> matchingRegions = new List<Vector3Int>();
+
+        foreach (Vector3Int tile in room.FloorTileCoordinates)
+        {
+            if (IsCorner2x2(room, tile, missingCorner))
+            {
+                Vector3Int tilePosition = new Vector3Int(0, 0, 0);
+                switch (missingCorner.ToLower())
+                    {
+                    case "downleft":
+                        tilePosition = new Vector3Int(-1, -1, 0);
+                        break;
+                    case "downright":
+                        tilePosition = new Vector3Int(1, -1, 0);
+                        break;
+                    case "upleft":
+                        tilePosition = new Vector3Int(-1, 1, 0);
+                        break;
+                    case "upright":
+                        tilePosition = new Vector3Int(1, 1, 0);
+                        break;
+                }
+                matchingRegions.Add(tile + tilePosition);
+            }
+        }
+        return matchingRegions;
+    }
+
+    private bool IsCorner2x2(Room room, Vector3Int startPos, string missingCorner)
+    {
+        List<Vector3Int> neighbors = new List<Vector3Int>();
+        Vector3Int tilePosition = new Vector3Int(0, 0, 0);
+
+        switch (missingCorner.ToLower())
+        {
+            case "downleft":
+                tilePosition = new Vector3Int(-1, -1, 0);
+                neighbors = new List<Vector3Int>
+                {
+                    new Vector3Int(1, 0, 0),
+                    new Vector3Int(0, 1, 0),
+                    new Vector3Int(1, 1, 0)
+                };
+                break;
+            case "downright":
+                tilePosition = new Vector3Int(1, -1, 0);
+                neighbors = new List<Vector3Int>
+                {
+                    new Vector3Int(-1, 0, 0),
+                    new Vector3Int(0, 1, 0),
+                    new Vector3Int(-1, 1, 0)
+                };
+                break;
+            case "upleft":
+                tilePosition = new Vector3Int(-1, 1, 0);
+                neighbors = new List<Vector3Int>
+                {
+                    new Vector3Int(1, 0, 0),
+                    new Vector3Int(0, -1, 0),
+                    new Vector3Int(1, -1, 0)
+                };
+                break;
+            case "upright":
+                tilePosition = new Vector3Int(1, 1, 0);
+                neighbors = new List<Vector3Int>
+                {
+                    new Vector3Int(-1, 0, 0),
+                    new Vector3Int(0, -1, 0),
+                    new Vector3Int(-1, -1, 0)
+                };
+                break;
+        }
+
+        foreach (Vector3Int neighbor in neighbors)
+        {
+            if (!room.FloorTileCoordinates.Contains(startPos + tilePosition + neighbor))
+            {
+                return false;
+            }
+        }
+        if (room.FloorTileCoordinates.Contains(startPos + tilePosition))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public void AddFloorCornerBroken(Room room)
+    {
+        string[] cornerTypes = { "downleft", "downright", "upleft", "upright" };
+        Dictionary<string, Tile> cornerTiles = new Dictionary<string, Tile>
+        {
+            { "downleft", tileFloorBrokenDownLeft },
+            { "downright", tileFloorBrokenDownRight },
+            { "upleft", tileFloorBrokenUpLeft },
+            { "upright", tileFloorBrokenUpRight }
+        };
+
+        List<Vector3Int> allCorners = new List<Vector3Int>();
+
+        // Get all types of corners
+        foreach (string cornerType in cornerTypes)
+        {
+            List<Vector3Int> corners = GetFloorCorner2x2(room, cornerType);
+            Vector3Int tilePosition = new Vector3Int(0, 0, 0);
+
+            foreach (Vector3Int corner in corners)
+            {
+                Debug.Log(corner);
+                switch (cornerType.ToLower())
+                {
+                    case "downleft":
+                        tilePosition = corner + new Vector3Int(0, 0, 0);
+                        break;
+                    case "downright":
+                        tilePosition = corner + new Vector3Int(-1, 0, 0);
+                        break;
+                    case "upleft":
+                        tilePosition = corner + new Vector3Int(0, -1, 0);
+                        break;
+                    case "upright":
+                        tilePosition = corner + new Vector3Int(-1, -1, 0);
+                        break;
+                }
+                tilePosition += room.GetPosition();
+                allCorners.Add(tilePosition);
+            }
+        }
+
+        foreach (Vector3Int tilePos in allCorners)
+        {
+            if (Random.value < chanceTileFloorCornerBroken)
+            {
+                if (tilemapFloor.GetTile(tilePos) != null)
+                    tilemapFloor.SetTile(tilePos, tileFloorBrokenDownLeft);
+                if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 0, 0)) != null)
+                    tilemapFloor.SetTile(tilePos + new Vector3Int(1, 0, 0), tileFloorBrokenDownRight);
+                if (tilemapFloor.GetTile(tilePos + new Vector3Int(0, 1, 0)) != null)
+                    tilemapFloor.SetTile(tilePos + new Vector3Int(0, 1, 0), tileFloorBrokenUpLeft);
+                if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 1, 0)) != null)
+                    tilemapFloor.SetTile(tilePos + new Vector3Int(1, 1, 0), tileFloorBrokenUpRight);
+            }
+        }
+    }
+
+    private void Start()
+    {
+        Vector3Int pos01 = new Vector3Int(0, 0, 0);
+
+        // Create and place the initial room
+        Room initialRoom = CreateRoomSquare(5, 5);
+        InstantiateRoom(initialRoom, pos01);
+
+        BuildRooms(0);
+
+        foreach (Room room in rooms)
+        {
+            AddFloorCornerBroken(room);
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.R))
@@ -1132,17 +1329,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 TryBuildAdditionalHallways(room1, room0);
             }
         }
-    }
-
-    private void Start()
-    {
-        Vector3Int pos01 = new Vector3Int(0, 0, 0);
-
-        // Create and place the initial room
-        Room initialRoom = CreateRoomSquare(5, 5);
-        InstantiateRoom(initialRoom, pos01);
-
-        BuildRooms(0);
     }
 
     private void ShuffleList<T>(List<T> list, int seed = 0)
