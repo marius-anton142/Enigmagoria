@@ -118,7 +118,6 @@ public class PlayerScript : MonoBehaviour
         if (!isMoving && tilemapFloor.GetTile(cellPosition) != null/* && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize)*/)
         {
             targetPosition = transform.position; // Set new target position
-            Debug.Log(targetPosition);
             if (direction == Vector3.up)
             {
                 targetPosition.y = Mathf.Floor(targetPosition.y - 0.5f) + 1.5f;
@@ -136,7 +135,6 @@ public class PlayerScript : MonoBehaviour
                 targetPosition.x = Mathf.Ceil(targetPosition.x + 0.5f) - 1.5f;
             }
 
-            Debug.Log(targetPosition);
             isMoving = true;
             spriteRenderer.flipX = direction == Vector3.left;
             animator.SetBool("IsWalking", true);

@@ -12,11 +12,19 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private int numRooms;
     [SerializeField] private int maxLHallwayLength;
     [SerializeField] private int roomsPlaced;
+    [SerializeField] private float chanceRoomSpecial;
+    [SerializeField] private float chanceRoomPlus;
+    [SerializeField] private float chanceAdditionalHallways;
+    [SerializeField] private int maxAdditionalHallways;
     [SerializeField] private float chanceAnyTileFloors;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
     [SerializeField] private float chanceTileFloorCornerBroken;
+    [SerializeField] private float chancePlantAny;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
+
+    [Header("Objects")]
+    [SerializeField] private GameObject PlantPrefab01;
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
@@ -728,18 +736,20 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void TryBuildAdditionalHallways(Room currentRoom, Room neighborRoom)
     {
-        // Get a random variable between 1 and 3 to determine how many hallways to attempt
-        int hallwayAttempts = Random.Range(1, 5);
+        int hallwayAttempts = 1;
+
+        if (Random.value < chanceAdditionalHallways)
+        {
+            hallwayAttempts = Random.Range(2, maxAdditionalHallways);
+        }
 
         if (hallwayAttempts == 1)
         {
-            return; // Don't attempt any additional hallways
+            return;
         }
 
-        // Find the closest rooms to the current room
         List<Room> closestRooms = FindClosestRooms(currentRoom, 6, neighborRoom);
 
-        // Iterate over the closest rooms and attempt to build hallways
         int hallwaysBuilt = 0;
 
         foreach (Room targetRoom in closestRooms)
@@ -1185,19 +1195,95 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private List<Vector3Int> RandomWalk(Room room, int maxSteps, int iterations, int stepSize = 1)
+    {
+        List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
+
+        // Possible directions: Up, Down, Left, Right
+        Vector3Int[] directions = new Vector3Int[]
+        {
+        new Vector3Int(0, stepSize, 0),   // Up
+        new Vector3Int(0, -stepSize, 0),  // Down
+        new Vector3Int(stepSize, 0, 0),   // Right
+        new Vector3Int(-stepSize, 0, 0)   // Left
+        };
+
+        Vector3Int currentPos = room.FloorTileCoordinates[Random.Range(0, room.FloorTileCoordinates.Count)];
+
+        for (int iter = 0; iter < iterations; iter++)
+        {
+            Vector3Int startPosition = currentPos;
+
+            for (int i = 0; i < maxSteps; i++)
+            {
+                // Filter valid positions: must be within the room and not visited
+                List<Vector3Int> possiblePositions = directions
+                    .Select(dir => currentPos + dir)
+                    .Where(pos => room.FloorTileCoordinates.Contains(pos) && !visited.Contains(pos))
+                    .ToList();
+
+                if (possiblePositions.Count == 0)
+                    break; // If no valid moves, exit the loop
+
+                // Randomly select the next position from the valid positions
+                Vector3Int nextPos = possiblePositions[Random.Range(0, possiblePositions.Count)];
+
+                floorTileCoordinates.Add(nextPos);
+                visited.Add(nextPos);
+                currentPos = nextPos;
+            }
+
+            currentPos = startPosition; // Reset to start position for next iteration
+        }
+
+        return floorTileCoordinates;
+    }
+
+    private void FillRoomWithPlants(Room room, List<Vector3Int> walkedTiles, GameObject plantPrefab, float chancePlantAny)
+    {
+        Sprite selectedPlantSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
+
+        if (Random.value < chancePlantAny)
+        {
+            // Choose a random sprite for each plant
+            foreach (Vector3Int pos in walkedTiles)
+            {
+                Sprite randomSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
+                FillRegionWithObject(new List<Vector3Int> { pos }, plantPrefab, room.GetPosition(), randomSprite);
+            }
+        }
+        else
+        {
+            // Use the selectedPlantSprite for all plants in this room
+            FillRegionWithObject(walkedTiles, plantPrefab, room.GetPosition(), selectedPlantSprite);
+        }
+    }
+
+    private void FillRegionWithObject(List<Vector3Int> region, GameObject objectToPlace, Vector3Int offset, Sprite selectedSprite)
+    {
+        foreach (Vector3Int pos in region)
+        {
+            GameObject instance = Instantiate(objectToPlace, pos + offset + new Vector3(0.5f, 0.5f, 0), Quaternion.identity);
+            instance.GetComponent<PlantScript>().SetPlantSprite(selectedSprite);
+        }
+    }
+
     private void Start()
     {
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
 
-        // Create and place the initial room
-        Room initialRoom = CreateRoomSquare(5, 5);
+        Room initialRoom = CreateRoomSquare(6, 6);
         InstantiateRoom(initialRoom, pos01);
 
-        BuildRooms(0);
+        BuildRooms();
 
         foreach (Room room in rooms)
         {
+            List<Vector3Int> walkedTiles = RandomWalk(room, 10, 3);
+            
             AddFloorCornerBroken(room);
+            FillRoomWithPlants(room, walkedTiles, PlantPrefab01, chancePlantAny);
         }
     }
 
@@ -1209,16 +1295,19 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
-    private void BuildRooms(int iteration = 0)
+    private void BuildRooms()
     {
         for (int n = 0; n < numRooms; n++)
         {
             Room room1 = null;
+            string type = "square";
 
-            if (iteration == 0)
+            if (Random.value < chanceRoomSpecial)
             {
-                if (Random.value < .05f)
+                if (Random.value < chanceRoomPlus)
                 {
+                    type = "plus";
+
                     int[] widthOptions = { 6, 8, 10 };
                     int[] heightOptions = { 6, 8, 10 };
                     int[] roomSquareOptions = { 3, 4, 5, 6, 7 };
@@ -1231,20 +1320,16 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
                     room1 = CreateRoomPlus(randomWidth, randomHeight, randomSquareSize, randomOtherSize);
                 }
-                else if (Random.value < .4f)
-                {
-                    int randomWidth = Random.Range(5, 9);
-                    int randomHeight = Random.Range(5, 9);
-                    room1 = CreateRoomSquare(randomWidth, randomHeight);
-                }
                 else
                 {
+                    type = "irregular";
                     room1 = CreateRoomIrregular(6, 8, 2);
                 }
-            }
-            else if (iteration == 1)
+            } else
             {
-                room1 = CreateRoomSquare(4, 2);
+                int randomWidth = Random.Range(5, 9);
+                int randomHeight = Random.Range(5, 9);
+                room1 = CreateRoomSquare(randomWidth, randomHeight);
             }
 
             Room room0 = null;
