@@ -25716,7 +25716,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 5.2
+  orthographic size: 3.8
   m_Depth: 100
   m_CullingMask:
     serializedVersion: 2
@@ -26771,6 +26771,9 @@ MonoBehaviour:
   chanceAnyTileFloors: 0.78
   chanceAnyTileWallBaseBroken: 0.965
   chanceTileFloorCornerBroken: 0.27
+  chanceRoomFloorFour: 0.7
+  chanceTileFloorFour: 0.73
+  chanceRoomFloorFourOne: 0.27
   chancePlantAny: 0.02
   chanceTileFloors:
   - 1
@@ -26787,6 +26790,12 @@ MonoBehaviour:
   tilemapWalls: {fileID: 34731195}
   tilemapWallColliders: {fileID: 998630374}
   tileFloor01: {fileID: 11400000, guid: 98e7a85cf72d1e549b2935c6fa634156, type: 2}
+  tileFloorFour01: {fileID: 11400000, guid: 7578daf38f5157f4a9443c959ac04b90, type: 2}
+  tileFloorOptions:
+  - {fileID: 11400000, guid: 44fc378ba21aa3e46a578905bcd8baa4, type: 2}
+  - {fileID: 11400000, guid: 82ed951ade64d634b8cf93da454e8e5b, type: 2}
+  - {fileID: 11400000, guid: 77c28bac4ad4808408f084e861519811, type: 2}
+  - {fileID: 11400000, guid: 59d832b21fe8b704484a5c007eacca81, type: 2}
   tileFloor02: {fileID: 11400000, guid: e57488ebd87cefc43af06e265aae0af8, type: 2}
   tileFloor03: {fileID: 11400000, guid: 5808fa0a870bb3144883b430bbdce695, type: 2}
   tileFloor04: {fileID: 11400000, guid: b679e5bbbcdebf54f8f249fe4130ee31, type: 2}

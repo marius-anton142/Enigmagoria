@@ -19,6 +19,9 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceAnyTileFloors;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
     [SerializeField] private float chanceTileFloorCornerBroken;
+    [SerializeField] private float chanceRoomFloorFour;
+    [SerializeField] private float chanceTileFloorFour;
+    [SerializeField] private float chanceRoomFloorFourOne;
     [SerializeField] private float chancePlantAny;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
@@ -32,6 +35,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     [Header("Floor Tiles")]
     [SerializeField] private Tile tileFloor01;
+    [SerializeField] private Tile tileFloorFour01;
+    [SerializeField] private List<Tile> tileFloorOptions;
     [SerializeField] private Tile tileFloor02, tileFloor03, tileFloor04, tileFloor05;
 
     [Header("Wall Tiles")]
@@ -1269,6 +1274,34 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private void FillRoomWithFloor(Room room, Tile tileToPlace)
+    {
+        if (Random.value < chanceRoomFloorFour)
+        {
+            if (tileToPlace == tileFloorFour01)
+            {
+                List<Vector3Int> walkedTilesFloorFour = RandomWalk(room, 8, 6);
+
+                Vector3Int offset = room.GetPosition();
+                foreach (Vector3Int pos in walkedTilesFloorFour)
+                {
+                    if (Random.value < chanceTileFloorFour)
+                    {
+                        if (Random.value < chanceRoomFloorFourOne)
+                        {
+                            tileToPlace = tileFloorOptions[Random.Range(0, tileFloorOptions.Count)];
+                        } else
+                        {
+                            tileToPlace = tileFloorFour01;
+                        }
+
+                        tilemapFloor.SetTile(pos + offset, tileToPlace);
+                    }
+                }
+            }
+        }
+    }
+
     private void Start()
     {
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
@@ -1280,10 +1313,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         foreach (Room room in rooms)
         {
-            List<Vector3Int> walkedTiles = RandomWalk(room, 10, 3);
-            
+            List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
+            FillRoomWithPlants(room, walkedTilesPlants, PlantPrefab01, chancePlantAny);
+
+            FillRoomWithFloor(room, tileFloorFour01);
+
             AddFloorCornerBroken(room);
-            FillRoomWithPlants(room, walkedTiles, PlantPrefab01, chancePlantAny);
         }
     }
 
