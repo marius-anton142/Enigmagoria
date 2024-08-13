@@ -19,9 +19,13 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceAnyTileFloors;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
     [SerializeField] private float chanceTileFloorCornerBroken;
-    [SerializeField] private float chanceRoomFloorFour;
-    [SerializeField] private float chanceTileFloorFour;
-    [SerializeField] private float chanceRoomFloorFourOne;
+    [SerializeField] private float chanceRoomFloorFour; //chane of a room with four slab tiles
+    [SerializeField] private float chanceTileFloorFour; //chance of a particular tile to be a four slab tile
+    [SerializeField] private float chanceRoomFloorFourOne; //chance of a particular four slab tile to be a semi four slab tile
+    [SerializeField] private float chanceRoomFloorFourFull; //chance of a room full of four slab tiles
+    [SerializeField] private float chanceRoomFloorFourFullOne; //chance of a particular four slab tile to be a semi four slab tile in a full room
+    [SerializeField] private float chanceRoomFloorFourFullNoBroken; //chance of a room full of four slab tiles to have no one tiles
+    [SerializeField] private float chanceRoomFloorFourFullBroken; //chance of a room full of four slab tiles to have only one tiles
     [SerializeField] private float chancePlantAny;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
@@ -1302,6 +1306,47 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private void FillRoomWithFloorFull(Room room, Tile tileToPlace)
+    {
+        if (Random.value < chanceRoomFloorFourFull)
+        {
+            bool noBroken = false, fullBroken = false;
+
+            if (Random.value < chanceRoomFloorFourFullBroken)
+            {
+                fullBroken = true;
+            }
+            else if (Random.value < chanceRoomFloorFourFullNoBroken)
+            {
+                noBroken = true;
+            }
+
+            if (tileToPlace == tileFloorFour01)
+            {
+                List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
+
+                Vector3Int offset = room.GetPosition();
+                foreach (Vector3Int pos in fullTilesFloorFour)
+                {
+                    if (noBroken)
+                    {
+                        tileToPlace = tileFloorFour01;
+                    }
+                    else if (fullBroken || Random.value < chanceRoomFloorFourFullOne)
+                    {
+                        tileToPlace = tileFloorOptions[Random.Range(0, tileFloorOptions.Count)];
+                    }
+                    else
+                    {
+                        tileToPlace = tileFloorFour01;
+                    }
+
+                    tilemapFloor.SetTile(pos + offset, tileToPlace);
+                }
+            }
+        }
+    }
+
     private void Start()
     {
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
@@ -1319,6 +1364,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
             FillRoomWithFloor(room, tileFloorFour01);
 
             AddFloorCornerBroken(room);
+
+            FillRoomWithFloorFull(room, tileFloorFour01);
         }
     }
 

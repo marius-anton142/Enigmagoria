@@ -26774,6 +26774,10 @@ MonoBehaviour:
   chanceRoomFloorFour: 0.7
   chanceTileFloorFour: 0.73
   chanceRoomFloorFourOne: 0.27
+  chanceRoomFloorFourFullOne: 0.38
+  chanceRoomFloorFourFull: 0.077
+  chanceRoomFloorFourFullNoBroken: 0.425
+  chanceRoomFloorFourFullBroken: 0.07
   chancePlantAny: 0.02
   chanceTileFloors:
   - 1
