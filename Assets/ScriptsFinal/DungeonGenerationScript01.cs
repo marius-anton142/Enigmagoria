@@ -27,11 +27,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceRoomFloorFourFullNoBroken; //chance of a room full of four slab tiles to have no one tiles
     [SerializeField] private float chanceRoomFloorFourFullBroken; //chance of a room full of four slab tiles to have only one tiles
     [SerializeField] private float chancePlantAny;
+    [SerializeField] private float chanceTable;
+    [SerializeField] private float chanceTableSmall;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
 
     [Header("Objects")]
     [SerializeField] private GameObject PlantPrefab01;
+    [SerializeField] private GameObject Table2x2Prefab01;
+    [SerializeField] private GameObject Table1x2Prefab01;
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
@@ -1347,6 +1351,125 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private void FillRoomWithTables(Room room)
+    {
+        if (Random.value < chanceTable)
+        {
+            if (Random.value < chanceTableSmall)
+            {
+                Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
+                if (freePosition != null)
+                {
+                    PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition());
+                }
+            }
+            else
+            {
+                Vector3Int? freePosition = GetRectanglesInRoomFree(room, 2, 2);
+                if (freePosition != null)
+                {
+                    PlaceObject(freePosition.Value, Table2x2Prefab01, room.GetPosition());
+                }
+            }
+        }
+    }
+
+    private bool CheckTileNextDoor(Room room, Vector3Int position)
+    {
+        Vector3Int[] directions = new Vector3Int[]
+        {
+        new Vector3Int(0, 1, 0),
+        new Vector3Int(0, -1, 0),
+        new Vector3Int(-1, 0, 0),
+        new Vector3Int(1, 0, 0)
+        };
+
+        foreach (var direction in directions)
+        {
+            Vector3Int neighborPos = position + direction;
+            Vector3Int neighborPosWithOffset = neighborPos + room.GetPosition();
+
+            if (!room.FloorTileCoordinates.Contains(neighborPos) && tilemapFloor.GetTile(neighborPosWithOffset) != null)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<Vector3Int> GetRectanglesInRoom(Room room, int width, int height)
+    {
+        List<Vector3Int> validPositions = new List<Vector3Int>();
+
+        foreach (Vector3Int tile in room.FloorTileCoordinates)
+        {
+            bool isValid = true;
+
+            for (int x = 0; x < width && isValid; x++)
+            {
+                for (int y = 0; y < height && isValid; y++)
+                {
+                    Vector3Int checkPos = new Vector3Int(tile.x + x, tile.y + y, tile.z);
+                    if (!room.FloorTileCoordinates.Contains(checkPos))
+                    {
+                        isValid = false;
+                    }
+                }
+            }
+
+            if (isValid)
+            {
+                validPositions.Add(tile);
+            }
+        }
+
+        return validPositions;
+    }
+
+    private Vector3Int? GetRectanglesInRoomFree(Room room, int width, int height)
+    {
+        // Get all valid positions for the rectangle
+        List<Vector3Int> validPositions = GetRectanglesInRoom(room, width, height);
+
+        // Shuffle the valid positions list
+        ShuffleList(validPositions);
+
+        // Check each position to see if it satisfies the CheckTileNextDoor condition
+        foreach (Vector3Int position in validPositions)
+        {
+            bool allTilesValid = true;
+
+            for (int x = 0; x < width && allTilesValid; x++)
+            {
+                for (int y = 0; y < height && allTilesValid; y++)
+                {
+                    Vector3Int checkPos = new Vector3Int(position.x + x, position.y + y, position.z);
+                    if (!CheckTileNextDoor(room, checkPos))
+                    {
+                        allTilesValid = false;
+                    }
+                }
+            }
+
+            if (allTilesValid)
+            {
+                return position; // Return the first valid position
+            }
+        }
+
+        return null; // Return null if no valid position is found
+    }
+
+    private void PlaceObject(Vector3Int position, GameObject objectToPlace, Vector3Int offset, Sprite selectedSprite = null)
+    {
+        GameObject instance = Instantiate(objectToPlace, position + offset, Quaternion.identity);
+
+        if (selectedSprite != null)
+        {
+            instance.GetComponent<SpriteRenderer>().sprite = selectedSprite;
+        }
+    }
+
     private void Start()
     {
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
@@ -1358,6 +1481,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         foreach (Room room in rooms)
         {
+            FillRoomWithTables(room);
+
             List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
             FillRoomWithPlants(room, walkedTilesPlants, PlantPrefab01, chancePlantAny);
 

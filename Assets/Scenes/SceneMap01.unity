@@ -26774,11 +26774,13 @@ MonoBehaviour:
   chanceRoomFloorFour: 0.7
   chanceTileFloorFour: 0.73
   chanceRoomFloorFourOne: 0.27
-  chanceRoomFloorFourFullOne: 0.38
   chanceRoomFloorFourFull: 0.077
+  chanceRoomFloorFourFullOne: 0.38
   chanceRoomFloorFourFullNoBroken: 0.425
   chanceRoomFloorFourFullBroken: 0.07
   chancePlantAny: 0.02
+  chanceTable: 0.42
+  chanceTableSmall: 0.23
   chanceTileFloors:
   - 1
   - 1
@@ -26790,6 +26792,8 @@ MonoBehaviour:
   - 1
   - 0.8
   PlantPrefab01: {fileID: 9037632988598735926, guid: 910934915f14c004ca1583249d2796ef, type: 3}
+  Table2x2Prefab01: {fileID: 1961583833583492094, guid: f03ec2ad1168e304dba96fe98648b3ad, type: 3}
+  Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
   tilemapFloor: {fileID: 1738476036}
   tilemapWalls: {fileID: 34731195}
   tilemapWallColliders: {fileID: 998630374}
