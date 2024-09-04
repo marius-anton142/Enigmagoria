@@ -42,12 +42,15 @@ TagManager:
   - 
   - 
   m_SortingLayers:
-  - name: Obstacols
-    uniqueID: 3665179659
-    locked: 0
-  - name: FloorLayer
-    uniqueID: 4259549949
-    locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 615041681
+    locked: 0
+  - name: Foreground
+    uniqueID: 712630415
+    locked: 0
+  - name: UI
+    uniqueID: 48445645
     locked: 0

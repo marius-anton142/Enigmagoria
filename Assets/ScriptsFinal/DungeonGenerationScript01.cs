@@ -1360,7 +1360,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
                 if (freePosition != null)
                 {
-                    PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition());
+                    float spriteHeightInUnits = 32f / 16f;
+                    float pivotYPercentage = 0.9f;
+                    float yOffset = spriteHeightInUnits * pivotYPercentage;
+                    Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
+
+                    PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition() + pivotOffset);
                 }
             }
             else
@@ -1368,7 +1373,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 Vector3Int? freePosition = GetRectanglesInRoomFree(room, 2, 2);
                 if (freePosition != null)
                 {
-                    PlaceObject(freePosition.Value, Table2x2Prefab01, room.GetPosition());
+                    float spriteHeightInUnits = 37f / 16f;
+                    float pivotYPercentage = 0.9f;
+                    float yOffset = spriteHeightInUnits * pivotYPercentage;
+                    Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
+
+                    PlaceObject(freePosition.Value, Table2x2Prefab01, room.GetPosition() + pivotOffset);
                 }
             }
         }
@@ -1460,7 +1470,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return null; // Return null if no valid position is found
     }
 
-    private void PlaceObject(Vector3Int position, GameObject objectToPlace, Vector3Int offset, Sprite selectedSprite = null)
+    private void PlaceObject(Vector3Int position, GameObject objectToPlace, Vector3 offset, Sprite selectedSprite = null)
     {
         GameObject instance = Instantiate(objectToPlace, position + offset, Quaternion.identity);
 
