@@ -39,7 +39,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
-    [SerializeField] private Tilemap tilemapWalls, tilemapWallColliders;
+    [SerializeField] private Tilemap tilemapWalls, tilemapWallsFix, tilemapWallColliders;
 
     [Header("Floor Tiles")]
     [SerializeField] private Tile tileFloor01;
@@ -51,6 +51,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileWallHorizontal;
     [SerializeField] private Tile tileWallHorizontalUpLeft, tileWallHorizontalUpRight, tileWallHorizontalDownLeft, tileWallHorizontalDownRight, tileWallLeft, tileWallRight, tileWallCornerUpLeft, tileWallCornerUpRight, tileWallBase, tileWallBaseCornerLeft, tileWallBaseCornerRight, tileWallBaseDownLeft, tileWallBaseDownRight, tileWallBaseUpLeft, tileWallBaseUpRight, tileWallBaseBroken01, tileWallBaseBroken02;
     [SerializeField] private Tile tileFloorBrokenUpLeft, tileFloorBrokenUpRight, tileFloorBrokenDownLeft, tileFloorBrokenDownRight;
+
+    [SerializeField] private Tile tileWallHorizontalFix, tileWallHorizontalUpLeftFix, tileWallHorizontalUpRightFix, tileWallHorizontalDownLeftFix, tileWallHorizontalDownRightFix, tileWallCornerUpLeftFix, tileWallCornerUpRightFix;
 
     private List<Room> rooms = new List<Room>();
 
@@ -100,9 +102,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         };
 
         tilemapWalls.SetTile(position, null);
+        tilemapWallsFix.SetTile(position, null);
         foreach (var neighbor in neighbors)
         {
             tilemapWalls.SetTile(position + neighbor, null);
+            tilemapWallsFix.SetTile(position + neighbor, null);
         }
     }
 
@@ -181,11 +185,13 @@ public class DungeonGenerationScript01 : MonoBehaviour
         if (downright && !center && !right && !left && !up && !down && !upleft && !upright && !downleft)
         {
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallCornerUpLeft);
+            tilemapWallsFix.SetTile(pos, tileWallCornerUpLeftFix);
             tilemapWalls.SetTile(pos, tileWallLeft);
         }
         else if (!downright && !center && !right && !left && !up && !down && !upleft && !upright && downleft)
         {
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallCornerUpRight);
+            tilemapWallsFix.SetTile(pos, tileWallCornerUpRightFix);
             tilemapWalls.SetTile(pos, tileWallRight);
         }
         else if (!downright && !center && !right && !left && !up && !down && !upleft && upright && !downleft)
@@ -199,21 +205,25 @@ public class DungeonGenerationScript01 : MonoBehaviour
         else if (!center && right && !left && !up && down && !upleft && downright)
         {
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontalDownRight);
+            tilemapWallsFix.SetTile(pos, tileWallHorizontalDownRightFix);
             tilemapWalls.SetTile(pos, tileWallBaseDownRight);
         }
         else if (!center && !right && left && !up && down && !upright && downleft)
         {
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontalDownLeft);
+            tilemapWallsFix.SetTile(pos, tileWallHorizontalDownLeftFix);
             tilemapWalls.SetTile(pos, tileWallBaseDownLeft);
         }
         else if (!center && right && !left && up && !down && !downleft && upright)
         {
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontalUpRight);
+            tilemapWallsFix.SetTile(pos, tileWallHorizontalUpRightFix);
             tilemapWalls.SetTile(pos, tileWallBaseUpRight);
         }
         else if (!center && !right && left && up && !down && !downright && upleft)
         {
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontalUpLeft);
+            tilemapWallsFix.SetTile(pos, tileWallHorizontalUpLeftFix);
             tilemapWalls.SetTile(pos, tileWallBaseUpLeft);
         }
         else if (!center && right && !left && !up && !down && !upleft && !downleft && !down_2)
@@ -228,11 +238,13 @@ public class DungeonGenerationScript01 : MonoBehaviour
         {
             SetTileWalls(pos, "base");
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
+            tilemapWallsFix.SetTile(pos, tileWallHorizontalFix);
         }
         else if (!downright && !center && !right && !left && up && !down && !downleft)
         {
             SetTileWalls(pos, "base");
             tilemapWalls.SetTile(pos + new Vector3Int(0, 1, 0), tileWallHorizontal);
+            tilemapWallsFix.SetTile(pos, tileWallHorizontalFix);
         }
     }
 
