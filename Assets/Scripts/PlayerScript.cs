@@ -77,15 +77,18 @@ public class PlayerScript : MonoBehaviour
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
             animator.SetBool("IsWalking", true);
-            if (Vector3.Distance(transform.position, targetPosition) < 0.001f) // Check for movement completion
+            if (Vector3.Distance(transform.position, targetPosition) < 0.001f)
             {
                 transform.position = targetPosition;
                 isMoving = false;
                 animator.SetBool("IsWalking", false);
 
                 // Generate Dijkstra map after moving
-                Vector2Int targetPosition2D = new Vector2Int(Mathf.FloorToInt(targetPosition.x), Mathf.FloorToInt(targetPosition.y));
-                DijkstraMap.GetComponent<DijkstraMapGenerator>().GenerateDijkstraMap(targetPosition2D);
+                Vector2Int targetPosition2D = new Vector2Int(
+                    Mathf.FloorToInt(targetPosition.x - 0.5f),
+                    Mathf.FloorToInt(targetPosition.y - 0.5f)
+                );
+                DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(targetPosition2D);
             }
         }
     }
@@ -118,21 +121,30 @@ public class PlayerScript : MonoBehaviour
         if (!isMoving && tilemapFloor.GetTile(cellPosition) != null/* && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize)*/)
         {
             targetPosition = transform.position; // Set new target position
+
+            // Snap x and y to the grid using SnapToGrid
+            Vector2 snappedPosition = SnapToGrid(new Vector2(transform.position.x, transform.position.y));
+
+            // Apply the snapped X or Y based on movement direction
             if (direction == Vector3.up)
             {
-                targetPosition.y = Mathf.Floor(targetPosition.y - 0.5f) + 1.5f;
+                targetPosition.x = snappedPosition.x; // Snap X to the grid
+                targetPosition.y = Mathf.Floor(targetPosition.y - 0.5f) + 1.5f; // Move up
             }
             else if (direction == Vector3.down)
             {
-                targetPosition.y = Mathf.Ceil(targetPosition.y + 0.5f) - 1.5f;
+                targetPosition.x = snappedPosition.x; // Snap X to the grid
+                targetPosition.y = Mathf.Ceil(targetPosition.y + 0.5f) - 1.5f; // Move down
             }
             else if (direction == Vector3.right)
             {
-                targetPosition.x = Mathf.Floor(targetPosition.x - 0.5f) + 1.5f;
+                targetPosition.y = snappedPosition.y; // Snap Y to the grid
+                targetPosition.x = Mathf.Floor(targetPosition.x - 0.5f) + 1.5f; // Move right
             }
             else if (direction == Vector3.left)
             {
-                targetPosition.x = Mathf.Ceil(targetPosition.x + 0.5f) - 1.5f;
+                targetPosition.y = snappedPosition.y; // Snap Y to the grid
+                targetPosition.x = Mathf.Ceil(targetPosition.x + 0.5f) - 1.5f; // Move left
             }
 
             isMoving = true;
@@ -153,16 +165,12 @@ public class PlayerScript : MonoBehaviour
         canMove = true;
     }
 
-    float RoundToNearestHalf(float value)
+    private Vector2 SnapToGrid(Vector2 position)
     {
-        if (GetDecimalPart(value) > 0.5f && GetDecimalPart(value) < 1f)
-        {
-            value = Mathf.Floor(value) - 0.5f;
-        } else
-        {
-            value = Mathf.Floor(value) + 0.5f;
-        }
-        return value;
+        float snappedX = Mathf.Round(position.x * 2) / 2;
+        float snappedY = Mathf.Round(position.y * 2) / 2;
+
+        return new Vector2(snappedX, snappedY);
     }
 
     float GetDecimalPart(float value)

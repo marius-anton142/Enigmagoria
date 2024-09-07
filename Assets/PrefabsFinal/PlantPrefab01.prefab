@@ -98,7 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1058b29d654fe4f4090feebb6e6fbb60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotationAngleTouch: 34
+  rotationAngleTouch: 45
   idleRotationAngle: 26
   idleRotationSpeed: 62
   touchRotationSpeed: 300
