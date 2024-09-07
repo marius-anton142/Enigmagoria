@@ -165,6 +165,12 @@ public class PlayerScript : MonoBehaviour
         canMove = true;
     }
 
+    public void ApplyKnockback(Vector2 direction, float force)
+    {
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb.AddForce(direction * force, ForceMode2D.Impulse);
+    }
+
     private Vector2 SnapToGrid(Vector2 position)
     {
         float snappedX = Mathf.Round(position.x * 2) / 2;
