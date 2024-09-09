@@ -209,8 +209,8 @@ Sprite:
     downscaleMultiplier: 1
   m_PhysicsShape:
   - - {x: -0.5, y: 0.5}
-    - {x: 0.5, y: 0.5}
-    - {x: 0.5, y: 0.875}
-    - {x: -0.5, y: 0.875}
+    - {x: -0.5, y: 0.5}
+    - {x: -0.5, y: 0.5}
+    - {x: -0.5, y: 0.5}
   m_Bones: []
   m_SpriteID: 32f1191b5f46a1e438eac0058d050ed7

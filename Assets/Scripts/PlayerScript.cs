@@ -7,6 +7,7 @@ public class PlayerScript : MonoBehaviour
     public string state = "alive";
     public float moveSpeed = 5.0f;
     public float hp = 100;
+    public float knockResistance = 1f;
     public bool immune = false;
     public float immunityDuration = 1f;
     public float tileSize = 1.0f;
@@ -43,6 +44,15 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    private bool CanMove()
+    {
+        if (state != "knocked")
+        {
+            return true;
+        }
+        return false;
+    }
+
     public void TakeDamage(float damage)
     {
         immune = true;
@@ -63,6 +73,18 @@ public class PlayerScript : MonoBehaviour
         state = "dead";
 
         DungeonManager.GetComponent<DungeonGenerationScript>().RestartScene();
+    }
+
+    void SetStateToKnocked(float knockTime)
+    {
+        state = "knocked";
+        StartCoroutine(ResetStateAfterKnock(knockTime * knockResistance));
+    }
+
+    private IEnumerator ResetStateAfterKnock(float knockTime)
+    {
+        yield return new WaitForSeconds(knockTime);
+        state = "alive";
     }
 
     IEnumerator ResetImmunityAfterDelay()
@@ -115,11 +137,13 @@ public class PlayerScript : MonoBehaviour
 
     public void Move(Vector3 direction)
     {
-        if (allowContinuousMove && !canMove) return;
+        if (allowContinuousMove && (!canMove || !CanMove())) return;
 
         Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
         if (!isMoving && tilemapFloor.GetTile(cellPosition) != null/* && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize)*/)
         {
+            GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+
             targetPosition = transform.position; // Set new target position
 
             // Snap x and y to the grid using SnapToGrid
@@ -165,18 +189,48 @@ public class PlayerScript : MonoBehaviour
         canMove = true;
     }
 
-    public void ApplyKnockback(Vector2 direction, float force)
+    public void ApplyKnockback(Vector2 direction, float force, float knockTime)
     {
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         rb.AddForce(direction * force, ForceMode2D.Impulse);
+        SetStateToKnocked(knockTime);
+
+        // Start a coroutine to monitor the player's position and regenerate Dijkstra map when necessary
+        StartCoroutine(MonitorPositionDuringKnockback());
+    }
+
+    private IEnumerator MonitorPositionDuringKnockback()
+    {
+        // Keep track of the last snapped integer position (tile position)
+        Vector2Int lastSnappedPosition = SnapToGridInt(transform.position);
+
+        while (state == "knocked")
+        {
+            // Check the current snapped position
+            Vector2Int currentSnappedPosition = SnapToGridInt(transform.position);
+
+            // If the player crosses a new tile (x or y changes), regenerate the Dijkstra map
+            if (currentSnappedPosition != lastSnappedPosition)
+            {
+                DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(currentSnappedPosition);
+                lastSnappedPosition = currentSnappedPosition; // Update the last snapped position
+            }
+
+            yield return null; // Continue checking on each frame
+        }
     }
 
     private Vector2 SnapToGrid(Vector2 position)
     {
-        float snappedX = Mathf.Round(position.x * 2) / 2;
-        float snappedY = Mathf.Round(position.y * 2) / 2;
+        float snappedX = Mathf.Floor(position.x) + 0.5f;
+        float snappedY = Mathf.Floor(position.y) + 0.5f;
 
         return new Vector2(snappedX, snappedY);
+    }
+
+    private Vector2Int SnapToGridInt(Vector3 position)
+    {
+        return new Vector2Int(Mathf.FloorToInt(position.x), Mathf.FloorToInt(position.y));
     }
 
     float GetDecimalPart(float value)

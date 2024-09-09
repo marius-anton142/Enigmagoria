@@ -13,15 +13,11 @@ public class DijkstraMap : MonoBehaviour
     private List<Vector2Int> cacheAccessOrder = new List<Vector2Int>(); // To track least-recently used
     private int cacheLimit = 9; // Limit to 9 cached maps
 
-    public void GenerateDijkstraMap(Vector2Int targetPosition)
+    public void GenerateDijkstraMap(Vector2Int targetPosition, int maxCost = 10)
     {
         // Check if the map for this position is already cached
         if (cachedDijkstraMaps.ContainsKey(targetPosition))
         {
-            // Move the accessed map to the top of the access order (most recent)
-            cacheAccessOrder.Remove(targetPosition);
-            cacheAccessOrder.Add(targetPosition);
-
             // Use the cached map, no recalculation needed
             dijkstraMap = cachedDijkstraMaps[targetPosition];
             return;
@@ -29,23 +25,28 @@ public class DijkstraMap : MonoBehaviour
 
         // If not cached, generate a new Dijkstra map
         dijkstraMap = new Dictionary<Vector2Int, int>();
-        walkableTiles = GetWalkableTiles(); // Get all walkable tiles from the floor tilemap
+        walkableTiles = GetWalkableTiles();
 
         Queue<Vector2Int> frontier = new Queue<Vector2Int>();
         frontier.Enqueue(targetPosition);
-        dijkstraMap[targetPosition] = 0; // Start with the player's position, cost = 0
+        dijkstraMap[targetPosition] = 0;
 
-        // BFS to calculate the cost for every other tile
+        // BFS to calculate the cost for every other tile up to maxCost
         while (frontier.Count > 0)
         {
             Vector2Int current = frontier.Dequeue();
             int currentCost = dijkstraMap[current];
 
-            // Get all adjacent positions (up, down, left, right)
+            // Stop expanding if the current cost exceeds maxCost
+            if (currentCost >= maxCost)
+            {
+                continue;
+            }
+
             Vector2Int[] directions = new Vector2Int[]
             {
-                new Vector2Int(0, 1), new Vector2Int(0, -1),
-                new Vector2Int(1, 0), new Vector2Int(-1, 0)
+            new Vector2Int(0, 1), new Vector2Int(0, -1),
+            new Vector2Int(1, 0), new Vector2Int(-1, 0)
             };
 
             foreach (var direction in directions)
@@ -55,7 +56,7 @@ public class DijkstraMap : MonoBehaviour
                 // If the neighbor is walkable and not yet visited
                 if (walkableTiles.Contains(neighbor) && !dijkstraMap.ContainsKey(neighbor))
                 {
-                    dijkstraMap[neighbor] = currentCost + 1; // Set cost to be one higher than the current tile
+                    dijkstraMap[neighbor] = currentCost + 1;
                     frontier.Enqueue(neighbor);
                 }
             }

@@ -9,6 +9,7 @@ public class EnemyAI : MonoBehaviour
     public float moveIntervalMax = 0.6f;
     public float leapForce = 10.0f;     // Force of the leap attack
     public float knockbackForce = 10.0f;
+    public float knockTime = 1f;
     public GameObject DijkstraMap;
     public Tilemap tilemapFloor;
     public GameObject player;
@@ -19,6 +20,9 @@ public class EnemyAI : MonoBehaviour
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
+    private Collider2D playerCollider;
+    private Collider2D mainCollider;   // Main collider for environment interactions
+    private Collider2D triggerCollider;
 
     private void Awake()
     {
@@ -26,12 +30,35 @@ public class EnemyAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         player = GameObject.FindGameObjectWithTag("Player");
+
+        // Get Player's Collider and set IgnoreCollision at the start
+        playerCollider = player.GetComponent<Collider2D>();
+        Physics2D.IgnoreCollision(playerCollider, GetComponent<Collider2D>(), true);
     }
 
     private void Start()
     {
         targetPosition = transform.position; // Initialize target position
         InvokeRepeating(nameof(NextStep), Random.Range(moveIntervalMin, moveIntervalMax), Random.Range(moveIntervalMin, moveIntervalMax));
+
+        // Find both colliders attached to the enemy
+        Collider2D[] enemyColliders = GetComponents<Collider2D>();
+
+        // Loop through colliders to assign mainCollider and triggerCollider
+        foreach (var col in enemyColliders)
+        {
+            if (col.isTrigger)
+            {
+                triggerCollider = col; // Assign the trigger collider
+            }
+            else
+            {
+                mainCollider = col; // Assign the non-trigger collider (main collider)
+            }
+        }
+
+        // Ignore collision between player's main collider and enemy's main collider
+        Physics2D.IgnoreCollision(mainCollider, player.GetComponent<Collider2D>(), true);
     }
 
     private void Update()
@@ -167,9 +194,8 @@ public class EnemyAI : MonoBehaviour
         // Check if we collided with the player while leaping
         if (isLeaping && other.CompareTag("Player"))
         {
-            Vector2 knockbackDirection = (other.transform.position - transform.position).normalized;
-            // Apply knockback to the player
-            other.GetComponent<PlayerScript>().ApplyKnockback(knockbackDirection, knockbackForce);
+            Vector2 knockbackDirection = rb.velocity.normalized;
+            other.GetComponent<PlayerScript>().ApplyKnockback(knockbackDirection, knockbackForce, knockTime);
         }
     }
 }
