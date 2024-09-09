@@ -1,15 +1,18 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Tilemaps;
+using System.Collections.Generic;
 
 public class EnemyAI : MonoBehaviour
 {
+    public string state = "idle";
     public float moveSpeed = 5.0f;
     public float moveIntervalMin = 0.4f;
     public float moveIntervalMax = 0.6f;
     public float leapForce = 10.0f;     // Force of the leap attack
     public float knockbackForce = 10.0f;
     public float knockTime = 1f;
+    public float knockResistance = 1f;
     public GameObject DijkstraMap;
     public Tilemap tilemapFloor;
     public GameObject player;
@@ -23,6 +26,9 @@ public class EnemyAI : MonoBehaviour
     private Collider2D playerCollider;
     private Collider2D mainCollider;   // Main collider for environment interactions
     private Collider2D triggerCollider;
+
+    private HashSet<Collider2D> hitUnits;
+    private Coroutine leapCoroutine;
 
     private void Awake()
     {
@@ -64,7 +70,7 @@ public class EnemyAI : MonoBehaviour
     private void Update()
     {
         // Only move if not leaping
-        if (!isLeaping && isMoving)
+        if (CanMove() && isMoving)
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
             animator.SetBool("IsWalking", true);
@@ -81,7 +87,7 @@ public class EnemyAI : MonoBehaviour
     // Determine the next step based on the Dijkstra map and move the enemy
     private void NextStep()
     {
-        if (isMoving || isLeaping) return; // Don't process if already moving or leaping
+        if (!CanMove() || isMoving || isLeaping) return; // Don't process if already moving or leaping
 
         Vector2Int currentCell = new Vector2Int(
             Mathf.FloorToInt(transform.position.x),
@@ -94,7 +100,8 @@ public class EnemyAI : MonoBehaviour
         {
             // Prepare to leap towards the player
             StopInvokeNextStep(); // Stop the NextStep coroutine
-            StartCoroutine(PrepareAndLeap());
+            leapCoroutine = StartCoroutine(PrepareAndLeap());
+            SetStateToPreparing();
             return;
         }
 
@@ -123,9 +130,17 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        if (bestMove != currentCell)
+        if (bestMove == currentCell && state != "idle")
+        {
+            SetStateToIdle();
+        } 
+        else if (bestMove != currentCell)
         {
             MoveToPosition(bestMove);
+            if (state != "chase")
+            {
+                SetStateToChase();
+            }
         }
     }
 
@@ -145,11 +160,13 @@ public class EnemyAI : MonoBehaviour
     private IEnumerator PrepareAndLeap()
     {
         isLeaping = true;
+        hitUnits = new HashSet<Collider2D>();
 
         // Prepare for 1 second before leaping
         yield return new WaitForSeconds(1.0f);
 
         // Launch towards the player
+        SetStateToAttacking();
         Vector2 leapDirection = (player.transform.position - transform.position).normalized;
         rb.AddForce(leapDirection * leapForce, ForceMode2D.Impulse);
 
@@ -157,6 +174,7 @@ public class EnemyAI : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         isLeaping = false; // Reset leap state
+        SetStateToCooldown();
         yield return new WaitForSeconds(1.0f); // Pause for 1 second before resuming regular behavior
         ResumeInvokeNextStep(); // Resume regular movement
     }
@@ -189,13 +207,91 @@ public class EnemyAI : MonoBehaviour
         isMoving = true;
     }
 
+    public void ApplyKnockback(Vector2 direction, float force, float knockTime)
+    {
+
+        // Stop the leap coroutine if it is running
+        if (leapCoroutine != null)
+        {
+            StopCoroutine(leapCoroutine);
+            leapCoroutine = null;
+            isLeaping = false; // Ensure leaping state is reset
+        }
+
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb.AddForce(direction * force, ForceMode2D.Impulse);
+        SetStateToKnocked(knockTime);
+
+        float distance = (force / rb.mass) / (1 + rb.drag);
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Check if we collided with the player while leaping
-        if (isLeaping && other.CompareTag("Player"))
+        // Check if we collided with the player or another enemy while leaping
+        if (isLeaping && !hitUnits.Contains(other) && (other.CompareTag("Player") || other.CompareTag("Enemy")))
         {
             Vector2 knockbackDirection = rb.velocity.normalized;
-            other.GetComponent<PlayerScript>().ApplyKnockback(knockbackDirection, knockbackForce, knockTime);
+
+            PlayerScript player = other.GetComponent<PlayerScript>();
+            EnemyAI enemy = other.GetComponent<EnemyAI>();
+
+            if (player != null)
+            {
+                player.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);
+            }
+            else if (enemy != null)
+            {
+                enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);  // Assuming you have ApplyKnockback in EnemyAI
+            }
+
+            hitUnits.Add(other);
         }
+    }
+
+    private bool CanMove()
+    {
+        if (state != "knocked" && state != "leaping")
+        {
+            return true;
+        }
+        return false;
+    }
+
+    void SetStateToKnocked(float knockTime)
+    {
+        state = "knocked";
+        StartCoroutine(ResetStateAfterKnock(knockTime * knockResistance));
+    }
+
+    private IEnumerator ResetStateAfterKnock(float knockTime)
+    {
+        yield return new WaitForSeconds(knockTime);
+        state = "idle";
+        ResumeInvokeNextStep();
+    }
+
+    void SetStateToPreparing()
+    {
+        state = "preparing";
+    }
+
+    void SetStateToAttacking()
+    {
+        state = "attacking";
+    }
+
+    void SetStateToCooldown()
+    {
+        state = "cooldown";
+    }
+
+    void SetStateToIdle()
+    {
+        state = "idle";
+    }
+
+    void SetStateToChase()
+    {
+        state = "chase";
     }
 }
