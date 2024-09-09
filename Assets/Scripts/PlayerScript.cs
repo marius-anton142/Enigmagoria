@@ -143,9 +143,7 @@ public class PlayerScript : MonoBehaviour
         if (!isMoving && tilemapFloor.GetTile(cellPosition) != null/* && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize)*/)
         {
             GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-
             targetPosition = transform.position; // Set new target position
-
             // Snap x and y to the grid using SnapToGrid
             Vector2 snappedPosition = SnapToGrid(new Vector2(transform.position.x, transform.position.y));
 

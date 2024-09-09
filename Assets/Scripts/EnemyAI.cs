@@ -9,14 +9,14 @@ public class EnemyAI : MonoBehaviour
     public float moveSpeed = 5.0f;
     public float moveIntervalMin = 0.4f;
     public float moveIntervalMax = 0.6f;
-    public float leapForce = 10.0f;     // Force of the leap attack
+    public float leapForce = 10.0f;
     public float knockbackForce = 10.0f;
     public float knockTime = 1f;
     public float knockResistance = 1f;
     public GameObject DijkstraMap;
     public Tilemap tilemapFloor;
     public GameObject player;
-    public bool isLeaping = false;      // Track if the enemy is leaping
+    public bool isLeaping = false;
 
     private Vector3 targetPosition;
     private bool isMoving = false;
@@ -24,10 +24,10 @@ public class EnemyAI : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Collider2D playerCollider;
-    private Collider2D mainCollider;   // Main collider for environment interactions
+    private Collider2D mainCollider;
     private Collider2D triggerCollider;
 
-    private HashSet<Collider2D> hitUnits;
+    private HashSet<GameObject> hitEntities;
     private Coroutine leapCoroutine;
 
     private void Awake()
@@ -36,10 +36,6 @@ public class EnemyAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         player = GameObject.FindGameObjectWithTag("Player");
-
-        // Get Player's Collider and set IgnoreCollision at the start
-        playerCollider = player.GetComponent<Collider2D>();
-        Physics2D.IgnoreCollision(playerCollider, GetComponent<Collider2D>(), true);
     }
 
     private void Start()
@@ -101,7 +97,7 @@ public class EnemyAI : MonoBehaviour
             // Prepare to leap towards the player
             StopInvokeNextStep(); // Stop the NextStep coroutine
             leapCoroutine = StartCoroutine(PrepareAndLeap());
-            SetStateToPreparing();
+            SetStateToPrepare();
             return;
         }
 
@@ -133,7 +129,7 @@ public class EnemyAI : MonoBehaviour
         if (bestMove == currentCell && state != "idle")
         {
             SetStateToIdle();
-        } 
+        }
         else if (bestMove != currentCell)
         {
             MoveToPosition(bestMove);
@@ -160,14 +156,19 @@ public class EnemyAI : MonoBehaviour
     private IEnumerator PrepareAndLeap()
     {
         isLeaping = true;
-        hitUnits = new HashSet<Collider2D>();
 
         // Prepare for 1 second before leaping
         yield return new WaitForSeconds(1.0f);
 
         // Launch towards the player
-        SetStateToAttacking();
+        SetStateToAttack();
         Vector2 leapDirection = (player.transform.position - transform.position).normalized;
+        if (leapDirection == Vector2.zero)
+        {
+            leapDirection = GetRandomDirection();
+        }
+
+        ApplyKnockbackToOverlappingEntities(leapDirection);
         rb.AddForce(leapDirection * leapForce, ForceMode2D.Impulse);
 
         // After a short leap, stop and wait before invoking NextStep again
@@ -209,7 +210,6 @@ public class EnemyAI : MonoBehaviour
 
     public void ApplyKnockback(Vector2 direction, float force, float knockTime)
     {
-
         // Stop the leap coroutine if it is running
         if (leapCoroutine != null)
         {
@@ -228,23 +228,64 @@ public class EnemyAI : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         // Check if we collided with the player or another enemy while leaping
-        if (isLeaping && !hitUnits.Contains(other) && (other.CompareTag("Player") || other.CompareTag("Enemy")))
+        if (state == "attack" && !hitEntities.Contains(other.gameObject) && (other.CompareTag("Player") || other.CompareTag("Enemy")))
         {
-            Vector2 knockbackDirection = rb.velocity.normalized;
+            ApplyKnockbackToOther(other, Vector2.zero);
+            hitEntities.Add(other.gameObject); // Track the object instead of just the collider
+        }
 
-            PlayerScript player = other.GetComponent<PlayerScript>();
-            EnemyAI enemy = other.GetComponent<EnemyAI>();
+        if (other.CompareTag("Enemy"))
+        {
+            Physics2D.IgnoreCollision(mainCollider, other.GetComponent<Collider2D>(), true);
+        }
+    }
 
-            if (player != null)
+    void ApplyKnockbackToOther(Collider2D other, Vector2 knockbackDirection)
+    {
+        if (knockbackDirection == Vector2.zero) 
+        {
+            knockbackDirection = rb.velocity.normalized;
+        }
+
+        PlayerScript player = other.GetComponent<PlayerScript>();
+        EnemyAI enemy = other.GetComponent<EnemyAI>();
+
+        if (player != null)
+        {
+            player.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);
+        }
+        else if (enemy != null)
+        {
+            Physics2D.IgnoreCollision(mainCollider, other.GetComponent<Collider2D>(), true);
+            enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);  // Assuming you have ApplyKnockback in EnemyAI
+        }
+    }
+
+    void ApplyKnockbackToOverlappingEntities(Vector2 knockbackDirection)
+    {
+        // Create an array to hold the overlapping colliders
+        Collider2D[] overlappingColliders = new Collider2D[10]; // Max 10 colliders can overlap
+        ContactFilter2D contactFilter = new ContactFilter2D().NoFilter(); // No specific filter
+
+        // Get the number of overlapping colliders
+        int colliderCount = Physics2D.OverlapCollider(triggerCollider, contactFilter, overlappingColliders);
+
+        // Loop through the overlapping colliders
+        for (int i = 0; i < colliderCount; i++)
+        {
+            Collider2D collider = overlappingColliders[i];
+
+            // Get the GameObject from the collider
+            GameObject hitObject = collider?.gameObject;
+
+            if (collider == null || hitEntities.Contains(hitObject) || hitObject == gameObject)
+                continue; // Skip if no collider or object has already been hit
+
+            if (collider.CompareTag("Player") || collider.CompareTag("Enemy"))
             {
-                player.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);
+                ApplyKnockbackToOther(collider, knockbackDirection); // Apply knockback to the overlapping entity
+                hitEntities.Add(hitObject); // Track the object that was hit
             }
-            else if (enemy != null)
-            {
-                enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);  // Assuming you have ApplyKnockback in EnemyAI
-            }
-
-            hitUnits.Add(other);
         }
     }
 
@@ -270,14 +311,15 @@ public class EnemyAI : MonoBehaviour
         ResumeInvokeNextStep();
     }
 
-    void SetStateToPreparing()
+    void SetStateToPrepare()
     {
-        state = "preparing";
+        state = "prepare";
     }
 
-    void SetStateToAttacking()
+    void SetStateToAttack()
     {
-        state = "attacking";
+        state = "attack";
+        hitEntities = new HashSet<GameObject>();
     }
 
     void SetStateToCooldown()
@@ -293,5 +335,12 @@ public class EnemyAI : MonoBehaviour
     void SetStateToChase()
     {
         state = "chase";
+    }
+
+    Vector2 GetRandomDirection()
+    {
+        float randomAngle = Random.Range(0f, 360f); // Random angle in degrees
+        Vector2 direction = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
+        return direction;
     }
 }
