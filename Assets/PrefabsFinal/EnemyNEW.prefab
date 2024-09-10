@@ -57,8 +57,8 @@ MonoBehaviour:
   moveIntervalMax: 0.72
   leapForce: 50
   knockbackForce: 24
-  prepareTime: 0.2
-  leapTime: 0.3
+  prepareTime: 0.35
+  leapTime: 0.4
   cooldownTime: 0.4
   knockTime: 0.42
   knockResistance: 1

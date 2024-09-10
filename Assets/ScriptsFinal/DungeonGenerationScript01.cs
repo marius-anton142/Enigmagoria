@@ -1405,7 +1405,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         if (Random.value < chanceEnemy01)
         {
-            int numberOfPlacements = Random.Range(1, 5); // Random number between 1 and 4
+            int numberOfPlacements = Random.Range(1, 4); // Random number between 1 and 4
 
             for (int i = 0; i < numberOfPlacements; i++)
             {
