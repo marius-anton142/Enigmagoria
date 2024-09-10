@@ -8,6 +8,7 @@ TagManager:
   - DungeonManager
   - WeaponMelee
   - TilemapFloor
+  - DijkstraMap
   layers:
   - Default
   - TransparentFX

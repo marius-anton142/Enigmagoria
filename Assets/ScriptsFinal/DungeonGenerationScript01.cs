@@ -29,6 +29,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chancePlantAny;
     [SerializeField] private float chanceTable;
     [SerializeField] private float chanceTableSmall;
+    [SerializeField] private float chanceEnemy01;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
 
@@ -36,6 +37,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject PlantPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
+
+    [Header("Enemies")]
+    [SerializeField] private GameObject EnemyPrefab01;
+    [SerializeField] private GameObject EnemyPrefab02;
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
@@ -1396,6 +1401,28 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private void FillRoomWithEnemies(Room room)
+    {
+        if (Random.value < chanceEnemy01)
+        {
+            int numberOfPlacements = Random.Range(1, 5); // Random number between 1 and 4
+
+            for (int i = 0; i < numberOfPlacements; i++)
+            {
+                Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
+                if (freePosition != null)
+                {
+                    float spriteHeightInUnits = 24f / 16f;
+                    float pivotYPercentage = 1f;
+                    float yOffset = spriteHeightInUnits * pivotYPercentage;
+                    Vector3 pivotOffset = new Vector3(0.5f, yOffset, 0f);
+
+                    PlaceObject(freePosition.Value, EnemyPrefab01, room.GetPosition() + pivotOffset);
+                }
+            }
+        }
+    }
+
     private bool CheckTileNextDoor(Room room, Vector3Int position)
     {
         Vector3Int[] directions = new Vector3Int[]
@@ -1509,10 +1536,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
             FillRoomWithPlants(room, walkedTilesPlants, PlantPrefab01, chancePlantAny);
 
             FillRoomWithFloor(room, tileFloorFour01);
-
             AddFloorCornerBroken(room);
-
             FillRoomWithFloorFull(room, tileFloorFour01);
+
+            FillRoomWithEnemies(room);
         }
     }
 

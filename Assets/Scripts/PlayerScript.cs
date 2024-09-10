@@ -5,11 +5,10 @@ using UnityEngine.Tilemaps;
 public class PlayerScript : MonoBehaviour
 {
     public string state = "alive";
-    public float moveSpeed = 5.0f;
     public float hp = 100;
+    public float moveSpeed = 5.0f;
     public float knockResistance = 1f;
-    public bool immune = false;
-    public float immunityDuration = 1f;
+
     public float tileSize = 1.0f;
     public Tilemap tilemapFloor;
 
@@ -32,6 +31,12 @@ public class PlayerScript : MonoBehaviour
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         targetPosition = transform.position; // Initialize targetPosition
+
+        Vector2Int targetPosition2D = new Vector2Int(
+            Mathf.FloorToInt(targetPosition.x - 0.5f),
+            Mathf.FloorToInt(targetPosition.y - 0.5f)
+        );
+        DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(targetPosition2D);
     }
 
     private void Update()
@@ -55,16 +60,11 @@ public class PlayerScript : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        immune = true;
         hp -= damage;
 
         if (hp <= 0)
         {
             SetStateToDead();
-        }
-        else
-        {
-            StartCoroutine(ResetImmunityAfterDelay());
         }
     }
 
@@ -72,7 +72,7 @@ public class PlayerScript : MonoBehaviour
     {
         state = "dead";
 
-        DungeonManager.GetComponent<DungeonGenerationScript>().RestartScene();
+        DungeonManager.GetComponent<DungeonGenerationScript01>().RestartScene();
     }
 
     void SetStateToKnocked(float knockTime)
@@ -85,12 +85,6 @@ public class PlayerScript : MonoBehaviour
     {
         yield return new WaitForSeconds(knockTime);
         state = "alive";
-    }
-
-    IEnumerator ResetImmunityAfterDelay()
-    {
-        yield return new WaitForSeconds(immunityDuration);
-        immune = false;
     }
 
     private void HandleMovement()
@@ -187,11 +181,12 @@ public class PlayerScript : MonoBehaviour
         canMove = true;
     }
 
-    public void ApplyKnockback(Vector2 direction, float force, float knockTime)
+    public void ApplyKnockback(Vector2 direction, float force, float knockTime, float damageOther)
     {
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         rb.AddForce(direction * force, ForceMode2D.Impulse);
         SetStateToKnocked(knockTime);
+        TakeDamage(damageOther);
 
         // Start a coroutine to monitor the player's position and regenerate Dijkstra map when necessary
         StartCoroutine(MonitorPositionDuringKnockback());

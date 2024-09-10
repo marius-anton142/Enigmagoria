@@ -11,13 +11,21 @@ public class SwordController : MonoBehaviour
 
     public float attackDuration = 0.5f; // Duration of the attack animation
     public float attackCooldown = 1f; // Cooldown time between attacks
+    public float attackRange = 2f; // The range of the sword attack
+    public float damage = 50;
+    public float attackSize = 1.5f;
+    public float knockbackForce = 10.0f;
+    public float knockTime = 1f;
 
     public float baseAngle;
     public float adjustedAngle;
     public float additionalAngleValue = 20f;
 
+    public LayerMask enemyLayer;
     private float targetAngleOffset; // Target angle for the current attack phase
     public float additionalAngle = 0f; // Additional angle to be applied during an attack
+
+    public bool attacked;
     private float additionalAngleLatest = 0f;
 
     private float lastAttackTime = -1f; // Track the last attack time
@@ -26,6 +34,7 @@ public class SwordController : MonoBehaviour
 
     private bool isResetting = false;
     private float resetStartTime; // Time when resetting starts
+    private HashSet<GameObject> hitEntities;
 
     void Update()
     {
@@ -62,6 +71,7 @@ public class SwordController : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && !IsPointerOverUIObject() && Time.time >= lastAttackTime + attackCooldown && !isAttacking)
         {
             StartAttack();
+            hitEntities = new HashSet<GameObject>();
         }
 
         // Handle touch input for touch-enabled devices
@@ -111,12 +121,31 @@ public class SwordController : MonoBehaviour
             isAttacking = false;
             isResetting = true; // Start resetting after the attack
             resetStartTime = Time.time; // Mark the start time for the reset
-        } else if (percentageComplete >= .4f)
+            attacked = false;
+        } else if (!attacked && percentageComplete >= 0.2f)
         {
-            GetComponent<BoxCollider2D>().enabled = false;
-        } else if (percentageComplete >= .1f)
-        {
-            GetComponent<BoxCollider2D>().enabled = true;
+            Vector3 attackPoint = player.transform.position + direction * attackRange;
+            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint, attackRange, enemyLayer);
+            attacked = true;
+
+            foreach (Collider2D collider in hitEnemies)
+            {
+                GameObject hitObject = collider?.gameObject;
+
+                if (collider == null || hitEntities.Contains(hitObject) || hitObject == gameObject)
+                    continue;
+
+                hitEntities.Add(hitObject);
+                EnemyAI enemy = collider.GetComponent<EnemyAI>();
+                Vector2 knockbackDirection = (hitObject.transform.position - player.transform.position).normalized;
+
+                if (enemy != null)
+                {
+                    enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
+                }
+
+                //Debug.Log("We hit " + enemy.name);
+            }
         }
     }
 
@@ -206,5 +235,20 @@ public class SwordController : MonoBehaviour
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
         return results.Count > 0;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (player != null)
+        {
+            // Calculate the attack point based on the player's position and attack direction
+            Vector3 attackPoint = player.transform.position + direction * attackRange;
+
+            // Set the color for the Gizmo
+            Gizmos.color = Color.red;
+
+            // Draw a wireframe sphere at the attack point to visualize the attack range
+            Gizmos.DrawWireSphere(attackPoint, attackSize);
+        }
     }
 }

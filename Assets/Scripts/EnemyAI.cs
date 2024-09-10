@@ -6,11 +6,16 @@ using System.Collections.Generic;
 public class EnemyAI : MonoBehaviour
 {
     public string state = "idle";
+    public float hp = 100;
+    public float damage = 50;
     public float moveSpeed = 5.0f;
     public float moveIntervalMin = 0.4f;
     public float moveIntervalMax = 0.6f;
     public float leapForce = 10.0f;
     public float knockbackForce = 10.0f;
+    public float prepareTime = 1f;
+    public float leapTime = 1f;
+    public float cooldownTime = 1f;
     public float knockTime = 1f;
     public float knockResistance = 1f;
     public GameObject DijkstraMap;
@@ -36,12 +41,14 @@ public class EnemyAI : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         player = GameObject.FindGameObjectWithTag("Player");
+        DijkstraMap = GameObject.FindGameObjectWithTag("DijkstraMap");
+        tilemapFloor = GameObject.FindGameObjectWithTag("TilemapFloor").GetComponent<Tilemap>();
     }
 
     private void Start()
     {
         targetPosition = transform.position; // Initialize target position
-        InvokeRepeating(nameof(NextStep), Random.Range(moveIntervalMin, moveIntervalMax), Random.Range(moveIntervalMin, moveIntervalMax));
+        Invoke(nameof(NextStep), Random.Range(moveIntervalMin, moveIntervalMax));
 
         // Find both colliders attached to the enemy
         Collider2D[] enemyColliders = GetComponents<Collider2D>();
@@ -83,6 +90,8 @@ public class EnemyAI : MonoBehaviour
     // Determine the next step based on the Dijkstra map and move the enemy
     private void NextStep()
     {
+        Invoke(nameof(NextStep), Random.Range(moveIntervalMin, moveIntervalMax));
+
         if (!CanMove() || isMoving || isLeaping) return; // Don't process if already moving or leaping
 
         Vector2Int currentCell = new Vector2Int(
@@ -95,7 +104,7 @@ public class EnemyAI : MonoBehaviour
         if (currentCost < 3 && !isLeaping)
         {
             // Prepare to leap towards the player
-            StopInvokeNextStep(); // Stop the NextStep coroutine
+            //StopInvokeNextStep(); // Stop the NextStep coroutine
             leapCoroutine = StartCoroutine(PrepareAndLeap());
             SetStateToPrepare();
             return;
@@ -149,7 +158,7 @@ public class EnemyAI : MonoBehaviour
     // Resume invoking NextStep after a delay
     private void ResumeInvokeNextStep()
     {
-        InvokeRepeating(nameof(NextStep), moveIntervalMin, moveIntervalMax);
+        Invoke(nameof(NextStep), Random.Range(moveIntervalMin, moveIntervalMax));
     }
 
     // Coroutine to handle the leap attack
@@ -158,7 +167,7 @@ public class EnemyAI : MonoBehaviour
         isLeaping = true;
 
         // Prepare for 1 second before leaping
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(prepareTime);
 
         // Launch towards the player
         SetStateToAttack();
@@ -172,12 +181,12 @@ public class EnemyAI : MonoBehaviour
         rb.AddForce(leapDirection * leapForce, ForceMode2D.Impulse);
 
         // After a short leap, stop and wait before invoking NextStep again
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(leapTime);
 
         isLeaping = false; // Reset leap state
         SetStateToCooldown();
-        yield return new WaitForSeconds(1.0f); // Pause for 1 second before resuming regular behavior
-        ResumeInvokeNextStep(); // Resume regular movement
+        yield return new WaitForSeconds(cooldownTime); // Pause for 1 second before resuming regular behavior
+        //ResumeInvokeNextStep(); // Resume regular movement
     }
 
     // Shuffle array to randomize the order of directions
@@ -208,7 +217,23 @@ public class EnemyAI : MonoBehaviour
         isMoving = true;
     }
 
-    public void ApplyKnockback(Vector2 direction, float force, float knockTime)
+    public void TakeDamage(float damage)
+    {
+        hp -= damage;
+
+        if (hp <= 0)
+        {
+            SetStateToDead();
+        }
+    }
+
+    void SetStateToDead()
+    {
+        state = "dead";
+        Destroy(gameObject);
+    }
+
+    public void ApplyKnockback(Vector2 direction, float force, float knockTime, float damageOther)
     {
         // Stop the leap coroutine if it is running
         if (leapCoroutine != null)
@@ -221,7 +246,7 @@ public class EnemyAI : MonoBehaviour
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         rb.AddForce(direction * force, ForceMode2D.Impulse);
         SetStateToKnocked(knockTime);
-
+        TakeDamage(damageOther);
         float distance = (force / rb.mass) / (1 + rb.drag);
     }
 
@@ -252,12 +277,12 @@ public class EnemyAI : MonoBehaviour
 
         if (player != null)
         {
-            player.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);
+            player.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
         }
         else if (enemy != null)
         {
             Physics2D.IgnoreCollision(mainCollider, other.GetComponent<Collider2D>(), true);
-            enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime);  // Assuming you have ApplyKnockback in EnemyAI
+            enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
         }
     }
 
@@ -291,7 +316,7 @@ public class EnemyAI : MonoBehaviour
 
     private bool CanMove()
     {
-        if (state != "knocked" && state != "leaping")
+        if (state != "knocked" && state != "leaping" && state != "prepare" && state != "dead")
         {
             return true;
         }
@@ -308,7 +333,7 @@ public class EnemyAI : MonoBehaviour
     {
         yield return new WaitForSeconds(knockTime);
         state = "idle";
-        ResumeInvokeNextStep();
+        //ResumeInvokeNextStep();
     }
 
     void SetStateToPrepare()

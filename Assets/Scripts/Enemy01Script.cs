@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class Enemy01Script : MonoBehaviour
-{
+{/*
     public string state = "idle";
     public GameObject DijkstraMap, DungeonManager;
     public float moveSpeed = 5.0f;
@@ -307,4 +307,4 @@ public class Enemy01Script : MonoBehaviour
         Vector3Int cellPosition = new Vector3Int(cell.x, cell.y, 0);
         return tilemapFloor.GetTile(cellPosition) != null;
     }
-}
+*/}
