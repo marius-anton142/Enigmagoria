@@ -31,12 +31,6 @@ public class PlayerScript : MonoBehaviour
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         targetPosition = transform.position; // Initialize targetPosition
-
-        Vector2Int targetPosition2D = new Vector2Int(
-            Mathf.FloorToInt(targetPosition.x - 0.5f),
-            Mathf.FloorToInt(targetPosition.y - 0.5f)
-        );
-        DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(targetPosition2D);
     }
 
     private void Update()
