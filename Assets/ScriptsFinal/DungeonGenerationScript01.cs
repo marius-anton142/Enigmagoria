@@ -1530,14 +1530,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         foreach (Room room in rooms)
         {
-            FillRoomWithTables(room);
+            //FillRoomWithTables(room);
 
-            List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
-            FillRoomWithPlants(room, walkedTilesPlants, PlantPrefab01, chancePlantAny);
+            //List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
+            //FillRoomWithPlants(room, walkedTilesPlants, PlantPrefab01, chancePlantAny);
 
-            FillRoomWithFloor(room, tileFloorFour01);
-            AddFloorCornerBroken(room);
-            FillRoomWithFloorFull(room, tileFloorFour01);
+            //FillRoomWithFloor(room, tileFloorFour01);
+            //AddFloorCornerBroken(room);
+            //FillRoomWithFloorFull(room, tileFloorFour01);
 
             FillRoomWithEnemies(room);
         }
