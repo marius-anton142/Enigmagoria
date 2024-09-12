@@ -51111,17 +51111,17 @@ MonoBehaviour:
   tilemapWalls: {fileID: 34731195}
   tilemapWallsFix: {fileID: 800668273}
   tilemapWallColliders: {fileID: 0}
-  tileFloor01: {fileID: 11400000, guid: 33038e240b4af824fb5f66529344c02c, type: 2}
+  tileFloor01: {fileID: 11400000, guid: 309e84caab7209f4f9d45ed2b38346bc, type: 2}
   tileFloorFour01: {fileID: 11400000, guid: 7578daf38f5157f4a9443c959ac04b90, type: 2}
   tileFloorOptions:
   - {fileID: 11400000, guid: 44fc378ba21aa3e46a578905bcd8baa4, type: 2}
   - {fileID: 11400000, guid: 82ed951ade64d634b8cf93da454e8e5b, type: 2}
   - {fileID: 11400000, guid: 77c28bac4ad4808408f084e861519811, type: 2}
   - {fileID: 11400000, guid: 59d832b21fe8b704484a5c007eacca81, type: 2}
-  tileFloor02: {fileID: 11400000, guid: 33038e240b4af824fb5f66529344c02c, type: 2}
-  tileFloor03: {fileID: 11400000, guid: 20d4af4222e12de4fb2a53c6f520894c, type: 2}
-  tileFloor04: {fileID: 11400000, guid: 20d4af4222e12de4fb2a53c6f520894c, type: 2}
-  tileFloor05: {fileID: 11400000, guid: 20d4af4222e12de4fb2a53c6f520894c, type: 2}
+  tileFloor02: {fileID: 11400000, guid: 309e84caab7209f4f9d45ed2b38346bc, type: 2}
+  tileFloor03: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
+  tileFloor04: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
+  tileFloor05: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
   tileWallHorizontal: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpLeft: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpRight: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
