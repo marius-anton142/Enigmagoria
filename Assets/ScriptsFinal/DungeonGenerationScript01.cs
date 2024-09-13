@@ -12,8 +12,13 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private int numRooms;
     [SerializeField] private int maxLHallwayLength;
     [SerializeField] private int roomsPlaced;
+
+    [Header("Special Rooms")]
     [SerializeField] private float chanceRoomSpecial;
     [SerializeField] private float chanceRoomPlus;
+    [SerializeField] private float chanceRoomChess;
+
+    [Header("Parameters")]
     [SerializeField] private float chanceAdditionalHallways;
     [SerializeField] private int maxAdditionalHallways;
     [SerializeField] private float chanceAnyTileFloors;
@@ -51,6 +56,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileFloorFour01;
     [SerializeField] private List<Tile> tileFloorOptions;
     [SerializeField] private Tile tileFloor02, tileFloor03, tileFloor04, tileFloor05;
+    [SerializeField] private Tile tileFloorChessWhite, tileFloorChessBlack;
 
     [Header("Wall Tiles")]
     [SerializeField] private Tile tileWallHorizontal;
@@ -441,6 +447,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         public List<Vector3Int> FloorTileCoordinates { get; private set; }
         private Vector3Int position;
+        private string type;
 
         public Room(List<Vector3Int> floorTileCoordinates)
         {
@@ -455,6 +462,16 @@ public class DungeonGenerationScript01 : MonoBehaviour
         public void SetPosition(Vector3Int newPosition)
         {
             position = newPosition;
+        }
+
+        public string GetType()
+        {
+            return type;
+        }
+
+        public void SetType(string newType)
+        {
+            type = newType;
         }
     }
 
@@ -1270,14 +1287,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return floorTileCoordinates;
     }
 
-    private void FillRoomWithPlants(Room room, List<Vector3Int> walkedTiles, GameObject plantPrefab, float chancePlantAny)
+    private void FillRoomWithPlants(Room room, GameObject plantPrefab, float chancePlantAny)
     {
+        List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
         Sprite selectedPlantSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
 
         if (Random.value < chancePlantAny)
         {
             // Choose a random sprite for each plant
-            foreach (Vector3Int pos in walkedTiles)
+            foreach (Vector3Int pos in walkedTilesPlants)
             {
                 Sprite randomSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
                 FillRegionWithObject(new List<Vector3Int> { pos }, plantPrefab, room.GetPosition(), randomSprite);
@@ -1286,7 +1304,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         else
         {
             // Use the selectedPlantSprite for all plants in this room
-            FillRegionWithObject(walkedTiles, plantPrefab, room.GetPosition(), selectedPlantSprite);
+            FillRegionWithObject(walkedTilesPlants, plantPrefab, room.GetPosition(), selectedPlantSprite);
         }
     }
 
@@ -1364,6 +1382,34 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
                     tilemapFloor.SetTile(pos + offset, tileToPlace);
                 }
+            }
+        }
+    }
+
+    private void FillRoomWithFloorChess(Room room)
+    {
+        if (room.GetType() == "chess")
+        {
+            List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
+            Tile tileToPlace;
+            Vector3Int offset = room.GetPosition();
+            int step = 0;
+            bool flip = false;
+
+            foreach (Vector3Int pos in fullTilesFloorFour)
+            {
+                if (step % 8 == 0) flip = !flip;
+
+                if (step % 2 == 0 && flip || step % 2 == 1 && !flip)
+                {
+                    tileToPlace = tileFloorChessBlack;
+                } else
+                {
+                    tileToPlace = tileFloorChessWhite;
+                }
+                ++step;
+
+                tilemapFloor.SetTile(pos + offset, tileToPlace);
             }
         }
     }
@@ -1519,6 +1565,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    bool roomTemplate(Room room)
+    {
+        if (room.GetType() == "chess")
+        {
+            return true;
+        } else
+        {
+            return false;
+        }
+    }
+
     private void Start()
     {
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
@@ -1530,14 +1587,19 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         foreach (Room room in rooms)
         {
-            FillRoomWithTables(room);
+            if (!roomTemplate(room))
+            {
+                FillRoomWithTables(room);
 
-            List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
-            FillRoomWithPlants(room, walkedTilesPlants, PlantPrefab01, chancePlantAny);
+                FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
 
-            //FillRoomWithFloor(room, tileFloorFour01);
-            //AddFloorCornerBroken(room);
-            //FillRoomWithFloorFull(room, tileFloorFour01);
+                FillRoomWithFloor(room, tileFloorFour01);
+                AddFloorCornerBroken(room);
+                FillRoomWithFloorFull(room, tileFloorFour01);
+            } else
+            {
+                FillRoomWithFloorChess(room);
+            }
 
             FillRoomWithEnemies(room);
         }
@@ -1560,7 +1622,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
             if (Random.value < chanceRoomSpecial)
             {
-                if (Random.value < chanceRoomPlus)
+                if (Random.value < chanceRoomChess)
+                {
+                    type = "chess";
+
+                    int randomWidth = 8;
+                    int randomHeight = 8;
+                    room1 = CreateRoomSquare(randomWidth, randomHeight);
+                }
+                else if (Random.value < chanceRoomPlus)
                 {
                     type = "plus";
 
@@ -1587,6 +1657,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 int randomHeight = Random.Range(5, 9);
                 room1 = CreateRoomSquare(randomWidth, randomHeight);
             }
+            room1.SetType(type);
 
             Room room0 = null;
             bool roomPlaced = false;

@@ -233,7 +233,7 @@ MonoBehaviour:
   tilemapFloor: {fileID: 1738476036}
   allowContinuousMove: 1
   continuousMoveCooldown: 0.12
-  DungeonManager: {fileID: 975777536}
+  DungeonManager: {fileID: 942841689}
   DijkstraMap: {fileID: 442514941}
   targetPosition: {x: 0, y: 0, z: 0}
 --- !u!61 &21251031
@@ -50670,7 +50670,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &942841690
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50687,7 +50687,8 @@ MonoBehaviour:
   maxLHallwayLength: 20
   roomsPlaced: 0
   chanceRoomSpecial: 0.5
-  chanceRoomPlus: 0.05
+  chanceRoomPlus: 0.1
+  chanceRoomChess: 0.075
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloors: 0.78
@@ -50734,6 +50735,8 @@ MonoBehaviour:
   tileFloor03: {fileID: 11400000, guid: 5808fa0a870bb3144883b430bbdce695, type: 2}
   tileFloor04: {fileID: 11400000, guid: b679e5bbbcdebf54f8f249fe4130ee31, type: 2}
   tileFloor05: {fileID: 11400000, guid: 59484ddeee438944f85aa252eae50053, type: 2}
+  tileFloorChessWhite: {fileID: 11400000, guid: 37c40516c1c23f14895b1ef18ef3da70, type: 2}
+  tileFloorChessBlack: {fileID: 11400000, guid: 5d030590921a4224fa05dcbc41d3fccf, type: 2}
   tileWallHorizontal: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpLeft: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpRight: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
@@ -51058,7 +51061,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &975777537
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51076,6 +51079,7 @@ MonoBehaviour:
   roomsPlaced: 0
   chanceRoomSpecial: 0.5
   chanceRoomPlus: 0.05
+  chanceRoomChess: 0
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloors: 0.78
@@ -51122,6 +51126,8 @@ MonoBehaviour:
   tileFloor03: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
   tileFloor04: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
   tileFloor05: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
+  tileFloorChessWhite: {fileID: 0}
+  tileFloorChessBlack: {fileID: 0}
   tileWallHorizontal: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpLeft: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpRight: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
