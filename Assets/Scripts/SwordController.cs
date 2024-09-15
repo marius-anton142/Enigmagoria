@@ -15,8 +15,8 @@ public class SwordController : MonoBehaviour
     public float resetDuration = 0.5f;
     public float attackCooldown = 1f; // Cooldown time between attacks
     public float attackRange = 2f; // The range of the sword attack
-    public float damage = 50;
     public float attackSize = 1.5f;
+    public float damage = 50;
     public float knockbackForce = 10.0f;
     public float knockTime = 1f;
 
