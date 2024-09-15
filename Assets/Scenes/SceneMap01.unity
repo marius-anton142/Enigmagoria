@@ -25924,7 +25924,7 @@ Canvas:
   m_RenderMode: 0
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
-  m_PixelPerfect: 0
+  m_PixelPerfect: 1
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
@@ -50657,6 +50657,7 @@ MonoBehaviour:
     m_Bits: 64
   additionalAngle: 0
   attacked: 0
+  canvasRect: {fileID: 561306941}
 --- !u!61 &839997651
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -51492,6 +51493,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 312994586de9cbd4baa4971f3a9eb4c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvasRect: {fileID: 561306941}
 --- !u!1 &1196491413
 GameObject:
   m_ObjectHideFlags: 0

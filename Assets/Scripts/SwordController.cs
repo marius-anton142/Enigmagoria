@@ -39,6 +39,7 @@ public class SwordController : MonoBehaviour
     private bool isResetting = false;
     private float resetStartTime; // Time when resetting starts
     private HashSet<GameObject> hitEntities;
+    public RectTransform canvasRect;
 
     void Update()
     {
@@ -222,7 +223,14 @@ public class SwordController : MonoBehaviour
     {
         Vector3 inputPosition = Vector3.zero;
 
-        Vector3 bottomRightReferencePoint = new Vector3(Screen.width * 7 / 8f, Screen.height * 1 / 8f, 0);
+        // Get the Canvas dimensions
+        float canvasWidth = canvasRect.rect.width;
+        float canvasHeight = canvasRect.rect.height;
+
+        // Calculate the bottom-right reference point based on the Canvas size (1/8 from right and bottom)
+        Vector3 bottomRightReferencePoint = new Vector3(canvasWidth * 6.5f / 8f, canvasHeight * 3 / 8f, 0);
+
+        // Convert the reference point from Canvas space to world space
         Vector3 worldReferencePoint = Camera.main.ScreenToWorldPoint(bottomRightReferencePoint);
 
         // Check for touch input

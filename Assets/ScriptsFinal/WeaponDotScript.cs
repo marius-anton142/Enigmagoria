@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class WeaponDotScript : MonoBehaviour
 {
+    public RectTransform canvasRect;
+
     void Start()
     {
         RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
@@ -12,7 +14,9 @@ public class WeaponDotScript : MonoBehaviour
         rectTransform.anchorMax = new Vector2(0, 0);
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
 
-        Vector2 offset = new Vector2(Screen.width * 7 / 8f, Screen.height * 1 / 8f);
+        float canvasWidth = canvasRect.rect.width;
+        float canvasHeight = canvasRect.rect.height;
+        Vector2 offset = new Vector2(canvasWidth * 6.5f / 8f, canvasHeight * 3 / 8f);
 
         rectTransform.anchoredPosition = offset;
     }
