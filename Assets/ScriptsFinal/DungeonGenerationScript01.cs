@@ -1449,21 +1449,24 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void FillRoomWithEnemies(Room room)
     {
-        if (Random.value < chanceEnemy01)
+        if (room.GetType() != "start")
         {
-            int numberOfPlacements = Random.Range(1, 4); // Random number between 1 and 4
-
-            for (int i = 0; i < numberOfPlacements; i++)
+            if (Random.value < chanceEnemy01)
             {
-                Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
-                if (freePosition != null)
-                {
-                    float spriteHeightInUnits = 24f / 16f;
-                    float pivotYPercentage = 1f;
-                    float yOffset = spriteHeightInUnits * pivotYPercentage;
-                    Vector3 pivotOffset = new Vector3(0.5f, yOffset, 0f);
+                int numberOfPlacements = Random.Range(1, 4); // Random number between 1 and 4
 
-                    PlaceObject(freePosition.Value, EnemyPrefab01, room.GetPosition() + pivotOffset);
+                for (int i = 0; i < numberOfPlacements; i++)
+                {
+                    Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
+                    if (freePosition != null)
+                    {
+                        float spriteHeightInUnits = 24f / 16f;
+                        float pivotYPercentage = 1f;
+                        float yOffset = spriteHeightInUnits * pivotYPercentage;
+                        Vector3 pivotOffset = new Vector3(0.5f, yOffset, 0f);
+
+                        PlaceObject(freePosition.Value, EnemyPrefab01, room.GetPosition() + pivotOffset);
+                    }
                 }
             }
         }
@@ -1582,9 +1585,9 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         Room initialRoom = CreateRoomSquare(6, 6);
         InstantiateRoom(initialRoom, pos01);
+        initialRoom.SetType("start");
 
         BuildRooms();
-
         foreach (Room room in rooms)
         {
             if (!roomTemplate(room))

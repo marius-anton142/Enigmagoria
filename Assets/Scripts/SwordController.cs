@@ -4,12 +4,15 @@ using System.Collections.Generic;
 
 public class SwordController : MonoBehaviour
 {
+    public WeaponState weaponState = WeaponState.Free;
+    public GameObject inventory;
     public GameObject player; // Assign the player GameObject in the inspector
     public float distanceFromPlayer; // Distance between player and sword
     public float angleOffset; // Initial angle offset
     private bool isAttackPhaseOne = true; // Tracks the attack phase
 
     public float attackDuration = 0.5f; // Duration of the attack animation
+    public float resetDuration = 0.5f;
     public float attackCooldown = 1f; // Cooldown time between attacks
     public float attackRange = 2f; // The range of the sword attack
     public float damage = 50;
@@ -32,37 +35,83 @@ public class SwordController : MonoBehaviour
     private bool isAttacking = false; // Is the sword currently attacking
     private Vector3 direction = new Vector3(0, 0, 0);
 
+    private bool attackStarted = false;
     private bool isResetting = false;
     private float resetStartTime; // Time when resetting starts
     private HashSet<GameObject> hitEntities;
 
     void Update()
     {
-        HandleInput();
-
-        if (isAttacking)
+        if (weaponState == WeaponState.Equipped)
         {
-            float timeSinceStarted = Time.time - lastAttackTime;
-            float percentageComplete = timeSinceStarted / attackDuration;
+            HandleInput();
+            FollowInput();
 
-            // Use SmoothStep for a smoother transition of additionalAngle
-            if (isAttackPhaseOne)
+            if (isAttacking)
             {
-                additionalAngle = Mathf.SmoothStep(additionalAngleLatest, additionalAngleValue, percentageComplete);
+                float timeSinceStarted = Time.time - lastAttackTime;
+                float percentageComplete = timeSinceStarted / attackDuration;
+
+                if (!attackStarted)
+                {
+                    additionalAngleLatest = additionalAngle;
+                    attackStarted = true;
+                }
+
+                // Use SmoothStep for a smoother transition of additionalAngle
+                if (isAttackPhaseOne)
+                {
+                    additionalAngle = Mathf.SmoothStep(additionalAngleLatest, additionalAngleValue, percentageComplete);
+                }
+                else
+                {
+                    additionalAngle = Mathf.SmoothStep(additionalAngleLatest, additionalAngleValue * -1, percentageComplete);
+                }
+
+                PerformAttack();
             }
             else
             {
-                additionalAngle = Mathf.SmoothStep(additionalAngleLatest, additionalAngleValue * -1, percentageComplete);
+                HandleResetting();
             }
-
-            PerformAttack();
         }
-        else
+    }
+
+    public void SetState(WeaponState newState)
+    {
+        weaponState = newState;
+        switch (newState)
         {
-            HandleResetting();
-        }
+            case WeaponState.Free:
+            case WeaponState.Dropped:
+                transform.SetParent(null);
+                gameObject.SetActive(true); // Active in the world
+                break;
 
-        FollowInput();
+            case WeaponState.Equipped:
+                transform.SetParent(player.transform);
+                transform.localPosition = Vector3.zero;
+                transform.localRotation = Quaternion.identity;
+                gameObject.SetActive(true);
+                break;
+
+            case WeaponState.Inventory:
+                transform.SetParent(player.transform);
+                transform.localPosition = Vector3.zero;
+                gameObject.SetActive(false);
+                break;
+        }
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player") && weaponState == WeaponState.Free)
+        {
+            if (inventory != null)
+            {
+                bool added = inventory.GetComponent<InventoryManager>().AddWeapon(gameObject);
+            }
+        }
     }
 
     void HandleInput()
@@ -71,7 +120,6 @@ public class SwordController : MonoBehaviour
         if (Input.GetMouseButtonDown(0) && !IsPointerOverUIObject() && Time.time >= lastAttackTime + attackCooldown && !isAttacking)
         {
             StartAttack();
-            hitEntities = new HashSet<GameObject>();
         }
 
         // Handle touch input for touch-enabled devices
@@ -93,6 +141,7 @@ public class SwordController : MonoBehaviour
         lastAttackTime = Time.time;
         isAttacking = true;
         isResetting = false;
+        hitEntities = new HashSet<GameObject>();
 
         // Initialize additional logic for starting the attack here if necessary
         if (isAttackPhaseOne)
@@ -118,6 +167,8 @@ public class SwordController : MonoBehaviour
         // Complete the attack once the duration is finished
         if (percentageComplete >= 1.0f)
         {
+            attackStarted = false;
+            additionalAngleLatest = additionalAngle;
             isAttacking = false;
             isResetting = true; // Start resetting after the attack
             resetStartTime = Time.time; // Mark the start time for the reset
@@ -154,16 +205,15 @@ public class SwordController : MonoBehaviour
         if (isResetting)
         {
             float timeSinceStarted = Time.time - resetStartTime;
-            // Use the same duration for resetting as the attack for consistency
-            float percentageComplete = timeSinceStarted / attackDuration;
-
-            additionalAngle = Mathf.SmoothStep(additionalAngle, 0, percentageComplete);
-            additionalAngleLatest = additionalAngle;
+            float percentageComplete = timeSinceStarted / resetDuration;
 
             if (percentageComplete >= 1.0f)
             {
                 isResetting = false; // Stop resetting once done
                 additionalAngle = 0; // Ensure it's precisely 0
+            } else if (percentageComplete >= 0f)
+            {
+                additionalAngle = Mathf.SmoothStep(additionalAngleLatest, 0, percentageComplete);
             }
         }
     }
@@ -172,6 +222,10 @@ public class SwordController : MonoBehaviour
     {
         Vector3 inputPosition = Vector3.zero;
 
+        Vector3 bottomRightReferencePoint = new Vector3(Screen.width * 7 / 8f, Screen.height * 1 / 8f, 0);
+        Vector3 worldReferencePoint = Camera.main.ScreenToWorldPoint(bottomRightReferencePoint);
+
+        // Check for touch input
         if (Input.touchCount > 0)
         {
             foreach (Touch touch in Input.touches)
@@ -180,16 +234,17 @@ public class SwordController : MonoBehaviour
                 {
                     inputPosition = Camera.main.ScreenToWorldPoint(touch.position);
                     inputPosition.z = 0;
-                    direction = (inputPosition - player.transform.position).normalized;
+                    direction = (inputPosition - worldReferencePoint).normalized;  // Use the new reference point
                     break;
                 }
             }
         }
+        // Check for mouse input
         else if (!IsPointerOverUIObject())
         {
             inputPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             inputPosition.z = 0;
-            direction = (inputPosition - player.transform.position).normalized;
+            direction = (inputPosition - worldReferencePoint).normalized;  // Use the new reference point
         }
 
         if (direction != Vector3.zero)
@@ -223,6 +278,16 @@ public class SwordController : MonoBehaviour
         };
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+
+        // Check if any of the raycast results include your specific UI dot
+        foreach (RaycastResult result in results)
+        {
+            if (result.gameObject.name == "WeaponDot") // Replace with your dot's name or tag
+            {
+                return true; // Pointer is over the dot
+            }
+        }
+
         return results.Count > 0;
     }
 
@@ -234,6 +299,16 @@ public class SwordController : MonoBehaviour
         };
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+
+        // Check if any of the raycast results include your specific UI dot
+        foreach (RaycastResult result in results)
+        {
+            if (result.gameObject.name == "WeaponDot") // Replace with your dot's name or tag
+            {
+                return true; // Pointer is over the dot
+            }
+        }
+
         return results.Count > 0;
     }
 

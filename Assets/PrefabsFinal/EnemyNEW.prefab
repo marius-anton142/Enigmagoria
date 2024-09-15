@@ -54,7 +54,7 @@ MonoBehaviour:
   damage: 34
   moveSpeed: 12
   moveIntervalMin: 0.5
-  moveIntervalMax: 0.72
+  moveIntervalMax: 0.7
   leapForce: 50
   knockbackForce: 24
   prepareTime: 0.35

@@ -186,7 +186,7 @@ public class EnemyAI : MonoBehaviour
         isLeaping = false; // Reset leap state
         SetStateToCooldown();
         yield return new WaitForSeconds(cooldownTime); // Pause for 1 second before resuming regular behavior
-        //ResumeInvokeNextStep(); // Resume regular movement
+        SetStateToIdle(); // Resume regular movement
     }
 
     // Shuffle array to randomize the order of directions
@@ -240,8 +240,10 @@ public class EnemyAI : MonoBehaviour
         {
             StopCoroutine(leapCoroutine);
             leapCoroutine = null;
-            isLeaping = false; // Ensure leaping state is reset
         }
+
+        isLeaping = false; // Ensure leaping state is reset
+        isMoving = false;
 
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         rb.AddForce(direction * force, ForceMode2D.Impulse);
@@ -316,7 +318,7 @@ public class EnemyAI : MonoBehaviour
 
     private bool CanMove()
     {
-        if (state != "knocked" && state != "leaping" && state != "prepare" && state != "dead")
+        if (state != "knocked" && state != "leaping" && state != "prepare" && state != "dead" && state != "cooldown")
         {
             return true;
         }
