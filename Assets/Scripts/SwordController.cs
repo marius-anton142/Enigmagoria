@@ -40,6 +40,8 @@ public class SwordController : MonoBehaviour
     private float resetStartTime; // Time when resetting starts
     private HashSet<GameObject> hitEntities;
     public RectTransform canvasRect;
+    public Vector3 bottomRightReferencePoint = new Vector3();
+    public GameObject WeaponDot;
 
     void Update()
     {
@@ -177,7 +179,7 @@ public class SwordController : MonoBehaviour
         } else if (!attacked && percentageComplete >= 0.2f)
         {
             Vector3 attackPoint = player.transform.position + direction * attackRange;
-            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint, attackRange, enemyLayer);
+            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint, attackSize, enemyLayer);
             attacked = true;
 
             foreach (Collider2D collider in hitEnemies)
@@ -223,17 +225,14 @@ public class SwordController : MonoBehaviour
     {
         Vector3 inputPosition = Vector3.zero;
 
-        // Get the Canvas dimensions
-        float canvasWidth = canvasRect.rect.width;
-        float canvasHeight = canvasRect.rect.height;
+        // Use viewport coordinates instead of canvas width/height to get the bottom-right reference point
+        Vector2 viewportReferencePoint = new Vector2(6.5f / 8f, 3f / 8f); // Normalized values (0 to 1) for 6.5/8 and 3/8
 
-        // Calculate the bottom-right reference point based on the Canvas size (1/8 from right and bottom)
-        Vector3 bottomRightReferencePoint = new Vector3(canvasWidth * 6.5f / 8f, canvasHeight * 3 / 8f, 0);
+        // Convert viewport reference point directly to world space
+        Vector3 worldReferencePoint = Camera.main.ViewportToWorldPoint(new Vector3(viewportReferencePoint.x, viewportReferencePoint.y, Camera.main.nearClipPlane));
+        worldReferencePoint.z = 0; // Ensure it stays on the 2D plane
 
-        // Convert the reference point from Canvas space to world space
-        Vector3 worldReferencePoint = Camera.main.ScreenToWorldPoint(bottomRightReferencePoint);
-
-        // Check for touch input
+        // Handle input (touch or mouse)
         if (Input.touchCount > 0)
         {
             foreach (Touch touch in Input.touches)
@@ -247,33 +246,31 @@ public class SwordController : MonoBehaviour
                 }
             }
         }
-        // Check for mouse input
         else if (!IsPointerOverUIObject())
         {
             inputPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             inputPosition.z = 0;
-            direction = (inputPosition - worldReferencePoint).normalized;  // Use the new reference point
+            direction = (inputPosition - worldReferencePoint).normalized;
         }
 
+        // Proceed with direction logic
         if (direction != Vector3.zero)
         {
             // Calculate the base angle from the direction
             baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-            // Add the additionalAngle to the base angle for both position and rotation adjustment
+            // Add the additionalAngle to the base angle for position and rotation adjustment
             adjustedAngle = baseAngle + additionalAngle;
 
-            // Convert the adjusted angle back to radians for direction calculation
+            // Calculate direction based on adjusted angle
             float adjustedAngleRadians = adjustedAngle * Mathf.Deg2Rad;
-
-            // Create a new direction vector based on the adjusted angle
             Vector3 adjustedDirection = new Vector3(Mathf.Cos(adjustedAngleRadians), Mathf.Sin(adjustedAngleRadians), 0);
 
-            // Apply the additional angle for both position and rotation
+            // Move the object in the new direction
             transform.position = player.transform.position + adjustedDirection * distanceFromPlayer;
 
-            // Adjust the rotation to include the additional angle as well
-            float angleForRotation = adjustedAngle + angleOffset; // Include additionalAngle in rotation
+            // Rotate the object as well
+            float angleForRotation = adjustedAngle + angleOffset;
             transform.rotation = Quaternion.AngleAxis(angleForRotation, Vector3.forward);
         }
     }

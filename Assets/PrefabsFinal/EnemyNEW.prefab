@@ -49,9 +49,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ad9d21fb8a1bc14a8e5f18165c7485d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  type: Critter
   state: idle
   hp: 100
-  damage: 34
+  damage: 30
   moveSpeed: 12
   moveIntervalMin: 0.5
   moveIntervalMax: 0.7
@@ -62,7 +63,6 @@ MonoBehaviour:
   cooldownTime: 0.4
   knockTime: 0.42
   knockResistance: 1
-  DijkstraMap: {fileID: 0}
   tilemapFloor: {fileID: 0}
   player: {fileID: 0}
   isLeaping: 0

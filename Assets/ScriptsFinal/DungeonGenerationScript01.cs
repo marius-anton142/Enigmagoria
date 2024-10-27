@@ -45,7 +45,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     [Header("Enemies")]
     [SerializeField] private GameObject EnemyPrefab01;
-    [SerializeField] private GameObject EnemyPrefab02;
+    [SerializeField] private GameObject EnemyKnightPrefab;
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
@@ -1472,6 +1472,26 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private void FillRoomWithEnemy(Room room, GameObject EnemyPrefab, int numberOfPlacements)
+    {
+        if (room.GetType() != "start")
+        {
+            for (int i = 0; i < numberOfPlacements; i++)
+            {
+                Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
+                if (freePosition != null)
+                {
+                    float spriteHeightInUnits = 24f / 16f;
+                    float pivotYPercentage = 1f;
+                    float yOffset = spriteHeightInUnits * pivotYPercentage;
+                    Vector3 pivotOffset = new Vector3(0.5f, yOffset, 0f);
+
+                    PlaceObject(freePosition.Value, EnemyPrefab, room.GetPosition() + pivotOffset);
+                }
+            }
+        }
+    }
+
     private bool CheckTileNextDoor(Room room, Vector3Int position)
     {
         Vector3Int[] directions = new Vector3Int[]
@@ -1599,12 +1619,13 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 FillRoomWithFloor(room, tileFloorFour01);
                 AddFloorCornerBroken(room);
                 FillRoomWithFloorFull(room, tileFloorFour01);
+
+                FillRoomWithEnemies(room);
             } else
             {
                 FillRoomWithFloorChess(room);
+                FillRoomWithEnemy(room, EnemyKnightPrefab, 2);
             }
-
-            FillRoomWithEnemies(room);
         }
     }
 

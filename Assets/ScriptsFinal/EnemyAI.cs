@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 public class EnemyAI : MonoBehaviour
 {
+    public string type = "Critter";
     public string state = "idle";
     public float hp = 100;
     public float damage = 50;
@@ -18,7 +19,6 @@ public class EnemyAI : MonoBehaviour
     public float cooldownTime = 1f;
     public float knockTime = 1f;
     public float knockResistance = 1f;
-    public GameObject DijkstraMap;
     public Tilemap tilemapFloor;
     public GameObject player;
     public bool isLeaping = false;
@@ -35,13 +35,16 @@ public class EnemyAI : MonoBehaviour
     private HashSet<GameObject> hitEntities;
     private Coroutine leapCoroutine;
 
+    private HashSet<Vector2Int> walkableTiles;
+    //public GameObject DijkstraMap;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
         player = GameObject.FindGameObjectWithTag("Player");
-        DijkstraMap = GameObject.FindGameObjectWithTag("DijkstraMap");
+        //DijkstraMap = GameObject.FindGameObjectWithTag("DijkstraMap");
         tilemapFloor = GameObject.FindGameObjectWithTag("TilemapFloor").GetComponent<Tilemap>();
     }
 
@@ -49,6 +52,8 @@ public class EnemyAI : MonoBehaviour
     {
         targetPosition = transform.position; // Initialize target position
         Invoke(nameof(NextStep), Random.Range(moveIntervalMin, moveIntervalMax));
+
+        walkableTiles = GetWalkableTiles();
 
         // Find both colliders attached to the enemy
         Collider2D[] enemyColliders = GetComponents<Collider2D>();
@@ -87,64 +92,111 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    // Determine the next step based on the Dijkstra map and move the enemy
     private void NextStep()
     {
         Invoke(nameof(NextStep), Random.Range(moveIntervalMin, moveIntervalMax));
 
-        if (!CanMove() || isMoving || isLeaping) return; // Don't process if already moving or leaping
+        if (!CanMove() || isMoving || isLeaping) return; // Skip if already moving or leaping
 
         Vector2Int currentCell = new Vector2Int(
             Mathf.FloorToInt(transform.position.x),
             Mathf.FloorToInt(transform.position.y)
         );
 
-        int currentCost = DijkstraMap.GetComponent<DijkstraMap>().GetCost(currentCell);
+        Vector2Int targetCell = new Vector2Int(
+            Mathf.FloorToInt(player.transform.position.x),
+            Mathf.FloorToInt(player.transform.position.y)
+        );
 
-        if (currentCost < 3 && !isLeaping)
+        List<Vector2Int> path = AStarPathfinding(currentCell, targetCell);
+
+        if (type == "Critter")
         {
-            // Prepare to leap towards the player
-            //StopInvokeNextStep(); // Stop the NextStep coroutine
-            leapCoroutine = StartCoroutine(PrepareAndLeap());
-            SetStateToPrepare();
-            return;
-        }
-
-        // Regular movement logic using Dijkstra map
-        Vector2Int[] directions = new Vector2Int[]
-        {
-            new Vector2Int(0, 1), new Vector2Int(0, -1),
-            new Vector2Int(1, 0), new Vector2Int(-1, 0)
-        };
-
-        ShuffleArray(directions); // Shuffle directions for randomness
-
-        Vector2Int bestMove = currentCell;
-        int lowestCost = currentCost;
-
-        // Check each neighboring cell to find the one with the lowest Dijkstra value
-        foreach (var direction in directions)
-        {
-            Vector2Int neighbor = currentCell + direction;
-            int neighborCost = DijkstraMap.GetComponent<DijkstraMap>().GetCost(neighbor);
-
-            if (neighborCost < lowestCost)
+            if (currentCell == targetCell)
             {
-                bestMove = neighbor;
-                lowestCost = neighborCost;
+                leapCoroutine = StartCoroutine(PrepareAndLeap(Vector2Int.zero));
+                SetStateToPrepare();
+                return;
+            }
+
+            // Check if leaping condition is met (distance of 2 or less cells to the player)
+            if (path.Count > 7)
+            {
+                SetStateToIdle();
+                return;
+            }
+            else if (path.Count > 1 && path.Count <= 3 && !isLeaping)
+            {
+                // Prepare to leap towards the player
+                leapCoroutine = StartCoroutine(PrepareAndLeap(Vector2Int.zero));
+                SetStateToPrepare();
+                return;
+            }
+
+            // Proceed with regular movement towards the player
+            if (path.Count > 1)
+            {
+                Vector2Int bestMove = path[1]; // Next cell in the path
+
+                MoveToPosition(bestMove);
+                if (state != "chase")
+                {
+                    SetStateToChase();
+                }
+            }
+            else if (state != "idle")
+            {
+                SetStateToIdle();
             }
         }
-
-        if (bestMove == currentCell && state != "idle")
+        else if (type == "Knight")
         {
-            SetStateToIdle();
-        }
-        else if (bestMove != currentCell)
-        {
-            MoveToPosition(bestMove);
-            if (state != "chase")
+            if (currentCell == targetCell)
             {
-                SetStateToChase();
+                if (state == "idle")
+                {
+                    SetStateToChase();
+                } else if (state == "chase")
+                {
+                    List<Vector2Int> neighbors = GetNeighbors(currentCell);
+                    foreach (var neighbor in neighbors)
+                    {
+                        if (neighbor != targetCell) // Move to a neighbor cell that is not the player's cell
+                        {
+                            MoveToPosition(neighbor);
+                            return; // Exit after moving away to an adjacent cell
+                        }
+                    }
+                }
+                return;
+            }
+
+
+            if (path.Count > 1 && path[1] == targetCell && !isLeaping)
+            {
+                // Start the leap coroutine (acts as a move with knockback if the player is in target cell)
+                leapCoroutine = StartCoroutine(PrepareAndLeap(targetCell));
+                SetStateToPrepare();
+                return;
+            }
+
+            if (path.Count > 7)
+            {
+                SetStateToIdle();
+                return;
+            }
+            else if (path.Count > 1)
+            {
+                Vector2Int bestMove = path[1]; // Next cell in the path
+                MoveToPosition(bestMove);
+                if (state != "chase")
+                {
+                    SetStateToChase();
+                }
+            }
+            else if (state != "idle")
+            {
+                SetStateToIdle();
             }
         }
     }
@@ -162,7 +214,7 @@ public class EnemyAI : MonoBehaviour
     }
 
     // Coroutine to handle the leap attack
-    private IEnumerator PrepareAndLeap()
+    private IEnumerator PrepareAndLeap(Vector2Int targetCell)
     {
         isLeaping = true;
 
@@ -171,15 +223,45 @@ public class EnemyAI : MonoBehaviour
 
         // Launch towards the player
         SetStateToAttack();
-        Vector2 leapDirection = (player.transform.position - transform.position).normalized;
-        if (leapDirection == Vector2.zero)
+
+        Vector3 initialPosition = transform.position;
+
+        if (type == "Critter")
         {
-            leapDirection = GetRandomDirection();
+            Vector2 leapDirection = (player.transform.position - transform.position).normalized;
+            if (leapDirection == Vector2.zero)
+            {
+                leapDirection = GetRandomDirection();
+            }
+            ApplyKnockbackToOverlappingEntities(leapDirection);
+
+            rb.AddForce(leapDirection * leapForce, ForceMode2D.Impulse);
+        } 
+        else if (type == "Knight")
+        {
+            targetPosition = new Vector3(targetCell.x + 0.5f, targetCell.y + 0.5f, 0);
+
+            while (Vector3.Distance(transform.position, targetPosition) > 0.01f)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+                yield return null;
+            }
+
+            Collider2D[] entitiesInCell = Physics2D.OverlapBoxAll(
+                targetPosition, new Vector2(1, 1), 0f, LayerMask.GetMask("Player", "Enemy")
+            );
+
+            foreach (var entity in entitiesInCell)
+            {
+                // Ensure the entity is either the player or another enemy, and apply knockback
+                if (entity.gameObject != gameObject && !hitEntities.Contains(entity.gameObject) && (entity.CompareTag("Player") || entity.CompareTag("Enemy")))
+                {
+                    hitEntities.Add(entity.gameObject);
+                    Vector2 knockbackDirection = (transform.position - initialPosition).normalized;
+                    ApplyKnockbackToOther(entity, knockbackDirection);
+                }
+            }
         }
-
-        ApplyKnockbackToOverlappingEntities(leapDirection);
-        rb.AddForce(leapDirection * leapForce, ForceMode2D.Impulse);
-
         // After a short leap, stop and wait before invoking NextStep again
         yield return new WaitForSeconds(leapTime);
 
@@ -209,9 +291,9 @@ public class EnemyAI : MonoBehaviour
 
         targetPosition = new Vector3(targetCell.x + 0.5f, targetCell.y + 0.5f, 0); // Align to grid
 
-        if (targetCell.x < transform.position.x)
+        if (targetCell.x < transform.position.x - 0.5f)
             spriteRenderer.flipX = true;
-        else if (targetCell.x > transform.position.x)
+        else if (targetCell.x > transform.position.x - 0.5f)
             spriteRenderer.flipX = false;
 
         isMoving = true;
@@ -254,24 +336,33 @@ public class EnemyAI : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Check if we collided with the player or another enemy while leaping
-        if (state == "attack" && !hitEntities.Contains(other.gameObject) && (other.CompareTag("Player") || other.CompareTag("Enemy")))
+        if (type == "Critter")
         {
-            ApplyKnockbackToOther(other, Vector2.zero);
-            hitEntities.Add(other.gameObject); // Track the object instead of just the collider
-        }
+            // Check if we collided with the player or another enemy while leaping
+            if (state == "attack" && !hitEntities.Contains(other.gameObject) && (other.CompareTag("Player") || other.CompareTag("Enemy")))
+            {
+                ApplyKnockbackToOther(other, Vector2.zero);
+                hitEntities.Add(other.gameObject); // Track the object instead of just the collider
+            }
 
-        if (other.CompareTag("Enemy"))
-        {
-            Physics2D.IgnoreCollision(mainCollider, other.GetComponent<Collider2D>(), true);
+            if (other.CompareTag("Enemy"))
+            {
+                Physics2D.IgnoreCollision(mainCollider, other.GetComponent<Collider2D>(), true);
+            }
         }
     }
 
     void ApplyKnockbackToOther(Collider2D other, Vector2 knockbackDirection)
     {
-        if (knockbackDirection == Vector2.zero) 
+        if (knockbackDirection == Vector2.zero)
         {
-            knockbackDirection = rb.velocity.normalized;
+            if (type == "Critter")
+            {
+                knockbackDirection = rb.velocity.normalized;
+            } else if (type == "Knight")
+            {
+                knockbackDirection = (other.transform.position - transform.position).normalized;
+            }
         }
 
         PlayerScript player = other.GetComponent<PlayerScript>();
@@ -369,5 +460,128 @@ public class EnemyAI : MonoBehaviour
         float randomAngle = Random.Range(0f, 360f); // Random angle in degrees
         Vector2 direction = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
         return direction;
+    }
+
+    private int Heuristic(Vector2Int a, Vector2Int b)
+    {
+        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
+    }
+
+    private Vector2Int GetNodeWithLowestFScore(HashSet<Vector2Int> openSet, Dictionary<Vector2Int, int> fScore)
+    {
+        Vector2Int lowestNode = default;
+        int lowestFScore = int.MaxValue;
+
+        foreach (var node in openSet)
+        {
+            int score = fScore.GetValueOrDefault(node, int.MaxValue);
+            if (score < lowestFScore)
+            {
+                lowestFScore = score;
+                lowestNode = node;
+            }
+        }
+
+        return lowestNode;
+    }
+
+    private List<Vector2Int> GetNeighbors(Vector2Int cell)
+    {
+        List<Vector2Int> neighbors = new List<Vector2Int>();
+        Vector2Int[] directions = null;
+
+        if (type == "Critter")
+        {
+            directions = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        }
+        else if (type == "Knight")
+        {
+            directions = new Vector2Int[] {
+                new Vector2Int(2, 1), new Vector2Int(2, -1),
+                new Vector2Int(-2, 1), new Vector2Int(-2, -1),
+                new Vector2Int(1, 2), new Vector2Int(1, -2),
+                new Vector2Int(-1, 2), new Vector2Int(-1, -2)
+            };
+        }
+
+        foreach (var direction in directions)
+        {
+            Vector2Int neighbor = cell + direction;
+            if (walkableTiles.Contains(neighbor))
+            {
+                neighbors.Add(neighbor);
+            }
+        }
+
+        return neighbors;
+    }
+
+    private HashSet<Vector2Int> GetWalkableTiles()
+    {
+        HashSet<Vector2Int> walkable = new HashSet<Vector2Int>();
+
+        // Iterate over all positions within the bounds of the tilemapFloor
+        foreach (var pos in tilemapFloor.cellBounds.allPositionsWithin)
+        {
+            Vector3Int tilePosition = new Vector3Int(pos.x, pos.y, pos.z);
+            if (tilemapFloor.GetTile(tilePosition) != null) // Check if tile exists
+            {
+                walkable.Add((Vector2Int)tilePosition); // Add as walkable position
+            }
+        }
+
+        return walkable;
+    }
+
+    private List<Vector2Int> AStarPathfinding(Vector2Int start, Vector2Int goal)
+    {
+        List<Vector2Int> path = new List<Vector2Int>();
+        HashSet<Vector2Int> openSet = new HashSet<Vector2Int> { start };
+        HashSet<Vector2Int> closedSet = new HashSet<Vector2Int>();
+
+        Dictionary<Vector2Int, Vector2Int> cameFrom = new Dictionary<Vector2Int, Vector2Int>();
+        Dictionary<Vector2Int, int> gScore = new Dictionary<Vector2Int, int> { [start] = 0 };
+        Dictionary<Vector2Int, int> fScore = new Dictionary<Vector2Int, int> { [start] = Heuristic(start, goal) };
+
+        while (openSet.Count > 0)
+        {
+            Vector2Int current = GetNodeWithLowestFScore(openSet, fScore);
+
+            if (current == goal)
+            {
+                while (cameFrom.ContainsKey(current))
+                {
+                    path.Insert(0, current);
+                    current = cameFrom[current];
+                }
+                path.Insert(0, start);
+                return path;
+            }
+
+            openSet.Remove(current);
+            closedSet.Add(current);
+
+            foreach (var neighbor in GetNeighbors(current))
+            {
+                if (closedSet.Contains(neighbor)) continue;
+
+                int tentativeGScore = gScore[current] + 1;
+
+                if (!openSet.Contains(neighbor))
+                {
+                    openSet.Add(neighbor);
+                }
+                else if (tentativeGScore >= gScore.GetValueOrDefault(neighbor, int.MaxValue))
+                {
+                    continue;
+                }
+
+                cameFrom[neighbor] = current;
+                gScore[neighbor] = tentativeGScore;
+                fScore[neighbor] = gScore[neighbor] + Heuristic(neighbor, goal);
+            }
+        }
+
+        return path;
     }
 }

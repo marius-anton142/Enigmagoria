@@ -16,9 +16,10 @@ public class PlayerScript : MonoBehaviour
     public float continuousMoveCooldown = 0.2f;
     private bool canMove = true;
 
-    public GameObject DungeonManager, DijkstraMap;
+    public GameObject DungeonManager;
     public Vector3 targetPosition;
     private bool isMoving = false;
+    //public GameObject DijkstraMap;
 
     private Vector2 touchStartPos;
     private bool isSwiping = false;
@@ -93,12 +94,11 @@ public class PlayerScript : MonoBehaviour
                 isMoving = false;
                 animator.SetBool("IsWalking", false);
 
-                // Generate Dijkstra map after moving
                 Vector2Int targetPosition2D = new Vector2Int(
                     Mathf.FloorToInt(targetPosition.x - 0.5f),
                     Mathf.FloorToInt(targetPosition.y - 0.5f)
                 );
-                DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(targetPosition2D);
+                //DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(targetPosition2D);
             }
         }
     }
@@ -158,7 +158,10 @@ public class PlayerScript : MonoBehaviour
             }
 
             isMoving = true;
-            spriteRenderer.flipX = direction == Vector3.left;
+            if (direction.x != 0)
+            {
+                spriteRenderer.flipX = (direction.x < 0);
+            }
             animator.SetBool("IsWalking", true);
 
             if (allowContinuousMove)
@@ -196,10 +199,9 @@ public class PlayerScript : MonoBehaviour
             // Check the current snapped position
             Vector2Int currentSnappedPosition = SnapToGridInt(transform.position);
 
-            // If the player crosses a new tile (x or y changes), regenerate the Dijkstra map
             if (currentSnappedPosition != lastSnappedPosition)
             {
-                DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(currentSnappedPosition);
+                //DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(currentSnappedPosition);
                 lastSnappedPosition = currentSnappedPosition; // Update the last snapped position
             }
 
