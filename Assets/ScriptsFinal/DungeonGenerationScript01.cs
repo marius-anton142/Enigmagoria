@@ -31,7 +31,9 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceRoomFloorFourFullOne; //chance of a particular four slab tile to be a semi four slab tile in a full room
     [SerializeField] private float chanceRoomFloorFourFullNoBroken; //chance of a room full of four slab tiles to have no one tiles
     [SerializeField] private float chanceRoomFloorFourFullBroken; //chance of a room full of four slab tiles to have only one tiles
+    [SerializeField] private float chancePlants;
     [SerializeField] private float chancePlantAny;
+    [SerializeField] private float chanceCarpet;
     [SerializeField] private float chanceTable;
     [SerializeField] private float chanceTableSmall;
     [SerializeField] private float chanceEnemy01;
@@ -58,6 +60,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileFloor02, tileFloor03, tileFloor04, tileFloor05;
     [SerializeField] private Tile tileFloorChessWhite, tileFloorChessBlack;
 
+    [SerializeField] private Tile tileCarpet01CornerUpLeft, tileCarpet01CornerUpRight, tileCarpet01CornerDownLeft, tileCarpet01CornerDownRight;
+    [SerializeField] private Tile tileCarpet01Up, tileCarpet01Down, tileCarpet01Left, tileCarpet01Right;
+    [SerializeField] private Tile tileCarpet01Full;
+
+    [SerializeField] private Tile tileCarpet02CornerUpLeft, tileCarpet02CornerUpRight, tileCarpet02CornerDownLeft, tileCarpet02CornerDownRight;
+    [SerializeField] private Tile tileCarpet02Up, tileCarpet02Down, tileCarpet02Left, tileCarpet02Right;
+    [SerializeField] private Tile tileCarpet02Full;
+
     [Header("Wall Tiles")]
     [SerializeField] private Tile tileWallHorizontal;
     [SerializeField] private Tile tileWallHorizontalUpLeft, tileWallHorizontalUpRight, tileWallHorizontalDownLeft, tileWallHorizontalDownRight, tileWallLeft, tileWallRight, tileWallCornerUpLeft, tileWallCornerUpRight, tileWallBase, tileWallBaseCornerLeft, tileWallBaseCornerRight, tileWallBaseDownLeft, tileWallBaseDownRight, tileWallBaseUpLeft, tileWallBaseUpRight, tileWallBaseBroken01, tileWallBaseBroken02;
@@ -66,6 +76,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileWallHorizontalFix, tileWallHorizontalUpLeftFix, tileWallHorizontalUpRightFix, tileWallHorizontalDownLeftFix, tileWallHorizontalDownRightFix, tileWallCornerUpLeftFix, tileWallCornerUpRightFix;
 
     private List<Room> rooms = new List<Room>();
+    private List<GameObject> plantsInRoom = new List<GameObject>();
 
     TileBase getRandomTileFloor()
     {
@@ -472,6 +483,28 @@ public class DungeonGenerationScript01 : MonoBehaviour
         public void SetType(string newType)
         {
             type = newType;
+        }
+
+        public List<Vector3Int> FloorTileCoordinatesExcludeEdges()
+        {
+            HashSet<Vector3Int> floorTileSet = new HashSet<Vector3Int>(FloorTileCoordinates);
+            List<Vector3Int> innerTiles = new List<Vector3Int>();
+
+            foreach (var tile in FloorTileCoordinates)
+            {
+                // Check all four neighbors
+                bool hasAllNeighbors = floorTileSet.Contains(tile + Vector3Int.left) &&
+                                       floorTileSet.Contains(tile + Vector3Int.right) &&
+                                       floorTileSet.Contains(tile + Vector3Int.up) &&
+                                       floorTileSet.Contains(tile + Vector3Int.down);
+
+                if (hasAllNeighbors)
+                {
+                    innerTiles.Add(tile); // Add tile if it has all four neighbors
+                }
+            }
+
+            return innerTiles;
         }
     }
 
@@ -1289,32 +1322,42 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void FillRoomWithPlants(Room room, GameObject plantPrefab, float chancePlantAny)
     {
-        List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
-        Sprite selectedPlantSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
+        if (Random.value < chancePlants)
+        {
+            List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
+            Sprite selectedPlantSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
 
-        if (Random.value < chancePlantAny)
-        {
-            // Choose a random sprite for each plant
-            foreach (Vector3Int pos in walkedTilesPlants)
+            if (Random.value < chancePlantAny)
             {
-                Sprite randomSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
-                FillRegionWithObject(new List<Vector3Int> { pos }, plantPrefab, room.GetPosition(), randomSprite);
+                // Choose a random sprite for each plant
+                foreach (Vector3Int pos in walkedTilesPlants)
+                {
+                    Sprite randomSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
+                    GameObject plant = FillRegionWithObject(new List<Vector3Int> { pos }, plantPrefab, room.GetPosition(), randomSprite);
+                    plantsInRoom.Add(plant); // Add each plant to the list
+                }
             }
-        }
-        else
-        {
-            // Use the selectedPlantSprite for all plants in this room
-            FillRegionWithObject(walkedTilesPlants, plantPrefab, room.GetPosition(), selectedPlantSprite);
+            else
+            {
+                // Use the selectedPlantSprite for all plants in this room
+                foreach (Vector3Int pos in walkedTilesPlants)
+                {
+                    GameObject plant = FillRegionWithObject(new List<Vector3Int> { pos }, plantPrefab, room.GetPosition(), selectedPlantSprite);
+                    plantsInRoom.Add(plant); // Add each plant to the list
+                }
+            }
         }
     }
 
-    private void FillRegionWithObject(List<Vector3Int> region, GameObject objectToPlace, Vector3Int offset, Sprite selectedSprite)
+    private GameObject FillRegionWithObject(List<Vector3Int> region, GameObject objectToPlace, Vector3Int offset, Sprite selectedSprite)
     {
         foreach (Vector3Int pos in region)
         {
             GameObject instance = Instantiate(objectToPlace, pos + offset + new Vector3(0.5f, 0.5f, 0), Quaternion.identity);
-            instance.GetComponent<PlantScript>().SetPlantSprite(selectedSprite);
+            instance.GetComponent<SpriteRenderer>().sprite = selectedSprite;
+            return instance; // Return the instantiated object
         }
+        return null;
     }
 
     private void FillRoomWithFloor(Room room, Tile tileToPlace)
@@ -1429,6 +1472,9 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
 
                     PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition() + pivotOffset);
+
+                    RemovePlantAtPosition(freePosition.Value + room.GetPosition());
+                    RemovePlantAtPosition(new Vector3Int(0, 1, 0) + freePosition.Value + room.GetPosition());
                 }
             }
             else
@@ -1442,6 +1488,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
 
                     PlaceObject(freePosition.Value, Table2x2Prefab01, room.GetPosition() + pivotOffset);
+
+                    RemovePlantAtPosition(freePosition.Value + room.GetPosition());
+                    RemovePlantAtPosition(new Vector3Int(0, 1, 0) + freePosition.Value + room.GetPosition());
+                    RemovePlantAtPosition(new Vector3Int(1, 0, 0) + freePosition.Value + room.GetPosition());
+                    RemovePlantAtPosition(new Vector3Int(1, 1, 0) + freePosition.Value + room.GetPosition());
                 }
             }
         }
@@ -1488,6 +1539,155 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
                     PlaceObject(freePosition.Value, EnemyPrefab, room.GetPosition() + pivotOffset);
                 }
+            }
+        }
+    }
+
+    private (Vector3Int start, int width, int height) FindBiggestRectangle(Room room)
+    {
+        HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinatesExcludeEdges());
+        Dictionary<Vector3Int, int> heights = new Dictionary<Vector3Int, int>();
+
+        int bestWidth = 0;
+        int bestHeight = 0;
+        Vector3Int bestStart = Vector3Int.zero;
+
+        // Initialize heights for all potential columns in the room's bounding box
+        foreach (Vector3Int tile in floorTiles)
+        {
+            heights[tile] = 0;
+        }
+
+        int roomMinY = room.FloorTileCoordinates.Min(t => t.y);
+        int roomMaxY = room.FloorTileCoordinates.Max(t => t.y);
+        int roomMinX = room.FloorTileCoordinates.Min(t => t.x);
+        int roomMaxX = room.FloorTileCoordinates.Max(t => t.x);
+
+        for (int y = roomMinY; y <= roomMaxY; y++)
+        {
+            // Update the histogram heights for each column in this row
+            for (int x = roomMinX; x <= roomMaxX; x++)
+            {
+                Vector3Int pos = new Vector3Int(x, y, 0);
+                if (floorTiles.Contains(pos))
+                {
+                    heights[pos] = heights.ContainsKey(new Vector3Int(x, y - 1, 0)) ? heights[new Vector3Int(x, y - 1, 0)] + 1 : 1;
+                }
+                else
+                {
+                    heights[pos] = 0; // Reset height for non-floor tiles
+                }
+            }
+
+            // Use a stack to find the largest rectangle for the current row's histogram
+            Stack<Vector3Int> stack = new Stack<Vector3Int>();
+            foreach (int x in Enumerable.Range(roomMinX, roomMaxX - roomMinX + 2)) // Adding a sentinel at the end
+            {
+                int h = (x <= roomMaxX && heights.ContainsKey(new Vector3Int(x, y, 0))) ? heights[new Vector3Int(x, y, 0)] : 0;
+                Vector3Int pos = new Vector3Int(x, y, 0);
+
+                // Calculate area for rectangles in the histogram
+                while (stack.Count > 0 && heights[stack.Peek()] >= h)
+                {
+                    Vector3Int top = stack.Pop();
+                    int height = heights[top];
+                    int width = stack.Count == 0 ? x - roomMinX : x - stack.Peek().x - 1;
+
+                    Vector3Int candidateStart = new Vector3Int(top.x - width + 1, top.y - height + 1, 0);
+
+                    // Validation check: Ensure all tiles in the candidate rectangle are floor tiles
+                    bool isValid = true;
+                    for (int dx = 0; dx < width && isValid; dx++)
+                    {
+                        for (int dy = 0; dy < height && isValid; dy++)
+                        {
+                            Vector3Int checkPos = candidateStart + new Vector3Int(dx, dy, 0);
+                            if (!floorTiles.Contains(checkPos))
+                            {
+                                isValid = false;
+                            }
+                        }
+                    }
+
+                    if (isValid)
+                    {
+                        int area = width * height;
+                        if (area > bestWidth * bestHeight)
+                        {
+                            bestWidth = width;
+                            bestHeight = height;
+                            bestStart = candidateStart;
+                        }
+                    }
+                }
+                stack.Push(pos);
+            }
+        }
+
+        return (bestStart, bestWidth, bestHeight);
+    }
+
+    // Method to fill the largest rectangle area within a room with carpet tiles
+    private void FillRoomWithCarpet(Room room)
+    {
+        if (Random.value < chanceCarpet)
+        {
+            (Vector3Int start, int width, int height) = FindBiggestRectangle(room);
+
+            // Only fill if both dimensions are greater than 1
+            if (width > 1 && height > 1)
+            {
+                // Choose between carpet types 01 and 02 based on 50% chance
+                bool useType01 = Random.value < 0.5f;
+
+                Tile cornerUpLeft = useType01 ? tileCarpet01CornerUpLeft : tileCarpet02CornerUpLeft;
+                Tile cornerUpRight = useType01 ? tileCarpet01CornerUpRight : tileCarpet02CornerUpRight;
+                Tile cornerDownLeft = useType01 ? tileCarpet01CornerDownLeft : tileCarpet02CornerDownLeft;
+                Tile cornerDownRight = useType01 ? tileCarpet01CornerDownRight : tileCarpet02CornerDownRight;
+
+                Tile upTile = useType01 ? tileCarpet01Up : tileCarpet02Up;
+                Tile downTile = useType01 ? tileCarpet01Down : tileCarpet02Down;
+                Tile leftTile = useType01 ? tileCarpet01Left : tileCarpet02Left;
+                Tile rightTile = useType01 ? tileCarpet01Right : tileCarpet02Right;
+
+                Tile fullTile = useType01 ? tileCarpet01Full : tileCarpet02Full;
+
+                Vector3Int offset = room.GetPosition();
+
+                // Place the tiles for the carpet
+                for (int x = 0; x < width; x++)
+                {
+                    for (int y = 0; y < height; y++)
+                    {
+                        Vector3Int pos = start + new Vector3Int(x, y, 0) + offset;
+
+                        // Remove any plant that exists at this position
+                        RemovePlantAtPosition(pos);
+
+                        // Determine tile type based on position
+                        if (x == 0 && y == 0) tilemapFloor.SetTile(pos, cornerDownLeft);
+                        else if (x == 0 && y == height - 1) tilemapFloor.SetTile(pos, cornerUpLeft);
+                        else if (x == width - 1 && y == 0) tilemapFloor.SetTile(pos, cornerDownRight);
+                        else if (x == width - 1 && y == height - 1) tilemapFloor.SetTile(pos, cornerUpRight);
+                        else if (x == 0) tilemapFloor.SetTile(pos, leftTile);
+                        else if (x == width - 1) tilemapFloor.SetTile(pos, rightTile);
+                        else if (y == 0) tilemapFloor.SetTile(pos, downTile);
+                        else if (y == height - 1) tilemapFloor.SetTile(pos, upTile);
+                        else tilemapFloor.SetTile(pos, fullTile);
+                    }
+                }
+            }
+        }
+    }
+
+    private void RemovePlantAtPosition(Vector3Int position)
+    {
+        for (int i = plantsInRoom.Count - 1; i >= 0; i--)
+        {
+            if (plantsInRoom[i] != null && plantsInRoom[i].transform.position == position + new Vector3(0.5f, 0.5f, 0))
+            {
+                Destroy(plantsInRoom[i]);
+                plantsInRoom.RemoveAt(i);
             }
         }
     }
@@ -1612,13 +1812,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
         {
             if (!roomTemplate(room))
             {
-                FillRoomWithTables(room);
-
                 FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
 
                 FillRoomWithFloor(room, tileFloorFour01);
                 AddFloorCornerBroken(room);
                 FillRoomWithFloorFull(room, tileFloorFour01);
+                FillRoomWithCarpet(room);
+
+                FillRoomWithTables(room);
 
                 FillRoomWithEnemies(room);
             } else
