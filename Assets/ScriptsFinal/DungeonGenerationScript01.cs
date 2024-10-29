@@ -23,7 +23,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private int maxAdditionalHallways;
     [SerializeField] private float chanceAnyTileFloors;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
-    [SerializeField] private float chanceTileFloorCornerBroken;
+    [SerializeField] private float chanceRoomFloorCornerBroken;
+    [SerializeField] private float chanceCornerFloorCornerBroken;
     [SerializeField] private float chanceRoomFloorFour; //chane of a room with four slab tiles
     [SerializeField] private float chanceTileFloorFour; //chance of a particular tile to be a four slab tile
     [SerializeField] private float chanceRoomFloorFourOne; //chance of a particular four slab tile to be a semi four slab tile
@@ -31,9 +32,13 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceRoomFloorFourFullOne; //chance of a particular four slab tile to be a semi four slab tile in a full room
     [SerializeField] private float chanceRoomFloorFourFullNoBroken; //chance of a room full of four slab tiles to have no one tiles
     [SerializeField] private float chanceRoomFloorFourFullBroken; //chance of a room full of four slab tiles to have only one tiles
+    [SerializeField] private float chancePlantIgnore;
     [SerializeField] private float chancePlants;
     [SerializeField] private float chancePlantAny;
+    [SerializeField] private float chanceRoomCobweb;
+    [SerializeField] private float chanceCornerCobweb;
     [SerializeField] private float chanceCarpet;
+    [SerializeField] private float chanceCarpetFull;
     [SerializeField] private float chanceTable;
     [SerializeField] private float chanceTableSmall;
     [SerializeField] private float chanceEnemy01;
@@ -42,6 +47,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     [Header("Objects")]
     [SerializeField] private GameObject PlantPrefab01;
+    [SerializeField] private GameObject CobwebPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
 
@@ -76,7 +82,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileWallHorizontalFix, tileWallHorizontalUpLeftFix, tileWallHorizontalUpRightFix, tileWallHorizontalDownLeftFix, tileWallHorizontalDownRightFix, tileWallCornerUpLeftFix, tileWallCornerUpRightFix;
 
     private List<Room> rooms = new List<Room>();
-    private List<GameObject> plantsInRoom = new List<GameObject>();
+    private List<Vector3Int> plantsInRoom = new List<Vector3Int>();
+    private List<Vector3Int> cobwebsInRoom = new List<Vector3Int>();
+    private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
+    private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
 
     TileBase getRandomTileFloor()
     {
@@ -1220,6 +1229,80 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     public void AddFloorCornerBroken(Room room)
     {
+        if (Random.value < chanceRoomFloorCornerBroken)
+        {
+            List<Vector3Int> allCorners = GetCornersIn(room);
+
+            foreach (Vector3Int tilePos in allCorners)
+            {
+                if (Random.value < chanceCornerFloorCornerBroken)
+                {
+                    if (tilemapFloor.GetTile(tilePos) != null)
+                        tilemapFloor.SetTile(tilePos, tileFloorBrokenDownLeft);
+                    if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 0, 0)) != null)
+                        tilemapFloor.SetTile(tilePos + new Vector3Int(1, 0, 0), tileFloorBrokenDownRight);
+                    if (tilemapFloor.GetTile(tilePos + new Vector3Int(0, 1, 0)) != null)
+                        tilemapFloor.SetTile(tilePos + new Vector3Int(0, 1, 0), tileFloorBrokenUpLeft);
+                    if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 1, 0)) != null)
+                        tilemapFloor.SetTile(tilePos + new Vector3Int(1, 1, 0), tileFloorBrokenUpRight);
+                }
+            }
+        }
+    }
+
+    public void FillRoomWithCobweb(Room room)
+    {
+        if (Random.value < chanceRoomCobweb)
+        {
+            List<Vector3Int> allCorners = GetCornersIn(room);
+
+            foreach (Vector3Int tilePos in allCorners)
+            {
+                if (Random.value < chanceCornerCobweb)
+                {
+                    if (tilemapFloor.GetTile(tilePos) != null)
+                    {
+                        if (!IsEntityAtPosition(tilePos))
+                        {
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            GameObject cobweb = PlaceObject(tilePos, CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
+                            cobwebsInRoom.Add(tilePos);
+                        }
+                    }
+                    if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 0, 0)) != null)
+                    {
+                        if (!IsEntityAtPosition(tilePos + new Vector3Int(1, 0, 0)))
+                        {
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            GameObject cobweb = PlaceObject(tilePos + new Vector3Int(1, 0, 0), CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
+                            cobwebsInRoom.Add(tilePos + new Vector3Int(1, 0, 0));
+                        }
+                    }
+                    if (tilemapFloor.GetTile(tilePos + new Vector3Int(0, 1, 0)) != null)
+                    {
+                        if (!IsEntityAtPosition(tilePos + new Vector3Int(0, 1, 0)))
+                        {
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            GameObject cobweb = PlaceObject(tilePos + new Vector3Int(0, 1, 0), CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
+                            cobwebsInRoom.Add(tilePos + new Vector3Int(0, 1, 0));
+                        }
+                    }
+                    if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 1, 0)) != null)
+                    {
+                        if (!IsEntityAtPosition(tilePos + new Vector3Int(1, 1, 0)))
+                        {
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            GameObject cobweb = PlaceObject(tilePos + new Vector3Int(1, 1, 0), CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
+                            cobwebsInRoom.Add(tilePos + new Vector3Int(1, 1, 0));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private List<Vector3Int> GetCornersIn(Room room)
+    {
         string[] cornerTypes = { "downleft", "downright", "upleft", "upright" };
         Dictionary<string, Tile> cornerTiles = new Dictionary<string, Tile>
         {
@@ -1259,20 +1342,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             }
         }
 
-        foreach (Vector3Int tilePos in allCorners)
-        {
-            if (Random.value < chanceTileFloorCornerBroken)
-            {
-                if (tilemapFloor.GetTile(tilePos) != null)
-                    tilemapFloor.SetTile(tilePos, tileFloorBrokenDownLeft);
-                if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 0, 0)) != null)
-                    tilemapFloor.SetTile(tilePos + new Vector3Int(1, 0, 0), tileFloorBrokenDownRight);
-                if (tilemapFloor.GetTile(tilePos + new Vector3Int(0, 1, 0)) != null)
-                    tilemapFloor.SetTile(tilePos + new Vector3Int(0, 1, 0), tileFloorBrokenUpLeft);
-                if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 1, 0)) != null)
-                    tilemapFloor.SetTile(tilePos + new Vector3Int(1, 1, 0), tileFloorBrokenUpRight);
-            }
-        }
+        return allCorners;
     }
 
     private List<Vector3Int> RandomWalk(Room room, int maxSteps, int iterations, int stepSize = 1)
@@ -1325,16 +1395,22 @@ public class DungeonGenerationScript01 : MonoBehaviour
         if (Random.value < chancePlants)
         {
             List<Vector3Int> walkedTilesPlants = RandomWalk(room, 10, 3);
-            Sprite selectedPlantSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
+            Sprite selectedPlantSprite = plantPrefab.GetComponent<SpriteScript>().GetRandomSprite();
 
             if (Random.value < chancePlantAny)
             {
                 // Choose a random sprite for each plant
                 foreach (Vector3Int pos in walkedTilesPlants)
                 {
-                    Sprite randomSprite = plantPrefab.GetComponent<PlantScript>().GetRandomPlantSprite();
-                    GameObject plant = FillRegionWithObject(new List<Vector3Int> { pos }, plantPrefab, room.GetPosition(), randomSprite);
-                    plantsInRoom.Add(plant); // Add each plant to the list
+                    if (Random.value < chancePlantIgnore)
+                    {
+                        if (!IsEntityAtPosition(pos + room.GetPosition()))
+                        {
+                            Sprite randomSprite = plantPrefab.GetComponent<SpriteScript>().GetRandomSprite();
+                            GameObject plant = PlaceObject(pos, plantPrefab, room.GetPosition() + new Vector3(0.5f, 0.5f, 0), randomSprite);
+                            plantsInRoom.Add(pos + room.GetPosition()); // Add each plant to the list
+                        }
+                    }
                 }
             }
             else
@@ -1342,8 +1418,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 // Use the selectedPlantSprite for all plants in this room
                 foreach (Vector3Int pos in walkedTilesPlants)
                 {
-                    GameObject plant = FillRegionWithObject(new List<Vector3Int> { pos }, plantPrefab, room.GetPosition(), selectedPlantSprite);
-                    plantsInRoom.Add(plant); // Add each plant to the list
+                    if (Random.value < chancePlantIgnore)
+                    {
+                        if (!IsEntityAtPosition(pos + room.GetPosition()))
+                        {
+                            GameObject plant = PlaceObject(pos, plantPrefab, room.GetPosition() + new Vector3(0.5f, 0.5f, 0), selectedPlantSprite);
+                            plantsInRoom.Add(pos + room.GetPosition()); // Add each plant to the list
+                        }
+                    }
                 }
             }
         }
@@ -1466,15 +1548,19 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
                 if (freePosition != null)
                 {
-                    float spriteHeightInUnits = 32f / 16f;
-                    float pivotYPercentage = 0.9f;
-                    float yOffset = spriteHeightInUnits * pivotYPercentage;
-                    Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
+                    if (!IsEntityAtPosition(freePosition.Value + room.GetPosition()) && !IsEntityAtPosition(freePosition.Value + room.GetPosition() + Vector3Int.up))
+                    {
+                        float spriteHeightInUnits = 32f / 16f;
+                        float pivotYPercentage = 0.9f;
+                        float yOffset = spriteHeightInUnits * pivotYPercentage;
+                        Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
 
-                    PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition() + pivotOffset);
+                        GameObject table1x2 = PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition() + pivotOffset);
+                        tables1x2InRoom.Add(freePosition.Value + room.GetPosition());
 
-                    RemovePlantAtPosition(freePosition.Value + room.GetPosition());
-                    RemovePlantAtPosition(new Vector3Int(0, 1, 0) + freePosition.Value + room.GetPosition());
+                        //RemovePlantAtPosition(freePosition.Value + room.GetPosition());
+                        //RemovePlantAtPosition(new Vector3Int(0, 1, 0) + freePosition.Value + room.GetPosition());
+                    }
                 }
             }
             else
@@ -1482,17 +1568,22 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 Vector3Int? freePosition = GetRectanglesInRoomFree(room, 2, 2);
                 if (freePosition != null)
                 {
-                    float spriteHeightInUnits = 37f / 16f;
-                    float pivotYPercentage = 0.9f;
-                    float yOffset = spriteHeightInUnits * pivotYPercentage;
-                    Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
+                    if (!IsEntityAtPosition(freePosition.Value + room.GetPosition()) && !IsEntityAtPosition(freePosition.Value + room.GetPosition() + Vector3Int.up) && !IsEntityAtPosition(freePosition.Value + room.GetPosition() + Vector3Int.right) && !IsEntityAtPosition(freePosition.Value + room.GetPosition() + Vector3Int.up + Vector3Int.right))
+                    {
+                        float spriteHeightInUnits = 37f / 16f;
+                        float pivotYPercentage = 0.9f;
+                        float yOffset = spriteHeightInUnits * pivotYPercentage;
+                        Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
 
-                    PlaceObject(freePosition.Value, Table2x2Prefab01, room.GetPosition() + pivotOffset);
+                        GameObject table2x2 = PlaceObject(freePosition.Value, Table2x2Prefab01, room.GetPosition() + pivotOffset);
 
-                    RemovePlantAtPosition(freePosition.Value + room.GetPosition());
-                    RemovePlantAtPosition(new Vector3Int(0, 1, 0) + freePosition.Value + room.GetPosition());
-                    RemovePlantAtPosition(new Vector3Int(1, 0, 0) + freePosition.Value + room.GetPosition());
-                    RemovePlantAtPosition(new Vector3Int(1, 1, 0) + freePosition.Value + room.GetPosition());
+                        tables2x2InRoom.Add(freePosition.Value + room.GetPosition());
+
+                        //RemovePlantAtPosition(freePosition.Value + room.GetPosition());
+                        //RemovePlantAtPosition(new Vector3Int(0, 1, 0) + freePosition.Value + room.GetPosition());
+                        //RemovePlantAtPosition(new Vector3Int(1, 0, 0) + freePosition.Value + room.GetPosition());
+                        //RemovePlantAtPosition(new Vector3Int(1, 1, 0) + freePosition.Value + room.GetPosition());
+                    }
                 }
             }
         }
@@ -1543,9 +1634,18 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
-    private (Vector3Int start, int width, int height) FindBiggestRectangle(Room room)
+    private (Vector3Int start, int width, int height) FindBiggestRectangle(Room room, bool full = true)
     {
-        HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinatesExcludeEdges());
+        HashSet<Vector3Int> floorTiles;
+        if (full)
+        {
+            floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
+        }
+        else
+        {
+            floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinatesExcludeEdges());
+        }
+
         Dictionary<Vector3Int, int> heights = new Dictionary<Vector3Int, int>();
 
         int bestWidth = 0;
@@ -1632,7 +1732,24 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         if (Random.value < chanceCarpet)
         {
-            (Vector3Int start, int width, int height) = FindBiggestRectangle(room);
+            Vector3Int start;
+            int width = 0;
+            int height = 0;
+
+            if (room.GetType() == "square")
+            {
+                if (Random.value < chanceCarpetFull)
+                {
+                    (start, width, height) = FindBiggestRectangle(room);
+                } else
+                {
+                    (start, width, height) = FindBiggestRectangle(room, false);
+                }
+            }
+            else
+            {
+                (start, width, height) = FindBiggestRectangle(room, false);
+            }
 
             // Only fill if both dimensions are greater than 1
             if (width > 1 && height > 1)
@@ -1682,14 +1799,84 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void RemovePlantAtPosition(Vector3Int position)
     {
-        for (int i = plantsInRoom.Count - 1; i >= 0; i--)
+        // Convert the position to world space by adding offset for center alignment
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        // Find the GameObject at the given position using a tag or layer filter, if applicable
+        Collider2D hitCollider = Physics2D.OverlapPoint(worldPosition);
+        if (hitCollider != null && hitCollider.CompareTag("Plant")) // Assuming the plant has a "Plant" tag
         {
-            if (plantsInRoom[i] != null && plantsInRoom[i].transform.position == position + new Vector3(0.5f, 0.5f, 0))
+            Destroy(hitCollider.gameObject); // Remove the GameObject from the scene
+        }
+
+        // Finally, remove the position from the plantsInRoom list
+        plantsInRoom.Remove(position);
+    }
+
+    private bool IsPlantAtPosition(Vector3Int position)
+    {
+        return plantsInRoom.Contains(position);
+    }
+
+    private bool IsCobwebAtPosition(Vector3Int position)
+    {
+        return cobwebsInRoom.Contains(position);
+    }
+
+    private bool IsTable1x2AtPosition(Vector3Int position)
+    {
+        foreach (var tablePos in tables1x2InRoom)
+        {
+            if (tablePos == position)
             {
-                Destroy(plantsInRoom[i]);
-                plantsInRoom.RemoveAt(i);
+                return true;
             }
         }
+        return false;
+    }
+
+    private bool IsTable2x2AtPosition(Vector3Int position)
+    {
+        foreach (var tablePos in tables2x2InRoom)
+        {
+            if (tablePos == position)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private bool IsEntityAtPosition(Vector3Int position)
+    {
+        Vector3Int down = position + Vector3Int.down;
+        Vector3Int left = position + Vector3Int.left;
+        Vector3Int downLeft = position + Vector3Int.down + Vector3Int.left;
+
+        if (IsPlantAtPosition(position))
+        {
+            return true;
+        }
+
+        if (IsCobwebAtPosition(position))
+        {
+            return true;
+        }
+
+        if (IsTable1x2AtPosition(position) || IsTable1x2AtPosition(down))
+        {
+            Debug.Log("L");
+            Debug.Log(position);
+            Debug.Log(down);
+            return true;
+        }
+
+        if (IsTable2x2AtPosition(position) || IsTable2x2AtPosition(down) || IsTable2x2AtPosition(left) || IsTable2x2AtPosition(downLeft))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private bool CheckTileNextDoor(Room room, Vector3Int position)
@@ -1778,7 +1965,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return null; // Return null if no valid position is found
     }
 
-    private void PlaceObject(Vector3Int position, GameObject objectToPlace, Vector3 offset, Sprite selectedSprite = null)
+    private GameObject PlaceObject(Vector3Int position, GameObject objectToPlace, Vector3 offset, Sprite selectedSprite = null)
     {
         GameObject instance = Instantiate(objectToPlace, position + offset, Quaternion.identity);
 
@@ -1786,6 +1973,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
         {
             instance.GetComponent<SpriteRenderer>().sprite = selectedSprite;
         }
+
+        return instance;
     }
 
     bool roomTemplate(Room room)
@@ -1812,14 +2001,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
         {
             if (!roomTemplate(room))
             {
-                FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
-
                 FillRoomWithFloor(room, tileFloorFour01);
                 AddFloorCornerBroken(room);
                 FillRoomWithFloorFull(room, tileFloorFour01);
-                FillRoomWithCarpet(room);
 
+                FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
                 FillRoomWithTables(room);
+                FillRoomWithCobweb(room);
+
+                FillRoomWithCarpet(room);
 
                 FillRoomWithEnemies(room);
             } else

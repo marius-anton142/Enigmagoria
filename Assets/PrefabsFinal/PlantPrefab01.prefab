@@ -11,10 +11,11 @@ GameObject:
   - component: {fileID: 7900027627223003110}
   - component: {fileID: 5290925458968313747}
   - component: {fileID: 6625131690300616620}
+  - component: {fileID: -6645550623700118989}
   - component: {fileID: 2190214609403169837}
   m_Layer: 0
   m_Name: PlantPrefab01
-  m_TagString: Untagged
+  m_TagString: Plant
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -104,8 +105,20 @@ MonoBehaviour:
   touchRotationSpeed: 300
   smoothTime: 0.1
   playerTransform: {fileID: 0}
-  destroyChance: 0.5
-  plantSprites:
+--- !u!114 &-6645550623700118989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9037632988598735926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcc6001f9fe50e941b10c74c00c47213, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotate: 0
+  sprites:
   - {fileID: 21300000, guid: bd6b489c233be9040a9d73789455f0c6, type: 3}
   - {fileID: 21300000, guid: 1cd9f969464c20146a55b5ea22537469, type: 3}
   - {fileID: 21300000, guid: 87b850081d392404b80571833f37ac90, type: 3}
@@ -118,8 +131,20 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 76efde5cb39a63a479bc0661b7b12c1e, type: 3}
   - {fileID: 21300000, guid: 715b32d8833329e4fb6c519ef79240b4, type: 3}
   - {fileID: 21300000, guid: e8199ddad348d43418af395535b51f5a, type: 3}
+  - {fileID: 21300000, guid: 7884067a32c7b764181e9d15945713c4, type: 3}
+  - {fileID: 21300000, guid: 3a106d06d92638144b58ba956e7a6f82, type: 3}
+  - {fileID: 21300000, guid: 34bbf5bd9d4f76b488f81295daad8718, type: 3}
+  - {fileID: 21300000, guid: 6ef83590689daab48bbe1e27c7c21bd8, type: 3}
+  - {fileID: 21300000, guid: a557833589e3abb48960845f7b5ac7b0, type: 3}
+  - {fileID: 21300000, guid: ef3aaeccbe59c564e8f8c306ece716f9, type: 3}
+  - {fileID: 21300000, guid: 6fe388d4e8fa5ae4487bb2acd8e9035d, type: 3}
+  - {fileID: 21300000, guid: 299bb1cd4ae51a342814e3f1249cf920, type: 3}
+  - {fileID: 21300000, guid: c22ebe88bcbd1c843bfac39c2b4d6991, type: 3}
   - {fileID: 21300000, guid: c4ffa61df1ca63a4cbe65a85d962ad71, type: 3}
+  - {fileID: 21300000, guid: f30daab4bcb87a94c8c4badf42230810, type: 3}
+  - {fileID: 21300000, guid: 42ea836bebb70ba40afc8d7c0617d781, type: 3}
   - {fileID: 21300000, guid: 014aef59d6db8094fa548abf9061c7e8, type: 3}
+  - {fileID: 21300000, guid: 842699cf594898346906139620bb823c, type: 3}
 --- !u!61 &2190214609403169837
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -152,7 +177,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.09305549, y: 0.112288296}
+  m_Offset: {x: 0.05082794, y: 0.112288296}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.40972224, y: 0.027777784}
@@ -163,5 +188,5 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.2856878}
+  m_Size: {x: 0.7991462, y: 0.2856878}
   m_EdgeRadius: 0

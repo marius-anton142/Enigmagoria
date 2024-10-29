@@ -16,39 +16,7 @@ public class PlantScript : MonoBehaviour
 
     [SerializeField] private Transform playerTransform;
     private bool isTouchingPlayer;
-    [SerializeField] private float destroyChance = 0.5f;
-    [SerializeField] private List<Sprite> plantSprites;
     private bool isIdleIncreasing = true;
-    private SpriteRenderer spriteRenderer;
-
-    void Start()
-    {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-
-        if (Random.value < destroyChance)
-        {
-            Destroy(gameObject);
-            return;
-        }
-    }
-
-    public void SetPlantSprite(Sprite plantSprite)
-    {
-        if (spriteRenderer == null)
-        {
-            spriteRenderer = GetComponent<SpriteRenderer>();
-        }
-        spriteRenderer.sprite = plantSprite;
-    }
-
-    public Sprite GetRandomPlantSprite()
-    {
-        if (plantSprites != null && plantSprites.Count > 0)
-        {
-            return plantSprites[Random.Range(0, plantSprites.Count)];
-        }
-        return null;
-    }
 
     void Update()
     {

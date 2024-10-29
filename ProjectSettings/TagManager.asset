@@ -9,6 +9,7 @@ TagManager:
   - WeaponMelee
   - TilemapFloor
   - DijkstraMap
+  - Plant
   layers:
   - Default
   - TransparentFX
