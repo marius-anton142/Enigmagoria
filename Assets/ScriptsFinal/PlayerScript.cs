@@ -50,7 +50,7 @@ public class PlayerScript : MonoBehaviour
 
     public bool CanMove()
     {
-        if (state != "knocked" || bumpsStuck > 0)
+        if (state != "knocked")
         {
             return true;
         }
@@ -227,6 +227,7 @@ public class PlayerScript : MonoBehaviour
                     Mathf.FloorToInt(transform.position.z)
                 );
                 DungeonManager.GetComponent<DungeonGenerationScript01>().RemoveCobwebAtPosition(flooredPosition);
+                bumpsStuck = 0;
             }
         }
         else if (!positionFound)
