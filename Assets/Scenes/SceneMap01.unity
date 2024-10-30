@@ -232,8 +232,11 @@ MonoBehaviour:
   tilemapFloor: {fileID: 1738476036}
   allowContinuousMove: 1
   continuousMoveCooldown: 0.12
+  canMove: 1
   DungeonManager: {fileID: 942841689}
   targetPosition: {x: 0, y: 0, z: 0}
+  isSliding: 0
+  bumpsStuck: 0
 --- !u!61 &21251031
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -26989,19 +26992,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 723627755}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 21251030}
-        m_TargetAssemblyTypeName: PlayerScript, Assembly-CSharp
-        m_MethodName: MoveDown
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &723627755
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51864,11 +51855,11 @@ MonoBehaviour:
   chanceRoomFloorFourFullNoBroken: 0.425
   chanceRoomFloorFourFullBroken: 0.07
   chancePlantIgnore: 0.5
-  chancePlants: 0.72
+  chancePlants: 0.77
   chancePlantAny: 0.018
-  chanceRoomCobweb: 0.41
+  chanceRoomCobweb: 0.67
   chanceCornerCobweb: 0.37
-  chanceCarpet: 0.5
+  chanceCarpet: 0.55
   chanceCarpetFull: 0.43
   chanceTable: 0.67
   chanceTableSmall: 0.3
@@ -52876,19 +52867,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1231017792}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 21251030}
-        m_TargetAssemblyTypeName: PlayerScript, Assembly-CSharp
-        m_MethodName: MoveLeft
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1231017792
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53137,19 +53116,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1248146176}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 21251030}
-        m_TargetAssemblyTypeName: PlayerScript, Assembly-CSharp
-        m_MethodName: MoveUp
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1248146176
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54139,19 +54106,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1519633381}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 21251030}
-        m_TargetAssemblyTypeName: PlayerScript, Assembly-CSharp
-        m_MethodName: MoveRight
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1519633381
 MonoBehaviour:
   m_ObjectHideFlags: 0

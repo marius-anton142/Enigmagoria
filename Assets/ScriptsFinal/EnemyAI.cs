@@ -34,9 +34,8 @@ public class EnemyAI : MonoBehaviour
 
     private HashSet<GameObject> hitEntities;
     private Coroutine leapCoroutine;
-
     private HashSet<Vector2Int> walkableTiles;
-    //public GameObject DijkstraMap;
+    private int bumpsStuck = 0;
 
     private void Awake()
     {
@@ -453,6 +452,11 @@ public class EnemyAI : MonoBehaviour
     void SetStateToChase()
     {
         state = "chase";
+    }
+
+    public void SetStuck(int bumpsStuck)
+    {
+        this.bumpsStuck = bumpsStuck;
     }
 
     Vector2 GetRandomDirection()

@@ -10,7 +10,7 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
     private void Update()
     {
-        if (isHolding)
+        if (isHolding && !playerScript.isSliding && playerScript.bumpsStuck <= 1)
         {
             playerScript.Move(direction);
         }
@@ -19,6 +19,10 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public void OnPointerDown(PointerEventData eventData)
     {
         isHolding = true;
+        if (!playerScript.isSliding && playerScript.bumpsStuck > 1)
+        {
+            playerScript.Move(direction);
+        }
     }
 
     public void OnPointerUp(PointerEventData eventData)

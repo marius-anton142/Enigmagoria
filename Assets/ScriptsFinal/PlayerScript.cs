@@ -14,7 +14,7 @@ public class PlayerScript : MonoBehaviour
 
     public bool allowContinuousMove = false;
     public float continuousMoveCooldown = 0.2f;
-    private bool canMove = true;
+    public bool canMove = true;
 
     public GameObject DungeonManager;
     public Vector3 targetPosition;
@@ -26,12 +26,16 @@ public class PlayerScript : MonoBehaviour
 
     private Animator animator;
     SpriteRenderer spriteRenderer;
+    private float normalMoveSpeed;
+    public bool isSliding = false;
+    public int bumpsStuck = 0;
 
     private void Awake()
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         targetPosition = transform.position; // Initialize targetPosition
+        normalMoveSpeed = moveSpeed;
     }
 
     private void Update()
@@ -44,9 +48,9 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-    private bool CanMove()
+    public bool CanMove()
     {
-        if (state != "knocked")
+        if (state != "knocked" || bumpsStuck > 0)
         {
             return true;
         }
@@ -82,23 +86,45 @@ public class PlayerScript : MonoBehaviour
         state = "alive";
     }
 
+    public void SetStuck(int bumpsStuck)
+    {
+        this.bumpsStuck = bumpsStuck;
+        canMove = false;
+    }
+
     private void HandleMovement()
     {
         if (isMoving)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+            if (isSliding)
+            {
+                // Use linear movement (Lerp) when sliding
+                transform.position = Vector3.Lerp(transform.position, targetPosition, moveSpeed * Time.deltaTime / Vector3.Distance(transform.position, targetPosition));
+            }
+            else
+            {
+                // Default smooth movement
+                transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+            }
+
             animator.SetBool("IsWalking", true);
+
+            // Check if the player has reached the target position
             if (Vector3.Distance(transform.position, targetPosition) < 0.001f)
             {
+                // Stop movement and reset flags
                 transform.position = targetPosition;
                 isMoving = false;
+                isSliding = false; // Reset isSliding to false
+                moveSpeed = normalMoveSpeed; // Reset speed to normal
+
                 animator.SetBool("IsWalking", false);
 
                 Vector2Int targetPosition2D = new Vector2Int(
                     Mathf.FloorToInt(targetPosition.x - 0.5f),
                     Mathf.FloorToInt(targetPosition.y - 0.5f)
                 );
-                //DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(targetPosition2D);
+                // DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(targetPosition2D);
             }
         }
     }
@@ -125,38 +151,62 @@ public class PlayerScript : MonoBehaviour
 
     public void Move(Vector3 direction)
     {
+        if (bumpsStuck > 1)
+        {
+            if (direction.x != 0)
+            {
+                spriteRenderer.flipX = (direction.x < 0);
+            }
+
+            Vector3 bumpPosition = transform.position + direction * 0.23f;
+            StartCoroutine(ReturnFromBump(transform.position));
+            transform.position = bumpPosition;
+            isSliding = false;
+            return;
+        }
+
         if (allowContinuousMove && (!canMove || !CanMove())) return;
 
-        Vector3Int cellPosition = tilemapFloor.WorldToCell(transform.position + direction * tileSize);
-        if (!isMoving && tilemapFloor.GetTile(cellPosition) != null/* && !DungeonManager.GetComponent<DungeonGenerationScript>().IsPositionOccupiedSolid(transform.position + direction * tileSize)*/)
+        Vector3 currentPosition = transform.position;
+        Vector3Int cellPosition = tilemapFloor.WorldToCell(currentPosition + direction * tileSize);
+        bool positionFound = false; // Track if a valid position is found
+
+        // Set initial target position to current position in case no valid move is found
+        targetPosition = currentPosition;
+
+        // Check if there's a table and try to find a clear position
+        while (!positionFound)
         {
+            // Check if the target cell contains a floor tile and no table
+            if (tilemapFloor.GetTile(cellPosition) != null &&
+                !DungeonManager.GetComponent<DungeonGenerationScript01>().IsTable2x2AtPositionAny(cellPosition) &&
+                !DungeonManager.GetComponent<DungeonGenerationScript01>().IsTable1x2AtPositionAny(cellPosition))
+            {
+                // Valid position found
+                positionFound = true;
+                targetPosition = tilemapFloor.CellToWorld(cellPosition) + new Vector3(0.5f, 0.5f, 0); // Center on cell
+            }
+            else
+            {
+                // If a table is in the way, keep moving one more unit in the same direction
+                cellPosition += Vector3Int.RoundToInt(direction);
+                moveSpeed = normalMoveSpeed / 2.5f;
+                isSliding = true;
+
+                // If the cell does not have a floor tile, break the loop (no valid move)
+                if (tilemapFloor.GetTile(cellPosition) == null)
+                {
+                    moveSpeed = normalMoveSpeed;
+                    break;
+                }
+            }
+        }
+
+        // Only proceed with the movement if a valid target position was found
+        if (positionFound && !isMoving)
+        {
+            // Proceed with setting movement flags and initiating movement
             GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-            targetPosition = transform.position; // Set new target position
-            // Snap x and y to the grid using SnapToGrid
-            Vector2 snappedPosition = SnapToGrid(new Vector2(transform.position.x, transform.position.y));
-
-            // Apply the snapped X or Y based on movement direction
-            if (direction == Vector3.up)
-            {
-                targetPosition.x = snappedPosition.x; // Snap X to the grid
-                targetPosition.y = Mathf.Floor(targetPosition.y - 0.5f) + 1.5f; // Move up
-            }
-            else if (direction == Vector3.down)
-            {
-                targetPosition.x = snappedPosition.x; // Snap X to the grid
-                targetPosition.y = Mathf.Ceil(targetPosition.y + 0.5f) - 1.5f; // Move down
-            }
-            else if (direction == Vector3.right)
-            {
-                targetPosition.y = snappedPosition.y; // Snap Y to the grid
-                targetPosition.x = Mathf.Floor(targetPosition.x - 0.5f) + 1.5f; // Move right
-            }
-            else if (direction == Vector3.left)
-            {
-                targetPosition.y = snappedPosition.y; // Snap Y to the grid
-                targetPosition.x = Mathf.Ceil(targetPosition.x + 0.5f) - 1.5f; // Move left
-            }
-
             isMoving = true;
             if (direction.x != 0)
             {
@@ -168,6 +218,49 @@ public class PlayerScript : MonoBehaviour
             {
                 StartCoroutine(MoveCooldown());
             }
+
+            if (bumpsStuck == 1)
+            {
+                Vector3Int flooredPosition = new Vector3Int(
+                    Mathf.FloorToInt(transform.position.x),
+                    Mathf.FloorToInt(transform.position.y),
+                    Mathf.FloorToInt(transform.position.z)
+                );
+                DungeonManager.GetComponent<DungeonGenerationScript01>().RemoveCobwebAtPosition(flooredPosition);
+            }
+        }
+        else if (!positionFound)
+        {
+            if (direction.x != 0)
+            {
+                spriteRenderer.flipX = (direction.x < 0);
+            }
+
+            Vector3 bumpPosition = currentPosition + direction * 0.23f;
+            transform.position = bumpPosition;
+            StartCoroutine(ReturnFromBump(currentPosition));
+            isSliding = false;
+            canMove = false;
+        }
+    }
+
+    private IEnumerator ReturnFromBump(Vector3 originalPosition)
+    {
+        yield return new WaitForSeconds(0.062f); // Brief delay
+        transform.position = originalPosition;
+
+        if (bumpsStuck <= 1)
+        {
+            canMove = true;
+
+            if (allowContinuousMove)
+            {
+                StartCoroutine(MoveCooldown());
+            }
+        }
+        else if (bumpsStuck > 1)
+        {
+            --bumpsStuck;
         }
     }
 
@@ -175,6 +268,7 @@ public class PlayerScript : MonoBehaviour
     {
         canMove = false;
         yield return new WaitForSeconds(continuousMoveCooldown);
+
         canMove = true;
     }
 
@@ -184,29 +278,6 @@ public class PlayerScript : MonoBehaviour
         rb.AddForce(direction * force, ForceMode2D.Impulse);
         SetStateToKnocked(knockTime);
         TakeDamage(damageOther);
-
-        // Start a coroutine to monitor the player's position and regenerate Dijkstra map when necessary
-        StartCoroutine(MonitorPositionDuringKnockback());
-    }
-
-    private IEnumerator MonitorPositionDuringKnockback()
-    {
-        // Keep track of the last snapped integer position (tile position)
-        Vector2Int lastSnappedPosition = SnapToGridInt(transform.position);
-
-        while (state == "knocked")
-        {
-            // Check the current snapped position
-            Vector2Int currentSnappedPosition = SnapToGridInt(transform.position);
-
-            if (currentSnappedPosition != lastSnappedPosition)
-            {
-                //DijkstraMap.GetComponent<DijkstraMap>().GenerateDijkstraMap(currentSnappedPosition);
-                lastSnappedPosition = currentSnappedPosition; // Update the last snapped position
-            }
-
-            yield return null; // Continue checking on each frame
-        }
     }
 
     private Vector2 SnapToGrid(Vector2 position)

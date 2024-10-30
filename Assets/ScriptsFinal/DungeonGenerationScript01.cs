@@ -1813,6 +1813,24 @@ public class DungeonGenerationScript01 : MonoBehaviour
         plantsInRoom.Remove(position);
     }
 
+    public void RemoveCobwebAtPosition(Vector3Int position)
+    {
+        Debug.Log("REMOVE");
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        float detectionRadius = 0.3f; // Small radius for detection
+        int cobwebLayer = LayerMask.GetMask("Cobweb"); // Make sure the cobweb is assigned to this layer
+        Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, cobwebLayer);
+        Debug.Log(worldPosition);
+
+        if (hitCollider != null && hitCollider.CompareTag("Cobweb"))
+        {
+            Destroy(hitCollider.gameObject);
+        }
+
+        cobwebsInRoom.Remove(position);
+    }
+
     private bool IsPlantAtPosition(Vector3Int position)
     {
         return plantsInRoom.Contains(position);
@@ -1835,11 +1853,41 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return false;
     }
 
+    public bool IsTable1x2AtPositionAny(Vector3Int position)
+    {
+        Vector3Int down = position + Vector3Int.down;
+
+        foreach (var tablePos in tables1x2InRoom)
+        {
+            if (tablePos == position || tablePos == down)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private bool IsTable2x2AtPosition(Vector3Int position)
     {
         foreach (var tablePos in tables2x2InRoom)
         {
             if (tablePos == position)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool IsTable2x2AtPositionAny(Vector3Int position)
+    {
+        Vector3Int down = position + Vector3Int.down;
+        Vector3Int left = position + Vector3Int.left;
+        Vector3Int downLeft = position + Vector3Int.down + Vector3Int.left;
+
+        foreach (var tablePos in tables2x2InRoom)
+        {
+            if (tablePos == position || tablePos == down || tablePos == left || tablePos == downLeft)
             {
                 return true;
             }
@@ -1863,15 +1911,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
             return true;
         }
 
-        if (IsTable1x2AtPosition(position) || IsTable1x2AtPosition(down))
+        if (IsTable1x2AtPositionAny(position))
         {
-            Debug.Log("L");
-            Debug.Log(position);
-            Debug.Log(down);
             return true;
         }
 
-        if (IsTable2x2AtPosition(position) || IsTable2x2AtPosition(down) || IsTable2x2AtPosition(left) || IsTable2x2AtPosition(downLeft))
+        if (IsTable2x2AtPositionAny(position))
         {
             return true;
         }
