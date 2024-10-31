@@ -22,6 +22,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceAdditionalHallways;
     [SerializeField] private int maxAdditionalHallways;
     [SerializeField] private float chanceAnyTileFloors;
+    [SerializeField] private float chanceHallwayColumns;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
     [SerializeField] private float chanceRoomFloorCornerBroken;
     [SerializeField] private float chanceCornerFloorCornerBroken;
@@ -57,7 +58,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
-    [SerializeField] private Tilemap tilemapWalls, tilemapWallsFix, tilemapWallColliders;
+    [SerializeField] private Tilemap tilemapWalls, tilemapWallsFix;
 
     [Header("Floor Tiles")]
     [SerializeField] private Tile tileFloor01;
@@ -80,6 +81,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileFloorBrokenUpLeft, tileFloorBrokenUpRight, tileFloorBrokenDownLeft, tileFloorBrokenDownRight;
 
     [SerializeField] private Tile tileWallHorizontalFix, tileWallHorizontalUpLeftFix, tileWallHorizontalUpRightFix, tileWallHorizontalDownLeftFix, tileWallHorizontalDownRightFix, tileWallCornerUpLeftFix, tileWallCornerUpRightFix;
+    [SerializeField] private Tile tileWallColumnBase, tileWallColumnMid, tileWallColumnTopFix, tileWallColumnBaseFloor;
 
     private List<Room> rooms = new List<Room>();
     private List<Vector3Int> plantsInRoom = new List<Vector3Int>();
@@ -333,6 +335,47 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 Vector3Int tilePos = startPos + new Vector3Int(i, j, 0);
                 BuildFloor(tilePos);
             }
+        }
+    }
+
+    private void AddColumnsToHallwayHorizontal(Vector3Int startPos, int width, int height)
+    {
+        if (width % 2 == 1)
+        {
+            for (int i = 1; i < width - 1; i += 2)
+            {
+                Vector3Int pos = startPos + new Vector3Int(i, -1, 0);
+                tilemapWalls.SetTile(pos + new Vector3Int(0, -1, 0), tileWallColumnBase);
+                tilemapWalls.SetTile(pos, tileWallColumnMid);
+                tilemapWallsFix.SetTile(pos, tileWallColumnTopFix);
+
+                pos = startPos + new Vector3Int(i, height, 0);
+                tilemapFloor.SetTile(pos + new Vector3Int(0, -1, 0), tileWallColumnBaseFloor);
+                tilemapWalls.SetTile(pos, tileWallColumnMid);
+                tilemapWallsFix.SetTile(pos, tileWallColumnTopFix);
+            }
+        }
+        else
+        {
+            Vector3Int pos = startPos + new Vector3Int(1, -1, 0);
+            tilemapWalls.SetTile(pos + new Vector3Int(0, -1, 0), tileWallColumnBase);
+            tilemapWalls.SetTile(pos, tileWallColumnMid);
+            tilemapWallsFix.SetTile(pos, tileWallColumnTopFix);
+
+            pos = startPos + new Vector3Int(1, height, 0);
+            tilemapFloor.SetTile(pos + new Vector3Int(0, -1, 0), tileWallColumnBaseFloor);
+            tilemapWalls.SetTile(pos, tileWallColumnMid);
+            tilemapWallsFix.SetTile(pos, tileWallColumnTopFix);
+
+            pos = startPos + new Vector3Int(width - 2, -1, 0);
+            tilemapWalls.SetTile(pos + new Vector3Int(0, -1, 0), tileWallColumnBase);
+            tilemapWalls.SetTile(pos, tileWallColumnMid);
+            tilemapWallsFix.SetTile(pos, tileWallColumnTopFix);
+
+            pos = startPos + new Vector3Int(width - 2, height, 0);
+            tilemapFloor.SetTile(pos + new Vector3Int(0, -1, 0), tileWallColumnBaseFloor);
+            tilemapWalls.SetTile(pos, tileWallColumnMid);
+            tilemapWallsFix.SetTile(pos, tileWallColumnTopFix);
         }
     }
 
@@ -1815,13 +1858,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     public void RemoveCobwebAtPosition(Vector3Int position)
     {
-        Debug.Log("REMOVE");
         Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
 
         float detectionRadius = 0.3f; // Small radius for detection
         int cobwebLayer = LayerMask.GetMask("Cobweb"); // Make sure the cobweb is assigned to this layer
         Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, cobwebLayer);
-        Debug.Log(worldPosition);
 
         if (hitCollider != null && hitCollider.CompareTag("Cobweb"))
         {
@@ -2141,7 +2182,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     List<Vector3Int> room0Sides = room0ConnectionPoints[side];
                     List<Vector3Int> room1Sides = room1ConnectionPoints[(side + 2) % 4];
 
-                    List<int> lengths = new List<int> { 3, 4, 5, 6 };
+                    List<int> lengths = new List<int> { 3, 4, 5, 6, 7 };
                     ShuffleList(lengths);
                     ShuffleList(room0Sides);
                     ShuffleList(room1Sides);
@@ -2197,6 +2238,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         {
                                             roomPlaced = true;
                                             BuildSquare(posHallway + new Vector3Int(1, 0, 0), length, 2);
+                                            if (Random.value < chanceHallwayColumns)
+                                            {
+                                                AddColumnsToHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2);
+                                            }
                                             break;
                                         }
                                         else
@@ -2241,6 +2286,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
                                         {
                                             roomPlaced = true;
                                             BuildSquare(posHallway, length, 2);
+                                            if (Random.value < chanceHallwayColumns)
+                                            {
+                                                AddColumnsToHallwayHorizontal(posHallway, length, 2);
+                                            }
                                             break;
                                         }
                                         else

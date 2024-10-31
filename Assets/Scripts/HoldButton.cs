@@ -19,9 +19,11 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public void OnPointerDown(PointerEventData eventData)
     {
         isHolding = true;
+        //Debug.Log("ONPDOWN");
         if (!playerScript.isSliding && playerScript.bumpsStuck > 0)
         {
             playerScript.Move(direction);
+            //Debug.Log("CLICKED");
         }
     }
 

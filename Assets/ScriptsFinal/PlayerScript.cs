@@ -89,7 +89,6 @@ public class PlayerScript : MonoBehaviour
     public void SetStuck(int bumpsStuck)
     {
         this.bumpsStuck = bumpsStuck;
-        canMove = false;
     }
 
     private void HandleMovement()
@@ -165,8 +164,10 @@ public class PlayerScript : MonoBehaviour
             return;
         }
 
-        if (allowContinuousMove && (!canMove || !CanMove())) return;
-
+        if (allowContinuousMove && (!canMove || !CanMove()))
+        {
+            return;
+        }
         Vector3 currentPosition = transform.position;
         Vector3Int cellPosition = tilemapFloor.WorldToCell(currentPosition + direction * tileSize);
         bool positionFound = false; // Track if a valid position is found
@@ -269,7 +270,6 @@ public class PlayerScript : MonoBehaviour
     {
         canMove = false;
         yield return new WaitForSeconds(continuousMoveCooldown);
-
         canMove = true;
     }
 
