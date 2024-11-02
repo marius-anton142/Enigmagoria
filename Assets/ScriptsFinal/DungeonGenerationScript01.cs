@@ -1598,7 +1598,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
                         float yOffset = spriteHeightInUnits * pivotYPercentage;
                         Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
 
-                        GameObject table1x2 = PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition() + pivotOffset);
+                        Sprite selectedTable1x2Sprite = Table1x2Prefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                        GameObject table1x2 = PlaceObject(freePosition.Value, Table1x2Prefab01, room.GetPosition() + pivotOffset, selectedTable1x2Sprite);
                         tables1x2InRoom.Add(freePosition.Value + room.GetPosition());
 
                         //RemovePlantAtPosition(freePosition.Value + room.GetPosition());

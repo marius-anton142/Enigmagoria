@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1158435477088484001}
   - component: {fileID: 2262259449395116930}
+  - component: {fileID: -6313121619695553531}
   m_Layer: 0
   m_Name: Table1x2Prefab01
   m_TagString: Untagged
@@ -84,3 +85,20 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 1
+--- !u!114 &-6313121619695553531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1961583833583492094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcc6001f9fe50e941b10c74c00c47213, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotate: 0
+  sprites:
+  - {fileID: 21300000, guid: e4bebb5e39ce1844e91d80a7ce03ea8a, type: 3}
+  - {fileID: 21300000, guid: 1dca48f936f558148a1ef15da902ca02, type: 3}
+  - {fileID: 21300000, guid: f73365d474510854da84034c58e195de, type: 3}
