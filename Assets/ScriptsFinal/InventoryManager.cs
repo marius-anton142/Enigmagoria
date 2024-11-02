@@ -63,7 +63,6 @@ public class InventoryManager : MonoBehaviour
         if (index < 0 || index >= weaponSlots.Length || weaponSlots[index] == null)
         {
             Debug.Log("Invalid weapon index");
-            return;
         }
 
         // Unequip the current weapon
@@ -85,7 +84,7 @@ public class InventoryManager : MonoBehaviour
     }
 
     // Method to equip a weapon
-    private void EquipWeapon(int index)
+    public void EquipWeapon(int index)
     {
         GameObject newWeapon = weaponSlots[index];
         if (newWeapon != null)
