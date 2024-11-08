@@ -15,6 +15,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     [Header("Special Rooms")]
     [SerializeField] private float chanceRoomSpecial;
+    [SerializeField] private float chanceRoomSquareHole;
+    [SerializeField] private float chanceRoomBelt;
     [SerializeField] private float chanceRoomPlus;
     [SerializeField] private float chanceRoomLCorner;
     [SerializeField] private float chanceRoomChess;
@@ -628,6 +630,71 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         Room newRoom = new Room(floorTileCoordinates);
         return new Room(floorTileCoordinates);
+    }
+
+    private Room CreateRoomSquareHole(int width, int height)
+    {
+        List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
+
+        // Define the minimum and maximum dimensions for the hole
+        int minHoleSize = 3;
+        int maxHoleWidth = width - 3;
+        int maxHoleHeight = height - 3;
+
+        // Determine random dimensions for the hole within allowed range
+        int holeWidth = Random.Range(minHoleSize, maxHoleWidth);
+        int holeHeight = Random.Range(minHoleSize, maxHoleHeight);
+
+        // Determine a random position for the top-left corner of the hole, ensuring at least a 1-tile border around the hole
+        int holeStartX = Random.Range(1, width - holeWidth - 1);
+        int holeStartY = Random.Range(1, height - holeHeight - 1);
+
+        // Generate floor tiles, excluding the hole area
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                // Check if the current tile is within the hole boundaries
+                bool isWithinHole = (x >= holeStartX && x < holeStartX + holeWidth) &&
+                                    (y >= holeStartY && y < holeStartY + holeHeight);
+
+                // Only add the tile if it is not part of the hole
+                if (!isWithinHole)
+                {
+                    floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+                }
+            }
+        }
+
+        Room newRoom = new Room(floorTileCoordinates);
+        return newRoom;
+    }
+
+    private Room CreateRoomBelt(int width, int height)
+    {
+        List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
+
+        int holeWidth = width - 2;
+        int holeHeight = height - 2;
+        int holeStartX = 1;
+        int holeStartY = 1;
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                bool isWithinHole = (x >= holeStartX && x < holeStartX + holeWidth) &&
+                                    (y >= holeStartY && y < holeStartY + holeHeight);
+
+                if (!isWithinHole)
+                {
+                    floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+                }
+            }
+        }
+
+        Room newRoom = new Room(floorTileCoordinates);
+        return newRoom;
     }
 
     private Room CreateRoomLCorner(int width, int height)
@@ -2197,6 +2264,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     int randomHeight = 8;
                     room1 = CreateRoomSquare(randomWidth, randomHeight);
                 }
+                else if (Random.value < chanceRoomBelt)
+                {
+                    type = "belt";
+
+                    int randomWidth = Random.Range(6, 13);
+                    int randomHeight = Random.Range(6, 13);
+
+                    room1 = CreateRoomBelt(randomWidth, randomHeight);
+                }
                 else if (Random.value < chanceRoomPlus)
                 {
                     type = "plus";
@@ -2212,6 +2288,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     int randomOtherSize = otherOptions[Random.Range(0, otherOptions.Length)];
 
                     room1 = CreateRoomPlus(randomWidth, randomHeight, randomSquareSize, randomOtherSize);
+                }
+                else if (Random.value < chanceRoomSquareHole)
+                {
+                    type = "SquareHole";
+
+                    int randomWidth = Random.Range(6, 14);
+                    int randomHeight = Random.Range(6, 14);
+
+                    room1 = CreateRoomSquareHole(randomWidth, randomHeight);
                 }
                 else
                 {

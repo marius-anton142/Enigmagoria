@@ -52931,6 +52931,8 @@ MonoBehaviour:
   maxLHallwayLength: 20
   roomsPlaced: 0
   chanceRoomSpecial: 0.45
+  chanceRoomSquareHole: 0.15
+  chanceRoomBelt: 0.05
   chanceRoomPlus: 0.1
   chanceRoomLCorner: 0.78
   chanceRoomChess: 0.075
@@ -53354,6 +53356,8 @@ MonoBehaviour:
   maxLHallwayLength: 20
   roomsPlaced: 0
   chanceRoomSpecial: 0.5
+  chanceRoomSquareHole: 0
+  chanceRoomBelt: 0
   chanceRoomPlus: 0.05
   chanceRoomLCorner: 0
   chanceRoomChess: 0
