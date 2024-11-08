@@ -21,6 +21,9 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceRoomLCorner;
     [SerializeField] private float chanceRoomChess;
 
+    [Header("Dungeon Level Chances")]
+    [SerializeField] private float chanceDungeonFloorNew;
+
     [Header("Regions")]
     [SerializeField] private float chanceRegionEmerald;
     [SerializeField] private int regionEmeraldSizeMin, regionEmeraldSizeMax;
@@ -32,7 +35,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [Header("Parameters")]
     [SerializeField] private float chanceAdditionalHallways;
     [SerializeField] private int maxAdditionalHallways;
-    [SerializeField] private float chanceAnyTileFloors;
+    [SerializeField] private float chanceAnyTileFloorsMin, chanceAnyTileFloorsMax;
+    private float chanceAnyTileFloors;
     [SerializeField] private float chanceHallwayColumns;
     [SerializeField] private float chanceHallwayWidth1;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
@@ -2235,6 +2239,16 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void Start()
     {
+        //Dungeon Level Chances
+        if (Random.value < chanceDungeonFloorNew)
+        {
+            chanceAnyTileFloors = 0;
+        }
+        else
+        {
+            chanceAnyTileFloors = Random.Range(chanceAnyTileFloorsMin, chanceAnyTileFloorsMax);
+        }
+
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
 
         Room initialRoom = CreateRoomSquare(6, 6);
