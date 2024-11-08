@@ -52936,6 +52936,11 @@ MonoBehaviour:
   chanceRoomPlus: 0.1
   chanceRoomLCorner: 0.78
   chanceRoomChess: 0.075
+  chanceRegionEmerald: 0.07
+  regionEmeraldSizeMin: 57
+  regionEmeraldSizeMax: 133
+  regionEmeraldReset: 137
+  chanceRegionTileEmerald: 0.46
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloors: 0.78
@@ -52964,9 +52969,9 @@ MonoBehaviour:
   chanceTileFloors:
   - 1
   - 1
-  - 0.7
-  - 0.84
-  - 0.999
+  - 0.3
+  - 0.16
+  - 0.001
   chanceTileWallBaseBroken:
   - 1
   - 1
@@ -53361,6 +53366,11 @@ MonoBehaviour:
   chanceRoomPlus: 0.05
   chanceRoomLCorner: 0
   chanceRoomChess: 0
+  chanceRegionEmerald: 0
+  regionEmeraldSizeMin: 0
+  regionEmeraldSizeMax: 0
+  regionEmeraldReset: 0
+  chanceRegionTileEmerald: 0
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloors: 0.78

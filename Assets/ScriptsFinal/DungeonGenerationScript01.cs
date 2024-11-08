@@ -21,6 +21,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceRoomLCorner;
     [SerializeField] private float chanceRoomChess;
 
+    [Header("Regions")]
+    [SerializeField] private float chanceRegionEmerald;
+    [SerializeField] private int regionEmeraldSizeMin, regionEmeraldSizeMax;
+    [SerializeField] private int regionEmeraldReset;
+    [SerializeField] private float chanceRegionTileEmerald;
+
+    private int regionEmeraldCounter;
+
     [Header("Parameters")]
     [SerializeField] private float chanceAdditionalHallways;
     [SerializeField] private int maxAdditionalHallways;
@@ -97,17 +105,35 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         TileBase tileToPaint;
 
-        if (Random.value > chanceAnyTileFloors)
+        if (Random.value < chanceRegionEmerald && regionEmeraldCounter == 0)
         {
-            if (Random.value > chanceTileFloors[4])
+            regionEmeraldCounter = Random.Range(regionEmeraldSizeMin, regionEmeraldSizeMax);
+        } 
+        else if (regionEmeraldCounter < 0)
+        {
+            ++regionEmeraldCounter;
+        } 
+        else if (regionEmeraldCounter == 0)
+        {
+            regionEmeraldCounter = -regionEmeraldReset;
+        }
+
+        if (regionEmeraldCounter > 0)
+        {
+            --regionEmeraldCounter;
+        }
+
+        if (Random.value < chanceAnyTileFloors)
+        {
+            if (Random.value < chanceTileFloors[4] || (regionEmeraldCounter > 0 && Random.value < chanceRegionTileEmerald))
             {
                 tileToPaint = tileFloor05;
             }
-            else if (Random.value > chanceTileFloors[3])
+            else if (Random.value < chanceTileFloors[3])
             {
                 tileToPaint = tileFloor04;
             }
-            else if (Random.value > chanceTileFloors[2])
+            else if (Random.value < chanceTileFloors[2])
             {
                 tileToPaint = tileFloor03;
             }
@@ -2291,7 +2317,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 }
                 else if (Random.value < chanceRoomSquareHole)
                 {
-                    type = "SquareHole";
+                    type = "square_hole";
 
                     int randomWidth = Random.Range(6, 14);
                     int randomHeight = Random.Range(6, 14);
@@ -2306,7 +2332,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             }
             else if (Random.value < chanceRoomLCorner)
             {
-                type = "LCorner";
+                type = "Lcorner";
 
                 int randomWidth = Random.Range(6, 14);
                 int randomHeight = Random.Range(6, 14);
