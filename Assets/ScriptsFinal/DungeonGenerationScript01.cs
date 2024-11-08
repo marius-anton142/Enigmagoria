@@ -16,6 +16,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [Header("Special Rooms")]
     [SerializeField] private float chanceRoomSpecial;
     [SerializeField] private float chanceRoomPlus;
+    [SerializeField] private float chanceRoomLCorner;
     [SerializeField] private float chanceRoomChess;
 
     [Header("Parameters")]
@@ -23,6 +24,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private int maxAdditionalHallways;
     [SerializeField] private float chanceAnyTileFloors;
     [SerializeField] private float chanceHallwayColumns;
+    [SerializeField] private float chanceHallwayWidth1;
     [SerializeField] private float chanceAnyTileWallBaseBroken;
     [SerializeField] private float chanceRoomFloorCornerBroken;
     [SerializeField] private float chanceCornerFloorCornerBroken;
@@ -502,6 +504,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
             }
         }
 
+        ShuffleList(downConnections);
+        ShuffleList(leftConnections);
+        ShuffleList(upConnections);
+        ShuffleList(rightConnections);
+
         // Return all four lists of connection points
         return new List<Vector3Int>[] { downConnections, leftConnections, upConnections, rightConnections };
     }
@@ -621,6 +628,64 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         Room newRoom = new Room(floorTileCoordinates);
         return new Room(floorTileCoordinates);
+    }
+
+    private Room CreateRoomLCorner(int width, int height)
+    {
+        List<Vector3Int> floorTileCoordinates = new List<Vector3Int>();
+
+        // Define minimum width and height for the main room part after corner removal
+        int minRemainingWidth = 2;
+        int minRemainingHeight = 2;
+
+        // Ensure room width and height are sufficient for a corner cut
+        if (width < minRemainingWidth + 1 || height < minRemainingHeight + 1)
+        {
+            Debug.LogWarning("Room dimensions too small for an L-corner room. Adjusting to minimum size.");
+            width = minRemainingWidth + 1;
+            height = minRemainingHeight + 1;
+        }
+
+        // Randomly determine the size of the corner to be removed
+        int cornerWidth = Random.Range(1, width - minRemainingWidth);
+        int cornerHeight = Random.Range(1, height - minRemainingHeight);
+
+        // Randomly choose which corner to remove (0: top-left, 1: top-right, 2: bottom-left, 3: bottom-right)
+        int cornerToCut = Random.Range(0, 4);
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                bool isCornerCut = false;
+
+                // Determine if the current tile is within the cut-out corner area based on the chosen corner
+                switch (cornerToCut)
+                {
+                    case 0: // Top-left corner
+                        isCornerCut = (x < cornerWidth && y >= height - cornerHeight);
+                        break;
+                    case 1: // Top-right corner
+                        isCornerCut = (x >= width - cornerWidth && y >= height - cornerHeight);
+                        break;
+                    case 2: // Bottom-left corner
+                        isCornerCut = (x < cornerWidth && y < cornerHeight);
+                        break;
+                    case 3: // Bottom-right corner
+                        isCornerCut = (x >= width - cornerWidth && y < cornerHeight);
+                        break;
+                }
+
+                // Only add the tile if it's outside the cut-out corner
+                if (!isCornerCut)
+                {
+                    floorTileCoordinates.Add(new Vector3Int(x, y, 0));
+                }
+            }
+        }
+
+        Room newRoom = new Room(floorTileCoordinates);
+        return newRoom;
     }
 
     private Room CreateRoomPlus(int centralWidth, int centralHeight, int armLength, int armWidth)
@@ -2153,7 +2218,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     type = "irregular";
                     room1 = CreateRoomIrregular(6, 8, 2);
                 }
-            } else
+            }
+            else if (Random.value < chanceRoomLCorner)
+            {
+                type = "LCorner";
+
+                int randomWidth = Random.Range(6, 14);
+                int randomHeight = Random.Range(6, 14);
+
+                room1 = CreateRoomLCorner(randomWidth, randomHeight);
+            }
+            else
             {
                 int randomWidth = Random.Range(5, 9);
                 int randomHeight = Random.Range(5, 9);
@@ -2167,138 +2242,165 @@ public class DungeonGenerationScript01 : MonoBehaviour
             List<int> roomIndices = Enumerable.Range(0, rooms.Count).ToList();
             ShuffleList(roomIndices);
 
+            List<int> sides = new List<int> { 0, 1, 2, 3 };
+            ShuffleList(sides);
+            List<int> lengths = new List<int> { 3, 4, 5, 6, 7 };
+            ShuffleList(lengths);
+
             foreach (int roomIndex in roomIndices)
             {
                 room0 = rooms[roomIndex];
 
-                // Down, left, up, right
-                List<Vector3Int>[] room0ConnectionPoints = GetConnectionPoints(room0, 2);
-                List<Vector3Int>[] room1ConnectionPoints = GetConnectionPoints(room1, 2);
-
-                List<int> sides = new List<int> { 0, 1, 2, 3 };
-                ShuffleList(sides);
-
                 foreach (int side in sides)
                 {
-                    List<Vector3Int> room0Sides = room0ConnectionPoints[side];
-                    List<Vector3Int> room1Sides = room1ConnectionPoints[(side + 2) % 4];
+                    List<int> widths = GetHallwayWidths(chanceHallwayWidth1);
 
-                    List<int> lengths = new List<int> { 3, 4, 5, 6, 7 };
-                    ShuffleList(lengths);
-                    ShuffleList(room0Sides);
-                    ShuffleList(room1Sides);
-
-                    foreach (int length in lengths)
+                    foreach (int width in widths)
                     {
-                        foreach (var room0Point in room0Sides)
+                        // Down, left, up, right
+                        List<Vector3Int>[] room0ConnectionPoints;
+                        List<Vector3Int>[] room1ConnectionPoints;
+
+                        List<Vector3Int> room0Sides;
+                        List<Vector3Int> room1Sides;
+
+                        if (width == 1)
                         {
-                            foreach (var room1Point in room1Sides)
+                            // Down, left, up, right
+                            room0ConnectionPoints = GetConnectionPoints(room0, 1);
+                            room1ConnectionPoints = GetConnectionPoints(room1, 1);
+
+                            room0Sides = room0ConnectionPoints[side];
+                            room1Sides = room1ConnectionPoints[(side + 2) % 4];
+
+                            ShuffleList(room0Sides);
+                            ShuffleList(room1Sides);
+                        } else
+                        {
+                            // Down, left, up, right
+                            room0ConnectionPoints = GetConnectionPoints(room0, 2);
+                            room1ConnectionPoints = GetConnectionPoints(room1, 2);
+
+                            room0Sides = room0ConnectionPoints[side];
+                            room1Sides = room1ConnectionPoints[(side + 2) % 4];
+
+                            ShuffleList(room0Sides);
+                            ShuffleList(room1Sides);
+                        }
+
+                        foreach (int length in lengths)
+                        {
+                            foreach (var room0Point in room0Sides)
                             {
-                                if (room0Point.x != room1Point.x && room0Point.y != room1Point.y)
+                                foreach (var room1Point in room1Sides)
                                 {
-                                    continue;
-                                }
-
-                                Vector3Int posHallway = Vector3Int.zero;
-                                Vector3Int posHallwayEnd = Vector3Int.zero;
-                                Vector3Int offset = room0.GetPosition();
-
-                                if (side == 0) // Down
-                                {
-                                    posHallway = offset + room0Point + new Vector3Int(0, -length - 1, 0);
-                                    posHallwayEnd = posHallway;
-
-                                    if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
-                                        CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, length))
+                                    if (room0Point.x != room1Point.x && room0Point.y != room1Point.y)
                                     {
-                                        InstantiateRoom(room1, posHallwayEnd - room1Point);
-
-                                        if (CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), 2, length))
-                                        {
-                                            roomPlaced = true;
-                                            BuildSquare(posHallway + new Vector3Int(0, 1, 0), 2, length);
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            ClearRoom(room1);
-                                        }
+                                        continue;
                                     }
-                                }
-                                else if (side == 1) // Left
-                                {
-                                    posHallway = offset + room0Point + new Vector3Int(-length - 1, 0, 0);
-                                    posHallwayEnd = posHallway;
 
-                                    if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
-                                        CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2))
+                                    Vector3Int posHallway = Vector3Int.zero;
+                                    Vector3Int posHallwayEnd = Vector3Int.zero;
+                                    Vector3Int offset = room0.GetPosition();
+
+                                    if (side == 0) // Down
                                     {
-                                        InstantiateRoom(room1, posHallwayEnd - room1Point);
+                                        posHallway = offset + room0Point + new Vector3Int(0, -length - 1, 0);
+                                        posHallwayEnd = posHallway;
 
-                                        if (CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2))
+                                        if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
+                                            CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), width, length))
                                         {
-                                            roomPlaced = true;
-                                            BuildSquare(posHallway + new Vector3Int(1, 0, 0), length, 2);
-                                            if (Random.value < chanceHallwayColumns)
+                                            InstantiateRoom(room1, posHallwayEnd - room1Point);
+
+                                            if (CheckBuildHallwayVertical(posHallway + new Vector3Int(0, 1, 0), width, length))
                                             {
-                                                AddColumnsToHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, 2);
+                                                roomPlaced = true;
+                                                BuildSquare(posHallway + new Vector3Int(0, 1, 0), width, length);
+                                                break;
                                             }
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            ClearRoom(room1);
-                                        }
-                                    }
-                                }
-                                else if (side == 2) // Up
-                                {
-                                    posHallway = offset + room0Point + new Vector3Int(0, 1, 0);
-                                    posHallwayEnd = posHallway + new Vector3Int(0, length, 0);
-
-                                    if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
-                                        CheckBuildHallwayVertical(posHallway, 2, length))
-                                    {
-                                        InstantiateRoom(room1, posHallwayEnd - room1Point);
-
-                                        if (CheckBuildHallwayVertical(posHallway, 2, length))
-                                        {
-                                            roomPlaced = true;
-                                            BuildSquare(posHallway, 2, length);
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            ClearRoom(room1);
-                                        }
-                                    }
-                                }
-                                else if (side == 3) // Right
-                                {
-                                    posHallway = offset + room0Point + new Vector3Int(1, 0, 0);
-                                    posHallwayEnd = posHallway + new Vector3Int(length, 0, 0);
-
-                                    if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
-                                        CheckBuildHallwayHorizontal(posHallway, length, 2))
-                                    {
-                                        InstantiateRoom(room1, posHallwayEnd - room1Point);
-
-                                        if (CheckBuildHallwayHorizontal(posHallway, length, 2))
-                                        {
-                                            roomPlaced = true;
-                                            BuildSquare(posHallway, length, 2);
-                                            if (Random.value < chanceHallwayColumns)
+                                            else
                                             {
-                                                AddColumnsToHallwayHorizontal(posHallway, length, 2);
+                                                ClearRoom(room1);
                                             }
-                                            break;
                                         }
-                                        else
+                                    }
+                                    else if (side == 1) // Left
+                                    {
+                                        posHallway = offset + room0Point + new Vector3Int(-length - 1, 0, 0);
+                                        posHallwayEnd = posHallway;
+
+                                        if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
+                                            CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, width))
                                         {
-                                            ClearRoom(room1);
+                                            InstantiateRoom(room1, posHallwayEnd - room1Point);
+
+                                            if (CheckBuildHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, width))
+                                            {
+                                                roomPlaced = true;
+                                                BuildSquare(posHallway + new Vector3Int(1, 0, 0), length, width);
+                                                if (Random.value < chanceHallwayColumns)
+                                                {
+                                                    AddColumnsToHallwayHorizontal(posHallway + new Vector3Int(1, 0, 0), length, width);
+                                                }
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                ClearRoom(room1);
+                                            }
+                                        }
+                                    }
+                                    else if (side == 2) // Up
+                                    {
+                                        posHallway = offset + room0Point + new Vector3Int(0, 1, 0);
+                                        posHallwayEnd = posHallway + new Vector3Int(0, length, 0);
+
+                                        if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
+                                            CheckBuildHallwayVertical(posHallway, width, length))
+                                        {
+                                            InstantiateRoom(room1, posHallwayEnd - room1Point);
+
+                                            if (CheckBuildHallwayVertical(posHallway, width, length))
+                                            {
+                                                roomPlaced = true;
+                                                BuildSquare(posHallway, width, length);
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                ClearRoom(room1);
+                                            }
+                                        }
+                                    }
+                                    else if (side == 3) // Right
+                                    {
+                                        posHallway = offset + room0Point + new Vector3Int(1, 0, 0);
+                                        posHallwayEnd = posHallway + new Vector3Int(length, 0, 0);
+
+                                        if (CheckInstantiateRoom(room1, posHallwayEnd - room1Point) &&
+                                            CheckBuildHallwayHorizontal(posHallway, length, width))
+                                        {
+                                            InstantiateRoom(room1, posHallwayEnd - room1Point);
+
+                                            if (CheckBuildHallwayHorizontal(posHallway, length, width))
+                                            {
+                                                roomPlaced = true;
+                                                BuildSquare(posHallway, length, width);
+                                                if (Random.value < chanceHallwayColumns)
+                                                {
+                                                    AddColumnsToHallwayHorizontal(posHallway, length, width);
+                                                }
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                ClearRoom(room1);
+                                            }
                                         }
                                     }
                                 }
+                                if (roomPlaced) break;
                             }
                             if (roomPlaced) break;
                         }
@@ -2314,6 +2416,23 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 TryBuildAdditionalHallways(room1, room0);
             }
         }
+    }
+
+    private List<int> GetHallwayWidths(float chanceHallwayWidth1)
+    {
+        List<int> widths = new List<int>();
+
+        if (Random.value < chanceHallwayWidth1)
+        {
+            widths.Add(1);
+            widths.Add(2);
+        }
+        else
+        {
+            widths.Add(2);
+        }
+
+        return widths;
     }
 
     private void ShuffleList<T>(List<T> list, int seed = 0)

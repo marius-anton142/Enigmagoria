@@ -52930,13 +52930,15 @@ MonoBehaviour:
   numRooms: 17
   maxLHallwayLength: 20
   roomsPlaced: 0
-  chanceRoomSpecial: 0.5
+  chanceRoomSpecial: 0.45
   chanceRoomPlus: 0.1
+  chanceRoomLCorner: 0.78
   chanceRoomChess: 0.075
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloors: 0.78
   chanceHallwayColumns: 0.33
+  chanceHallwayWidth1: 0.12
   chanceAnyTileWallBaseBroken: 0.965
   chanceRoomFloorCornerBroken: 0.6
   chanceCornerFloorCornerBroken: 0.27
@@ -53353,11 +53355,13 @@ MonoBehaviour:
   roomsPlaced: 0
   chanceRoomSpecial: 0.5
   chanceRoomPlus: 0.05
+  chanceRoomLCorner: 0
   chanceRoomChess: 0
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloors: 0.78
   chanceHallwayColumns: 0
+  chanceHallwayWidth1: 0
   chanceAnyTileWallBaseBroken: 0.965
   chanceRoomFloorCornerBroken: 0
   chanceCornerFloorCornerBroken: 0
