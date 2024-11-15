@@ -2,14 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum WeaponState
-{
-    Free,
-    Equipped,
-    Inventory,
-    Dropped
-}
-
 public class InventoryManager : MonoBehaviour
 {
     public GameObject[] weaponSlots = new GameObject[4];  // 4 inventory slots

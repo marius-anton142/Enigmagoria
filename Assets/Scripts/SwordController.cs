@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class SwordController : MonoBehaviour
 {
     public WeaponState weaponState = WeaponState.Free;
-    public GameObject inventoryManager, inventory;
+    public GameObject inventory;
     public GameObject player; // Assign the player GameObject in the inspector
     public float distanceFromPlayer; // Distance between player and sword
     public float angleOffset; // Initial angle offset
@@ -112,9 +112,16 @@ public class SwordController : MonoBehaviour
         {
             if (inventory != null)
             {
-                bool added = inventoryManager.GetComponent<InventoryManager>().AddWeapon(gameObject);
-                inventory.GetComponent<WeaponDotScript>().AddItemToSelectedSlot(gameObject.GetComponent<SpriteRenderer>().sprite, new Vector2(16f, 24f));
+                bool added = inventory.GetComponent<WeaponDotScript>().AddWeapon(gameObject, gameObject.GetComponent<SpriteRenderer>().sprite, new Vector2(16f, 24f));
             }
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (weaponState == WeaponState.Dropped)
+        {
+            SetState(WeaponState.Free);
         }
     }
 

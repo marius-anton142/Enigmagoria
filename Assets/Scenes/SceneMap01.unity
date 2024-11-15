@@ -26059,7 +26059,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 0a5fc7984709e2848a2214b112885027, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b6f702772bfe25042a5a79a32ee93f63, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -26133,8 +26133,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1260200729}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+      - m_Target: {fileID: 1317707409}
+        m_TargetAssemblyTypeName: WeaponDotScript, Assembly-CSharp
         m_MethodName: SwitchWeapon
         m_Mode: 3
         m_Arguments:
@@ -52596,6 +52596,7 @@ GameObject:
   - component: {fileID: 839997649}
   - component: {fileID: 839997650}
   - component: {fileID: 839997651}
+  - component: {fileID: 839997652}
   m_Layer: 0
   m_Name: Weapon
   m_TagString: WeaponMelee
@@ -52683,17 +52684,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponState: 0
-  inventoryManager: {fileID: 1260200728}
   inventory: {fileID: 1317707407}
   player: {fileID: 21251022}
   distanceFromPlayer: 0.5
   angleOffset: 30
   attackDuration: 0.38
-  resetDuration: 0.5
-  attackCooldown: 0.5
+  resetDuration: 0.65
+  attackCooldown: 0.65
   attackRange: 1.92
   attackSize: 1.15
-  damage: 25
+  damage: 40
   knockbackForce: 15
   knockTime: 1
   baseAngle: 0
@@ -52752,6 +52752,33 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.355, y: 1.0125}
   m_EdgeRadius: 0
+--- !u!50 &839997652
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 839997647}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 7
+  m_AngularDrag: 0
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &938456329
 GameObject:
   m_ObjectHideFlags: 0
@@ -52885,8 +52912,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1260200729}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+      - m_Target: {fileID: 1317707409}
+        m_TargetAssemblyTypeName: WeaponDotScript, Assembly-CSharp
         m_MethodName: SwitchWeapon
         m_Mode: 3
         m_Arguments:
@@ -52927,7 +52954,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c8e710563037f149b20fe85b4591d18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRooms: 17
+  numRooms: 14
   maxLHallwayLength: 20
   roomsPlaced: 0
   chanceRoomSpecial: 0.45
@@ -53776,6 +53803,13 @@ MonoBehaviour:
   slotSelected: {fileID: 0}
   spriteBoxSelected: {fileID: 0}
   spriteBoxEmpty: {fileID: 0}
+  weaponSlots:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  player: {fileID: 0}
+  currentWeaponIndex: -1
 --- !u!1 &1196491413
 GameObject:
   m_ObjectHideFlags: 0
@@ -54423,7 +54457,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1260200729
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54573,6 +54607,13 @@ MonoBehaviour:
   slotSelected: {fileID: 0}
   spriteBoxSelected: {fileID: 21300000, guid: b6f702772bfe25042a5a79a32ee93f63, type: 3}
   spriteBoxEmpty: {fileID: 21300000, guid: 0a5fc7984709e2848a2214b112885027, type: 3}
+  weaponSlots:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  player: {fileID: 21251029}
+  currentWeaponIndex: -1
 --- !u!222 &1317707410
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -55110,8 +55151,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1260200729}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+      - m_Target: {fileID: 1317707409}
+        m_TargetAssemblyTypeName: WeaponDotScript, Assembly-CSharp
         m_MethodName: SwitchWeapon
         m_Mode: 3
         m_Arguments:
@@ -55613,8 +55654,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1260200729}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+      - m_Target: {fileID: 1317707409}
+        m_TargetAssemblyTypeName: WeaponDotScript, Assembly-CSharp
         m_MethodName: SwitchWeapon
         m_Mode: 3
         m_Arguments:
@@ -59381,6 +59422,7 @@ GameObject:
   - component: {fileID: 2063201719}
   - component: {fileID: 2063201718}
   - component: {fileID: 2063201717}
+  - component: {fileID: 2063201721}
   m_Layer: 0
   m_Name: Weapon (1)
   m_TagString: WeaponMelee
@@ -59446,19 +59488,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponState: 0
-  inventoryManager: {fileID: 1260200728}
   inventory: {fileID: 1317707407}
   player: {fileID: 21251022}
   distanceFromPlayer: 0.5
   angleOffset: 30
   attackDuration: 0.38
-  resetDuration: 0.5
-  attackCooldown: 0.5
-  attackRange: 1.92
+  resetDuration: 0.3
+  attackCooldown: 0.3
+  attackRange: 1.52
   attackSize: 1.15
   damage: 25
-  knockbackForce: 15
-  knockTime: 1
+  knockbackForce: 5
+  knockTime: 0.5
   baseAngle: 0
   adjustedAngle: 0
   additionalAngleValue: 120
@@ -59537,6 +59578,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!50 &2063201721
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063201716}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 7
+  m_AngularDrag: 0
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &2063543783
 GameObject:
   m_ObjectHideFlags: 0
