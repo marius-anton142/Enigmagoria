@@ -11,6 +11,8 @@ public class InventoryArrowScript : MonoBehaviour
     public float inventoryOffsetX = -500f;
     public float inventoryAppendixOffsetX = -500f;
 
+    [SerializeField] private GameObject InventoryExpanded;
+
     private bool isOpen = true; // Tracks the state of the inventory
     private float targetRotationZ = 0; // Target rotation in Z-axis for the arrow
     private float rotationVelocity = 0; // Helper for SmoothDamp rotation
@@ -66,5 +68,6 @@ public class InventoryArrowScript : MonoBehaviour
 
         // Set target rotation for each toggle
         targetRotationZ += isOpen ? 180 : -180;
+        InventoryExpanded.SetActive(!isOpen);
     }
 }
