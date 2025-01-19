@@ -23,12 +23,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     [Header("Dungeon Level Chances")]
     [SerializeField] private float chanceDungeonFloorNew;
+    [SerializeField] private float chanceRegionEmeraldDungeon;
 
     [Header("Regions")]
     [SerializeField] private float chanceRegionEmerald;
     [SerializeField] private int regionEmeraldSizeMin, regionEmeraldSizeMax;
     [SerializeField] private int regionEmeraldReset;
     [SerializeField] private float chanceRegionTileEmerald;
+    private bool regionEmeraldDungeon = false;
 
     private int regionEmeraldCounter;
 
@@ -42,6 +44,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceAnyTileWallBaseBroken;
     [SerializeField] private float chanceRoomFloorCornerBroken;
     [SerializeField] private float chanceCornerFloorCornerBroken;
+    [SerializeField] private float chanceRoomFloorShadow;
+    [SerializeField] private float chanceRoomFloorLush;
+    [SerializeField] private float chanceLushLight;
+    [SerializeField] private float chanceLushMixed;
+    [SerializeField] private float chanceRoomFloorBig;
+    [SerializeField] private float chanceRoomFloorBigFull;
     [SerializeField] private float chanceRoomFloorFour; //chane of a room with four slab tiles
     [SerializeField] private float chanceTileFloorFour; //chance of a particular tile to be a four slab tile
     [SerializeField] private float chanceRoomFloorFourOne; //chance of a particular four slab tile to be a semi four slab tile
@@ -80,8 +88,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileFloor01;
     [SerializeField] private Tile tileFloorFour01;
     [SerializeField] private List<Tile> tileFloorOptions;
+    [SerializeField] private Tile tileFloorBigDownLeft, tileFloorBigDownRight, tileFloorBigUpLeft, tileFloorBigUpRight;
     [SerializeField] private Tile tileFloor02, tileFloor03, tileFloor04, tileFloor05;
     [SerializeField] private Tile tileFloorChessWhite, tileFloorChessBlack;
+    [SerializeField] private Tile tileFloorShadow01;
+    [SerializeField] private Tile tileFloorLushDark01, tileFloorLushLight01;
 
     [SerializeField] private Tile tileCarpet01CornerUpLeft, tileCarpet01CornerUpRight, tileCarpet01CornerDownLeft, tileCarpet01CornerDownRight;
     [SerializeField] private Tile tileCarpet01Up, tileCarpet01Down, tileCarpet01Left, tileCarpet01Right;
@@ -104,6 +115,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> cobwebsInRoom = new List<Vector3Int>();
     private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
+
+    private TilemapBaker floorBaker;
+    private TilemapBaker wallsBaker;
+    private TilemapBaker wallsFixBaker;
 
     TileBase getRandomTileFloor()
     {
@@ -129,7 +144,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         if (Random.value < chanceAnyTileFloors)
         {
-            if (Random.value < chanceTileFloors[4] || (regionEmeraldCounter > 0 && Random.value < chanceRegionTileEmerald))
+            if (Random.value < chanceTileFloors[4] || (regionEmeraldDungeon && regionEmeraldCounter > 0 && Random.value < chanceRegionTileEmerald))
             {
                 tileToPaint = tileFloor05;
             }
@@ -549,11 +564,20 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         public List<Vector3Int> FloorTileCoordinates { get; private set; }
         private Vector3Int position;
-        private string type;
+        private string type, floorType = "default";
+        private int width;
+        private int height;
 
         public Room(List<Vector3Int> floorTileCoordinates)
         {
             FloorTileCoordinates = floorTileCoordinates;
+        }
+
+        public Room(List<Vector3Int> floorTileCoordinates, int width, int height)
+        {
+            FloorTileCoordinates = floorTileCoordinates;
+            this.width = width;
+            this.height = height;
         }
 
         public Vector3Int GetPosition()
@@ -574,6 +598,36 @@ public class DungeonGenerationScript01 : MonoBehaviour
         public void SetType(string newType)
         {
             type = newType;
+        }
+
+        public string GetFloorType()
+        {
+            return floorType;
+        }
+
+        public void SetFloorType(string newType)
+        {
+            floorType = newType;
+        }
+
+        public int GetWidth()
+        {
+            return width;
+        }
+
+        public void SetWidth(int value)
+        {
+            width = value;
+        }
+
+        public int GetHeight()
+        {
+            return height;
+        }
+
+        public void SetHeight(int value)
+        {
+            height = value;
         }
 
         public List<Vector3Int> FloorTileCoordinatesExcludeEdges()
@@ -658,8 +712,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
             }
         }
 
-        Room newRoom = new Room(floorTileCoordinates);
-        return new Room(floorTileCoordinates);
+        Room newRoom = new Room(floorTileCoordinates, width, height);
+        return newRoom;
     }
 
     private Room CreateRoomSquareHole(int width, int height)
@@ -1647,6 +1701,66 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return null;
     }
 
+    private void FillRoomWithFloorBig(Room room, Tile tileToPlace, float chance)
+    {
+        if (Random.value < chance)
+        {
+            if (tileToPlace == tileFloorBigUpLeft && room.GetFloorType() != "fullBroken" && room.GetFloorType() != "fullNoBroken" && room.GetFloorType() != "fullFour01")
+            {
+                if (Random.value < chanceRoomFloorBigFull && room.GetType() == "square" && room.GetWidth() % 2 == 0 && room.GetHeight() % 2 == 0)
+                {
+                    Vector3Int offset = room.GetPosition();
+
+                    for (int x = 0; x < room.GetWidth(); x += 2) // Step 2 for width
+                    {
+                        for (int y = 0; y < room.GetHeight(); y += 2) // Step 2 for height
+                        {
+                            Vector3Int pos = offset + new Vector3Int(x, y, 0);
+
+                            tilemapFloor.SetTile(pos, tileFloorBigDownLeft);
+                            tilemapFloor.SetTile(pos + Vector3Int.right, tileFloorBigDownRight);
+                            tilemapFloor.SetTile(pos + Vector3Int.up, tileFloorBigUpLeft);
+                            tilemapFloor.SetTile(pos + Vector3Int.right + Vector3Int.up, tileFloorBigUpRight);
+                        }
+                    }
+                } else
+                {
+                    var validPositions = GetRectanglesInRoomFloorValid(room, 2, 2);
+                    if (validPositions.Count == 0) return;
+                    Vector3Int offset = room.GetPosition();
+
+                    int floorTileCount = room.FloorTileCoordinates.Count;
+                    int numBigTiles = floorTileCount > 100
+                        ? Random.Range(3, 10)  // Between 3 and 8
+                        : (floorTileCount > 64
+                            ? Random.Range(2, 5)  // Between 2 and 4
+                            : Random.Range(1, 3)); // Between 1 and 2
+
+                    for (int i = 0; i < numBigTiles && validPositions.Count > 0; i++)
+                    {
+                        Vector3Int pos = validPositions[Random.Range(0, validPositions.Count)] + offset;
+
+                        tilemapFloor.SetTile(pos, tileFloorBigDownLeft);
+                        tilemapFloor.SetTile(pos + Vector3Int.right, tileFloorBigDownRight);
+                        tilemapFloor.SetTile(pos + Vector3Int.up, tileFloorBigUpLeft);
+                        tilemapFloor.SetTile(pos + Vector3Int.right + Vector3Int.up, tileFloorBigUpRight);
+
+                        validPositions.Remove(pos); // Remove used position to avoid overlap
+                        validPositions.Remove(pos + Vector3Int.right - offset);
+                        validPositions.Remove(pos + Vector3Int.up - offset);
+                        validPositions.Remove(pos + Vector3Int.right + Vector3Int.up - offset);
+
+                        validPositions.Remove(pos + Vector3Int.left - offset);
+                        validPositions.Remove(pos + Vector3Int.down - offset);
+                        validPositions.Remove(pos + Vector3Int.left + Vector3Int.down - offset);
+                        validPositions.Remove(pos + Vector3Int.left + Vector3Int.up - offset);
+                        validPositions.Remove(pos + Vector3Int.down + Vector3Int.right - offset);
+                    }
+                }
+            }
+        }
+    }
+
     private void FillRoomWithFloor(Room room, Tile tileToPlace)
     {
         if (Random.value < chanceRoomFloorFour)
@@ -1675,26 +1789,32 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
-    private void FillRoomWithFloorFull(Room room, Tile tileToPlace)
+    private void FillRoomWithFloorFull(Room room, Tile tileToPlace, float chance)
     {
-        if (Random.value < chanceRoomFloorFourFull)
+        if (Random.value < chance)
         {
-            bool noBroken = false, fullBroken = false;
-
-            if (Random.value < chanceRoomFloorFourFullBroken)
-            {
-                fullBroken = true;
-            }
-            else if (Random.value < chanceRoomFloorFourFullNoBroken)
-            {
-                noBroken = true;
-            }
-
             if (tileToPlace == tileFloorFour01)
             {
-                List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
+                bool noBroken = false, fullBroken = false;
 
+                if (Random.value < chanceRoomFloorFourFullBroken)
+                {
+                    fullBroken = true;
+                    room.SetFloorType("fullBroken");
+                }
+                else if (Random.value < chanceRoomFloorFourFullNoBroken)
+                {
+                    noBroken = true;
+                    room.SetFloorType("fullNoBroken");
+                }
+                else
+                {
+                    room.SetFloorType("fullFour01");
+                }
+
+                List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
                 Vector3Int offset = room.GetPosition();
+
                 foreach (Vector3Int pos in fullTilesFloorFour)
                 {
                     if (noBroken)
@@ -1711,6 +1831,55 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     }
 
                     tilemapFloor.SetTile(pos + offset, tileToPlace);
+                }
+            }
+            else if (tileToPlace == tileFloorShadow01)
+            {
+                room.SetFloorType("Shadow01");
+                List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
+                Vector3Int offset = room.GetPosition();
+
+                foreach (Vector3Int pos in fullTilesFloorFour)
+                {
+                    tilemapFloor.SetTile(pos + offset, tileFloorShadow01);
+                }
+            }
+            else if (tileToPlace == tileFloorLushDark01)
+            {
+                Tile tileFloorLush01 = tileFloorLushDark01;
+                room.SetFloorType("LushDark01");
+                if (Random.value < chanceLushLight)
+                {
+                    tileFloorLush01 = tileFloorLushLight01;
+                    room.SetFloorType("LushLight01");
+                }
+
+                bool lushMixed = false;
+                float lushMixedDistribution = Random.Range(0.33f, 0.67f);
+
+                if (Random.value < chanceLushMixed)
+                {
+                    lushMixed = true;
+                    room.SetFloorType("LushMixed");
+                }
+
+                List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
+                Vector3Int offset = room.GetPosition(); 
+
+                foreach (Vector3Int pos in fullTilesFloorFour)
+                {
+                    if (lushMixed)
+                    {
+                        if (Random.value < lushMixedDistribution)
+                        {
+                            tileFloorLush01 = tileFloorLushDark01;
+                        } else
+                        {
+                            tileFloorLush01 = tileFloorLushLight01;
+                        }
+                    }
+
+                    tilemapFloor.SetTile(pos + offset, tileFloorLush01);
                 }
             }
         }
@@ -1794,6 +1963,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
             }
         }
     }
+
+
 
     private void FillRoomWithEnemies(Room room)
     {
@@ -2180,6 +2351,46 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return validPositions;
     }
 
+    private List<Vector3Int> GetRectanglesInRoomFloorValid(Room room, int width, int height)
+    {
+        List<Vector3Int> validPositions = new List<Vector3Int>();
+        Vector3Int offset = room.GetPosition();
+
+        foreach (Vector3Int tile in room.FloorTileCoordinates)
+        {
+            bool isValid = true;
+
+            for (int x = 0; x < width && isValid; x++)
+            {
+                for (int y = 0; y < height && isValid; y++)
+                {
+                    Vector3Int checkPos = new Vector3Int(tile.x + x, tile.y + y, tile.z);
+
+                    bool isInvalidTile = new Tile[] { tileFloorBigDownLeft, tileFloorBigDownRight, tileFloorBigUpLeft, tileFloorBigUpRight }
+                        .Contains(tilemapFloor.GetTile(checkPos + offset)) ||
+                        new Tile[] { tileFloorBigDownLeft, tileFloorBigDownRight, tileFloorBigUpLeft, tileFloorBigUpRight }
+                        .Contains(tilemapFloor.GetTile(checkPos + offset + Vector3Int.right)) ||
+                        new Tile[] { tileFloorBigDownLeft, tileFloorBigDownRight, tileFloorBigUpLeft, tileFloorBigUpRight }
+                        .Contains(tilemapFloor.GetTile(checkPos + offset + Vector3Int.up)) ||
+                        new Tile[] { tileFloorBigDownLeft, tileFloorBigDownRight, tileFloorBigUpLeft, tileFloorBigUpRight }
+                        .Contains(tilemapFloor.GetTile(checkPos + offset + Vector3Int.right + Vector3Int.up));
+
+                    if (!room.FloorTileCoordinates.Contains(checkPos) || isInvalidTile)
+                    {
+                        isValid = false;
+                    }
+                }
+            }
+
+            if (isValid)
+            {
+                validPositions.Add(tile);
+            }
+        }
+
+        return validPositions;
+    }
+
     private Vector3Int? GetRectanglesInRoomFree(Room room, int width, int height)
     {
         // Get all valid positions for the rectangle
@@ -2249,6 +2460,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
             chanceAnyTileFloors = Random.Range(chanceAnyTileFloorsMin, chanceAnyTileFloorsMax);
         }
 
+        if (Random.value < chanceRegionEmeraldDungeon)
+        {
+            regionEmeraldDungeon = true;
+        }
+
         Vector3Int pos01 = new Vector3Int(0, 0, 0);
 
         Room initialRoom = CreateRoomSquare(6, 6);
@@ -2262,7 +2478,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
             {
                 FillRoomWithFloor(room, tileFloorFour01);
                 AddFloorCornerBroken(room);
-                FillRoomWithFloorFull(room, tileFloorFour01);
+                FillRoomWithFloorFull(room, tileFloorFour01, chanceRoomFloorFourFull);
+                FillRoomWithFloorBig(room, tileFloorBigUpLeft, chanceRoomFloorBig);
+
+                FillRoomWithFloorFull(room, tileFloorShadow01, chanceRoomFloorShadow);
+                FillRoomWithFloorFull(room, tileFloorLushDark01, chanceRoomFloorLush);
 
                 FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
                 FillRoomWithTables(room);
@@ -2277,6 +2497,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 FillRoomWithEnemy(room, EnemyKnightPrefab, 2);
             }
         }
+
+        BakeTilemaps();
     }
 
     private void Update()
@@ -2571,5 +2793,25 @@ public class DungeonGenerationScript01 : MonoBehaviour
             list[i] = list[randomIndex];
             list[randomIndex] = temp;
         }
+    }
+
+    private void BakeTilemaps()
+    {
+        if (floorBaker != null)
+        {
+            floorBaker.BakeTilemap();
+        }
+
+        if (wallsBaker != null)
+        {
+            wallsBaker.BakeTilemap();
+        }
+
+        if (wallsFixBaker != null)
+        {
+            wallsFixBaker.BakeTilemap();
+        }
+
+        Debug.Log("Tilemaps baked!");
     }
 }

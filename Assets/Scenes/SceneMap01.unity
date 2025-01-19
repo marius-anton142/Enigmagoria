@@ -514,6 +514,7 @@ GameObject:
   - component: {fileID: 34731193}
   - component: {fileID: 34731192}
   - component: {fileID: 34731191}
+  - component: {fileID: 34731196}
   m_Layer: 0
   m_Name: Walls
   m_TagString: Untagged
@@ -25447,6 +25448,19 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &34731196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 34731189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e209f32bcd7c76b4ba8f11fde358a01a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilemap: {fileID: 34731195}
 --- !u!1 &67275486
 GameObject:
   m_ObjectHideFlags: 0
@@ -28510,8 +28524,12 @@ MonoBehaviour:
   objectToFollow: {fileID: 21251022}
   speed: 3
   newSize: 3.5
-  lerpDuration: 1
+  lerpDuration: 0.4
   spawnedPlayer: 0
+  cameraShiftAmount: 3
+  shiftDelay: 0.1
+  releaseDelay: 0.12
+  verticalShiftMultiplier: 1.2
 --- !u!1 &534339085
 GameObject:
   m_ObjectHideFlags: 0
@@ -30762,6 +30780,7 @@ GameObject:
   - component: {fileID: 800668271}
   - component: {fileID: 800668270}
   - component: {fileID: 800668269}
+  - component: {fileID: 800668274}
   m_Layer: 0
   m_Name: WallsFix
   m_TagString: Untagged
@@ -55350,6 +55369,19 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &800668274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 800668267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e209f32bcd7c76b4ba8f11fde358a01a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilemap: {fileID: 800668273}
 --- !u!1 &803285697
 GameObject:
   m_ObjectHideFlags: 0
@@ -56271,7 +56303,8 @@ MonoBehaviour:
   chanceRoomPlus: 0.1
   chanceRoomLCorner: 0.78
   chanceRoomChess: 0.075
-  chanceDungeonFloorNew: 0.05
+  chanceDungeonFloorNew: 0.07
+  chanceRegionEmeraldDungeon: 0.1
   chanceRegionEmerald: 0.07
   regionEmeraldSizeMin: 57
   regionEmeraldSizeMax: 133
@@ -56286,6 +56319,12 @@ MonoBehaviour:
   chanceAnyTileWallBaseBroken: 0.965
   chanceRoomFloorCornerBroken: 0.6
   chanceCornerFloorCornerBroken: 0.27
+  chanceRoomFloorShadow: 0.21
+  chanceRoomFloorLush: 0.21
+  chanceLushLight: 0.5
+  chanceLushMixed: 0.82
+  chanceRoomFloorBig: 0.71
+  chanceRoomFloorBigFull: 0.5
   chanceRoomFloorFour: 0.7
   chanceTileFloorFour: 0.73
   chanceRoomFloorFourOne: 0.27
@@ -56329,12 +56368,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 82ed951ade64d634b8cf93da454e8e5b, type: 2}
   - {fileID: 11400000, guid: 77c28bac4ad4808408f084e861519811, type: 2}
   - {fileID: 11400000, guid: 59d832b21fe8b704484a5c007eacca81, type: 2}
+  tileFloorBigDownLeft: {fileID: 11400000, guid: e39c4ed291086494aa4920868036f1f0, type: 2}
+  tileFloorBigDownRight: {fileID: 11400000, guid: 00fc530c61f965a4b9d3d7ff66817870, type: 2}
+  tileFloorBigUpLeft: {fileID: 11400000, guid: 3c611493870cb5c47ba2d663e561f4d7, type: 2}
+  tileFloorBigUpRight: {fileID: 11400000, guid: 42db4ea6d5b16d947afe2f81a9f0bfbd, type: 2}
   tileFloor02: {fileID: 11400000, guid: e57488ebd87cefc43af06e265aae0af8, type: 2}
   tileFloor03: {fileID: 11400000, guid: 5808fa0a870bb3144883b430bbdce695, type: 2}
   tileFloor04: {fileID: 11400000, guid: b679e5bbbcdebf54f8f249fe4130ee31, type: 2}
   tileFloor05: {fileID: 11400000, guid: 59484ddeee438944f85aa252eae50053, type: 2}
   tileFloorChessWhite: {fileID: 11400000, guid: 37c40516c1c23f14895b1ef18ef3da70, type: 2}
   tileFloorChessBlack: {fileID: 11400000, guid: 5d030590921a4224fa05dcbc41d3fccf, type: 2}
+  tileFloorShadow01: {fileID: 11400000, guid: 4105333ec4d65a441bca997a3023e3ce, type: 2}
+  tileFloorLushDark01: {fileID: 11400000, guid: e9a8be27629c52f4cb7150b9d7fd04e6, type: 2}
+  tileFloorLushLight01: {fileID: 11400000, guid: 1402469d5aa712148bb1ffe659f1685c, type: 2}
   tileCarpet01CornerUpLeft: {fileID: 11400000, guid: 5e0d0334071dd564ab0af1ff91c85598, type: 2}
   tileCarpet01CornerUpRight: {fileID: 11400000, guid: 6c7e7e7c171bdcd4a947cef0ac2551d4, type: 2}
   tileCarpet01CornerDownLeft: {fileID: 11400000, guid: b9d2fbc4cccf7ef48b0bb7d4f75fae55, type: 2}
@@ -56704,6 +56750,7 @@ MonoBehaviour:
   chanceRoomLCorner: 0
   chanceRoomChess: 0
   chanceDungeonFloorNew: 0
+  chanceRegionEmeraldDungeon: 0
   chanceRegionEmerald: 0
   regionEmeraldSizeMin: 0
   regionEmeraldSizeMax: 0
@@ -56718,6 +56765,12 @@ MonoBehaviour:
   chanceAnyTileWallBaseBroken: 0.965
   chanceRoomFloorCornerBroken: 0
   chanceCornerFloorCornerBroken: 0
+  chanceRoomFloorShadow: 0
+  chanceRoomFloorLush: 0
+  chanceLushLight: 0
+  chanceLushMixed: 0
+  chanceRoomFloorBig: 0
+  chanceRoomFloorBigFull: 0
   chanceRoomFloorFour: 0.7
   chanceTileFloorFour: 0.73
   chanceRoomFloorFourOne: 0.27
@@ -56761,12 +56814,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 82ed951ade64d634b8cf93da454e8e5b, type: 2}
   - {fileID: 11400000, guid: 77c28bac4ad4808408f084e861519811, type: 2}
   - {fileID: 11400000, guid: 59d832b21fe8b704484a5c007eacca81, type: 2}
+  tileFloorBigDownLeft: {fileID: 0}
+  tileFloorBigDownRight: {fileID: 0}
+  tileFloorBigUpLeft: {fileID: 0}
+  tileFloorBigUpRight: {fileID: 0}
   tileFloor02: {fileID: 11400000, guid: 309e84caab7209f4f9d45ed2b38346bc, type: 2}
   tileFloor03: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
   tileFloor04: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
   tileFloor05: {fileID: 11400000, guid: 32c0e5a31f5a2bf45a3494f3b539923b, type: 2}
   tileFloorChessWhite: {fileID: 0}
   tileFloorChessBlack: {fileID: 0}
+  tileFloorShadow01: {fileID: 0}
+  tileFloorLushDark01: {fileID: 0}
+  tileFloorLushLight01: {fileID: 0}
   tileCarpet01CornerUpLeft: {fileID: 0}
   tileCarpet01CornerUpRight: {fileID: 0}
   tileCarpet01CornerDownLeft: {fileID: 0}
@@ -61109,6 +61169,7 @@ GameObject:
   - component: {fileID: 1738476034}
   - component: {fileID: 1738476036}
   - component: {fileID: 1738476035}
+  - component: {fileID: 1738476037}
   m_Layer: 0
   m_Name: Floor
   m_TagString: TilemapFloor
@@ -64542,6 +64603,19 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &1738476037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738476033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e209f32bcd7c76b4ba8f11fde358a01a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilemap: {fileID: 1738476036}
 --- !u!1 &1749507162
 GameObject:
   m_ObjectHideFlags: 0
