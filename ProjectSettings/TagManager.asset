@@ -11,6 +11,7 @@ TagManager:
   - DijkstraMap
   - Plant
   - Cobweb
+  - Buddha
   layers:
   - Default
   - TransparentFX
@@ -22,7 +23,7 @@ TagManager:
   - EnemyProjectiles
   - Player
   - Cobweb
-  - 
+  - Buddha
   - 
   - 
   - 
