@@ -37,6 +37,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject PlantPrefab01;
     [SerializeField] private GameObject CobwebPrefab01;
     [SerializeField] private GameObject BuddhaPrefab01;
+    [SerializeField] private GameObject PotPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
 
@@ -70,6 +71,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceCornerCobweb;
     [SerializeField] private float chanceRoomBuddha;
     [SerializeField] private float chanceDoorwayBuddha;
+    [SerializeField] private float chanceRoomPot;
+    [SerializeField] private float chanceRoomPotDoorway;
+    [SerializeField] private float chanceRoomPotEntrance;
+    [SerializeField] private float chanceRoomPotEdges;
+    [SerializeField] private float chanceRoomPotCorners;
+    [SerializeField] private float chanceRoomPotRandom;
     [SerializeField] private float chanceCarpet;
     [SerializeField] private float chanceCarpetFull;
     [SerializeField] private float chanceTable;
@@ -116,6 +123,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> plantsInRoom = new List<Vector3Int>();
     private List<Vector3Int> cobwebsInRoom = new List<Vector3Int>();
     private List<Vector3Int> buddhasInRoom = new List<Vector3Int>();
+    private List<Vector3Int> potsInRoom = new List<Vector3Int>();
     private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
 
@@ -1519,7 +1527,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             var doorways = GetDoorwaysSides(room);
 
             // Choose a single random sprite for the entire room
-            List<float> probabilities = new List<float> { 0.536f, 0.42f, 0.04f, 0.004f };
+            List<float> probabilities = new List<float> { 0.51f, 0.37f, 0.08f, 0.04f };
             Sprite selectedSprite;
 
             if (room.GetFloorType() == "LushMixed" || room.GetFloorType() == "LushDark01" || room.GetFloorType() == "LushLight01")
@@ -1559,6 +1567,123 @@ public class DungeonGenerationScript01 : MonoBehaviour
                             GameObject obj = PlaceObject(tilePos, BuddhaPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
                             buddhasInRoom.Add(tilePos);
                         }
+                    }
+                }
+            }
+        }
+    }
+    //[SerializeField] private float chanceRoomPotDoorway;
+    //[SerializeField] private float chanceRoomPotEntrance;
+    //[SerializeField] private float chanceRoomPotEdges;
+    //[SerializeField] private float chanceRoomPotCorners;
+    //[SerializeField] private float chanceRoomPotRandom;
+
+    public void FillRoomWithPots(Room room)
+    {
+        if (Random.value < chanceRoomPot)
+        {
+            // Choose a single random sprite for the entire room
+            List<float> probabilities = new List<float> { 1f };
+            Sprite selectedSprite;
+            selectedSprite = PotPrefab01.GetComponent<SpriteScript>().GetRandomSpriteWithProbabilities(probabilities);
+
+            var doorways = GetDoorwaysSides(room);
+            if (Random.value < chanceRoomPotDoorway)
+            {
+                doorways = GetDoorwaysSides(room);
+                float[] choices = { 0.25f, 0.5f, 1f };
+                float chanceDoorwayPot = choices[Random.Range(0, choices.Length)];
+
+                for (int dir = 0; dir < doorways.Length; dir++)
+                {
+                    foreach (var doorwayTile in doorways[dir])
+                    {
+                        if (Random.value < chanceDoorwayPot)
+                        {
+                            Vector3Int tilePos = doorwayTile + room.GetPosition();
+
+                            if (!IsEntityAtPosition(tilePos))
+                            {
+                                GameObject obj = PlaceObject(tilePos, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                                potsInRoom.Add(tilePos);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (Random.value < chanceRoomPotEntrance)
+            {
+                doorways = GetEntrances(room);
+                float[] choices = { 1f };
+                float chanceEntrancePot = choices[Random.Range(0, choices.Length)];
+
+                for (int dir = 0; dir < doorways.Length; dir++)
+                {
+                    foreach (var doorwayTile in doorways[dir])
+                    {
+                        if (Random.value < chanceEntrancePot)
+                        {
+                            Vector3Int tilePos = doorwayTile + room.GetPosition();
+
+                            if (!IsEntityAtPosition(tilePos))
+                            {
+                                GameObject obj = PlaceObject(tilePos, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                                potsInRoom.Add(tilePos);
+                            }
+                        }
+                    }
+                }
+            } 
+            
+            if (Random.value < chanceRoomPotEdges)
+            {
+                List<Vector3Int> edges = GetEdgesAndInnerCornersExcludingEntrances(room);
+                float[] choices = { 0.25f, 0.5f, 1f };
+                float chanceEdgePot = choices[Random.Range(0, choices.Length)];
+
+                foreach (var edgeTile in edges)
+                {
+                    if (Random.value < chanceEdgePot) // Adjust chance as needed
+                    {
+                        Vector3Int tilePos = edgeTile + room.GetPosition();
+                        if (!IsEntityAtPosition(tilePos))
+                        {
+                            GameObject obj = PlaceObject(tilePos, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                            potsInRoom.Add(tilePos);
+                        }
+                    }
+                }
+            }
+
+            // Place pots in corners
+            if (Random.value < chanceRoomPotCorners)
+            {
+                List<Vector3Int> corners = GetRoomCorners(room);
+                foreach (var cornerTile in corners)
+                {
+                    if (!IsEntityAtPosition(cornerTile))
+                    {
+                        GameObject obj = PlaceObject(cornerTile, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                        potsInRoom.Add(cornerTile);
+                    }
+                }
+            }
+
+            // Scatter pots randomly in the room
+            if (Random.value < chanceRoomPotRandom)
+            {
+                int tileCount = room.FloorTileCoordinates.Count;
+                int minPots = Mathf.Max(1, tileCount / 8); // Ensure at least 1 pot
+                int maxPots = Mathf.Max(1, tileCount / 4); // Ensure at least 1 pot
+                List<Vector3Int> randomPositions = GetRandomRoomPositions(room, minPots, maxPots);
+
+                foreach (var position in randomPositions)
+                {
+                    if (!IsEntityAtPosition(position))
+                    {
+                        GameObject obj = PlaceObject(position, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                        potsInRoom.Add(position);
                     }
                 }
             }
@@ -1623,6 +1748,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private List<Vector3Int> GetRandomRoomPositions(Room room, int minCount, int maxCount)
+    {
+        List<Vector3Int> validPositions = new List<Vector3Int>(room.FloorTileCoordinates);
+        ShuffleList(validPositions);
+
+        // Ensure we don't exceed the number of available positions
+        int potCount = Mathf.Min(validPositions.Count, Random.Range(minCount, maxCount + 1));
+
+        return validPositions.Take(potCount).Select(tile => tile + room.GetPosition()).ToList();
+    }
+
     private List<Vector3Int> GetCornersIn(Room room)
     {
         string[] cornerTypes = { "downleft", "downright", "upleft", "upright" };
@@ -1667,6 +1803,65 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return allCorners;
     }
 
+    private List<Vector3Int> GetRoomEdges(Room room)
+    {
+        List<Vector3Int> edges = new List<Vector3Int>();
+        HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
+
+        foreach (Vector3Int tile in floorTiles)
+        {
+            int neighborCount = 0;
+
+            // Check if this tile is an edge by counting neighbors
+            Vector3Int[] directions = { Vector3Int.up, Vector3Int.down, Vector3Int.left, Vector3Int.right };
+            foreach (Vector3Int dir in directions)
+            {
+                if (floorTiles.Contains(tile + dir))
+                {
+                    neighborCount++;
+                }
+            }
+
+            // An edge tile should have fewer than 4 neighbors
+            if (neighborCount < 4)
+            {
+                edges.Add(tile);
+            }
+        }
+
+        return edges;
+    }
+
+    private List<Vector3Int> GetRoomCorners(Room room)
+    {
+        List<Vector3Int> corners = new List<Vector3Int>();
+        Vector3Int roomPosition = room.GetPosition();
+        HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
+
+        foreach (Vector3Int tile in floorTiles)
+        {
+            int neighborCount = 0;
+
+            // Check if the tile has two adjacent neighbors
+            Vector3Int[] directions = { Vector3Int.up, Vector3Int.down, Vector3Int.left, Vector3Int.right };
+            foreach (Vector3Int dir in directions)
+            {
+                if (floorTiles.Contains(tile + dir))
+                {
+                    neighborCount++;
+                }
+            }
+
+            // A corner should have exactly 2 neighbors (diagonal)
+            if (neighborCount == 2)
+            {
+                corners.Add(tile + roomPosition);
+            }
+        }
+
+        return corners;
+    }
+
     private List<Vector3Int>[] GetDoorways(Room room)
     {
         // Initialize lists for each direction
@@ -1709,9 +1904,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return doorways;
     }
 
-    /*
     //Get further entrance doorway tile
-    private List<Vector3Int>[] GetDoorwaysSides(Room room)
+    private List<Vector3Int>[] GetEntrances(Room room)
     {
         // Use GetDoorways to get the doorway tiles
         var doorways = GetDoorways(room);
@@ -1754,14 +1948,106 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 {
                     // Add one perpendicular tile in the opposite direction
                     Vector3Int perpendicularTile = doorwayTile + directions[(dir + 2) % 4];
-                    edgeSides[dir].Add(perpendicularTile);
+                    if (tilemapFloor.GetTile(perpendicularTile + room.GetPosition()) != null)
+                        edgeSides[dir].Add(perpendicularTile);
                 }
             }
         }
 
         return edgeSides;
     }
-    */
+
+    private List<Vector3Int> GetEntrancesAtEdges(Room room)
+    {
+        // Use GetDoorways to get the doorway tiles
+        var doorways = GetDoorways(room);
+
+        // List to hold all edge entrance tiles
+        var edgeEntrances = new List<Vector3Int>();
+
+        Vector3Int[] directions = new Vector3Int[]
+        {
+        Vector3Int.down,  // Down
+        Vector3Int.left,  // Left
+        Vector3Int.up,    // Up
+        Vector3Int.right  // Right
+        };
+
+        foreach (int dir in Enumerable.Range(0, 4))
+        {
+            foreach (var doorway in doorways[dir])
+            {
+                Vector3Int doorwayTile = doorway;
+
+                // Add the doorway tile itself as the entrance at the edge
+                Vector3Int edgeTile = doorwayTile; // Move in the doorway's direction
+                if (tilemapFloor.GetTile(edgeTile + room.GetPosition()) != null)
+                {
+                    edgeEntrances.Add(edgeTile);
+                }
+            }
+        }
+
+        return edgeEntrances;
+    }
+
+    private List<Vector3Int> GetInnerCorners(Room room)
+    {
+        List<Vector3Int> innerCorners = new List<Vector3Int>();
+        HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
+
+        Vector3Int[] directions = new Vector3Int[]
+        {
+        Vector3Int.up,
+        Vector3Int.down,
+        Vector3Int.left,
+        Vector3Int.right
+        };
+
+        foreach (Vector3Int tile in room.FloorTileCoordinates)
+        {
+            // Check for inner corners: must have floor tiles in two perpendicular directions
+            foreach (var dir1 in directions)
+            {
+                foreach (var dir2 in directions)
+                {
+                    if (dir1 != dir2 && dir1 != -dir2) // Ensure perpendicular directions
+                    {
+                        Vector3Int neighbor1 = tile + dir1;
+                        Vector3Int neighbor2 = tile + dir2;
+
+                        if (floorTiles.Contains(neighbor1) && floorTiles.Contains(neighbor2) &&
+                            !floorTiles.Contains(tile + dir1 + dir2)) // Exclude tiles in full adjacency
+                        {
+                            innerCorners.Add(tile); // Add the world position of the tile
+                        }
+                    }
+                }
+            }
+        }
+
+        return innerCorners.Distinct().ToList(); // Remove duplicates
+    }
+
+    private List<Vector3Int> GetEdgesAndInnerCorners(Room room)
+    {
+        var edgeTiles = GetRoomEdges(room);
+        var innerCornerTiles = GetInnerCorners(room);
+
+        // Combine edge and inner corner tiles
+        var combinedTiles = edgeTiles.Union(innerCornerTiles).ToList();
+        return combinedTiles;
+    }
+
+    private List<Vector3Int> GetEdgesAndInnerCornersExcludingEntrances(Room room)
+    {
+        var edgeAndCornerTiles = GetEdgesAndInnerCorners(room);
+        var entranceEdgeTiles = GetEntrancesAtEdges(room).ToHashSet();
+
+        // Remove entrance edge tiles from the edge and corner tiles
+        var result = edgeAndCornerTiles.Where(tile => !entranceEdgeTiles.Contains(tile)).ToList();
+        return result;
+    }
 
     private List<Vector3Int>[] GetDoorwaysSides(Room room)
     {
@@ -1804,18 +2090,22 @@ public class DungeonGenerationScript01 : MonoBehaviour
                         // If it's part of a larger hallway (at the edge), pick one perpendicular tile
                         if (doorways[dir].Contains(neighborPerpendicular1))
                         {
-                            edgeSides[dir].Add(neighborPerpendicular1 + directions[(dir + 1) % 4]); // Further along the edge
+                            if (tilemapFloor.GetTile(neighborPerpendicular1 + directions[(dir + 1) % 4] + room.GetPosition()) != null)
+                                edgeSides[dir].Add(neighborPerpendicular1 + directions[(dir + 1) % 4]); // Further along the edge
                         }
                         else if (doorways[dir].Contains(neighborPerpendicular2))
                         {
-                            edgeSides[dir].Add(neighborPerpendicular2 - directions[(dir + 1) % 4]); // Further along the edge
+                            if (tilemapFloor.GetTile(neighborPerpendicular2 - directions[(dir + 1) % 4] + room.GetPosition()) != null)
+                                edgeSides[dir].Add(neighborPerpendicular2 - directions[(dir + 1) % 4]); // Further along the edge
                         }
                     }
                     else
                     {
                         // If it's a single-tile hallway, add both perpendicular tiles
-                        edgeSides[dir].Add(neighborPerpendicular1);
-                        edgeSides[dir].Add(neighborPerpendicular2);
+                        if (tilemapFloor.GetTile(neighborPerpendicular1 + room.GetPosition()) != null)
+                            edgeSides[dir].Add(neighborPerpendicular1);
+                        if (tilemapFloor.GetTile(neighborPerpendicular2 + room.GetPosition()) != null)
+                            edgeSides[dir].Add(neighborPerpendicular2);
                     }
                 }
             }
@@ -2441,6 +2731,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return buddhasInRoom.Contains(position);
     }
 
+    private bool IsPotAtPosition(Vector3Int position)
+    {
+        return potsInRoom.Contains(position);
+    }
+
     private bool IsTable1x2AtPosition(Vector3Int position)
     {
         foreach (var tablePos in tables1x2InRoom)
@@ -2512,6 +2807,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         if (IsBuddhaAtPosition(position))
+        {
+            return true;
+        }
+
+        if (IsPotAtPosition(position))
         {
             return true;
         }
@@ -2715,6 +3015,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 FillRoomWithFloorFull(room, tileFloorLushDark01, chanceRoomFloorLush);
 
                 FillRoomWithBuddha(room);
+                FillRoomWithPots(room);
                 FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
                 FillRoomWithTables(room);
                 FillRoomWithCobweb(room);
