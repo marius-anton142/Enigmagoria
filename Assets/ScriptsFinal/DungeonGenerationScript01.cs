@@ -38,6 +38,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject CobwebPrefab01;
     [SerializeField] private GameObject BuddhaPrefab01;
     [SerializeField] private GameObject PotPrefab01;
+    [SerializeField] private GameObject BookshelfSmallPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
 
@@ -81,6 +82,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceCarpetFull;
     [SerializeField] private float chanceTable;
     [SerializeField] private float chanceTableSmall;
+    [SerializeField] private float chanceBookshelf;
+    [SerializeField] private float chanceBookshelfSmall;
     [SerializeField] private float chanceEnemy01;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
@@ -124,6 +127,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> cobwebsInRoom = new List<Vector3Int>();
     private List<Vector3Int> buddhasInRoom = new List<Vector3Int>();
     private List<Vector3Int> potsInRoom = new List<Vector3Int>();
+    private List<Vector3Int> bookshelvesInRoom = new List<Vector3Int>();
     private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
 
@@ -1832,6 +1836,44 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return edges;
     }
 
+    private List<Vector3Int> GetRoomUpperEdges(Room room)
+    {
+        List<Vector3Int> upperEdges = new List<Vector3Int>();
+        HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
+
+        foreach (Vector3Int tile in floorTiles)
+        {
+            int neighborCount = 0;
+            Vector3Int[] directions = { Vector3Int.up, Vector3Int.down, Vector3Int.left, Vector3Int.right };
+
+            foreach (Vector3Int dir in directions)
+            {
+                if (floorTiles.Contains(tile + dir))
+                {
+                    neighborCount++;
+                }
+            }
+
+            // It's an edge and has no tile directly above
+            if (neighborCount < 4 && !floorTiles.Contains(tile + Vector3Int.up))
+            {
+                upperEdges.Add(tile);
+            }
+        }
+
+        return upperEdges;
+    }
+
+    private List<Vector3Int> GetRoomUpperEdgesExcludingEntrances(Room room)
+    {
+        var upperEdges = GetRoomUpperEdges(room);
+        var entranceEdgeTiles = GetEntrancesAtEdges(room).ToHashSet();
+
+        // Remove entrance tiles from upper edge tiles
+        var filteredEdges = upperEdges.Where(tile => !entranceEdgeTiles.Contains(tile)).ToList();
+        return filteredEdges;
+    }
+
     private List<Vector3Int> GetRoomCorners(Room room)
     {
         List<Vector3Int> corners = new List<Vector3Int>();
@@ -2476,6 +2518,40 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
 
 
+
+    private void FillRoomWithBookshelves(Room room)
+    {
+        if (Random.value < chanceBookshelf)
+        {
+            List<Vector3Int> edges = GetRoomUpperEdgesExcludingEntrances(room); // Only upper edges
+
+            foreach (var edgeTile in edges)
+            {
+                Vector3Int worldPos = edgeTile + room.GetPosition();
+                Vector3Int worldPosAbove = worldPos + Vector3Int.up;
+
+                // Check if both positions are free (since bookshelf is 1x2)
+                if (!IsEntityAtPosition(worldPos) && !IsEntityAtPosition(worldPosAbove))
+                {
+                    float spriteHeightInUnits = 29f / 16f;
+                    float pivotYPercentage = 0.5862069f; //DACA e CU MINUS SE FACE 1 + VALOARE
+                    float yOffset = spriteHeightInUnits * pivotYPercentage;
+                    Vector3 pivotOffset = new Vector3(0f, yOffset, 0f);
+
+                    Sprite spriteSelected = BookshelfSmallPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                    GameObject bookshelf = PlaceObject(edgeTile, BookshelfSmallPrefab01, room.GetPosition() + pivotOffset, spriteSelected);
+                    bookshelvesInRoom.Add(worldPos);
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+
     private void FillRoomWithEnemies(Room room)
     {
         if (room.GetType() != "start")
@@ -2748,6 +2824,18 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return false;
     }
 
+    private bool IsBookshelfSmallAtPosition(Vector3Int position)
+    {
+        foreach (var bookshelfPos in bookshelvesInRoom)
+        {
+            if (bookshelfPos == position)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public bool IsTable1x2AtPositionAny(Vector3Int position)
     {
         Vector3Int down = position + Vector3Int.down;
@@ -2755,6 +2843,20 @@ public class DungeonGenerationScript01 : MonoBehaviour
         foreach (var tablePos in tables1x2InRoom)
         {
             if (tablePos == position || tablePos == down)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool IsBookshelfSmallAtPositionAny(Vector3Int position)
+    {
+        Vector3Int down = position + Vector3Int.down;
+
+        foreach (var bookshelfPos in bookshelvesInRoom)
+        {
+            if (bookshelfPos == position || bookshelfPos == down)
             {
                 return true;
             }
@@ -2817,6 +2919,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         if (IsTable1x2AtPositionAny(position))
+        {
+            return true;
+        }
+
+        if (IsBookshelfSmallAtPositionAny(position))
         {
             return true;
         }
@@ -3014,6 +3121,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 FillRoomWithFloorFull(room, tileFloorShadow01, chanceRoomFloorShadow);
                 FillRoomWithFloorFull(room, tileFloorLushDark01, chanceRoomFloorLush);
 
+                FillRoomWithBookshelves(room);
                 FillRoomWithBuddha(room);
                 FillRoomWithPots(room);
                 FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
