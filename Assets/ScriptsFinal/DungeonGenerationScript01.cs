@@ -39,6 +39,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject BuddhaPrefab01;
     [SerializeField] private GameObject PotPrefab01;
     [SerializeField] private GameObject BookshelfSmallPrefab01;
+    [SerializeField] private GameObject BookstackPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
 
@@ -78,12 +79,19 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceRoomPotEdges;
     [SerializeField] private float chanceRoomPotCorners;
     [SerializeField] private float chanceRoomPotRandom;
+
+    [SerializeField] private float chanceRoomBookstack;
+    [SerializeField] private float chanceRoomBookstackDoorway;
+    [SerializeField] private float chanceRoomBookstackCorners;
+    [SerializeField] private float chanceRoomBookstackRandom;
+
     [SerializeField] private float chanceCarpet;
     [SerializeField] private float chanceCarpetFull;
     [SerializeField] private float chanceTable;
     [SerializeField] private float chanceTableSmall;
-    [SerializeField] private float chanceBookshelf;
+    [SerializeField] private float chanceRoomBookshelf;
     [SerializeField] private float chanceBookshelfSmall;
+    [SerializeField] private float chanceBookstack;
     [SerializeField] private float chanceEnemy01;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
@@ -127,6 +135,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> cobwebsInRoom = new List<Vector3Int>();
     private List<Vector3Int> buddhasInRoom = new List<Vector3Int>();
     private List<Vector3Int> potsInRoom = new List<Vector3Int>();
+    private List<Vector3Int> bookstacksInRoom = new List<Vector3Int>();
     private List<Vector3Int> bookshelvesInRoom = new List<Vector3Int>();
     private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
@@ -579,7 +588,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         public List<Vector3Int> FloorTileCoordinates { get; private set; }
         private Vector3Int position;
-        private string type, floorType = "default";
+        private string type, subType, floorType = "default";
         private int width;
         private int height;
 
@@ -610,9 +619,19 @@ public class DungeonGenerationScript01 : MonoBehaviour
             return type;
         }
 
+        public string GetSubType()
+        {
+            return subType;
+        }
+
         public void SetType(string newType)
         {
             type = newType;
+        }
+
+        public void SetSubType(string newSubType)
+        {
+            subType = newSubType;
         }
 
         public string GetFloorType()
@@ -1584,7 +1603,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     public void FillRoomWithPots(Room room)
     {
-        if (Random.value < chanceRoomPot)
+        if (Random.value < chanceRoomPot && room.GetSubType() != "library")
         {
             // Choose a single random sprite for the entire room
             List<float> probabilities = new List<float> { 1f };
@@ -1688,6 +1707,76 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     {
                         GameObject obj = PlaceObject(position, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
                         potsInRoom.Add(position);
+                    }
+                }
+            }
+        }
+    }
+
+    public void FillRoomWithBookstacks(Room room)
+    {
+        if (Random.value < chanceRoomBookstack)
+        {
+            int maxBookstacks = Random.Range(2, 8);
+            int placedCount = 0;
+
+            // Choose a single random sprite for the entire room
+            List<float> probabilities = new List<float> { 1f };
+            Sprite selectedSprite = BookstackPrefab01.GetComponent<SpriteScript>().GetRandomSpriteWithProbabilities(probabilities);
+
+            List<Vector3Int> candidatePositions = new List<Vector3Int>();
+
+            // Doorway tiles
+            if (Random.value < chanceRoomBookstackDoorway)
+            {
+                var doorways = GetDoorwaysSides(room);
+                foreach (var side in doorways)
+                {
+                    foreach (var tile in side)
+                    {
+                        candidatePositions.Add(tile + room.GetPosition());
+                    }
+                }
+            }
+
+            // Corner tiles
+            if (Random.value < chanceRoomBookstackCorners)
+            {
+                List<Vector3Int> corners = GetRoomCorners(room);
+                candidatePositions.AddRange(corners);
+            }
+
+            // Shuffle doorway + corner positions
+            candidatePositions = candidatePositions.OrderBy(_ => Random.value).ToList();
+
+            // Place at doorway/corner positions
+            foreach (var pos in candidatePositions)
+            {
+                if (placedCount >= maxBookstacks) break;
+
+                if (!IsEntityAtPosition(pos))
+                {
+                    GameObject obj = PlaceObject(pos, BookstackPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                    bookstacksInRoom.Add(pos);
+                    placedCount++;
+                }
+            }
+
+            // Now try random placement if under the max and random chance fulfilled
+            if (placedCount < maxBookstacks && Random.value < chanceRoomBookstackRandom)
+            {
+                int remaining = maxBookstacks - placedCount;
+                List<Vector3Int> randomPositions = GetRandomRoomPositions(room, remaining, remaining);
+
+                foreach (var pos in randomPositions)
+                {
+                    if (placedCount >= maxBookstacks) break;
+
+                    if (!IsEntityAtPosition(pos))
+                    {
+                        GameObject obj = PlaceObject(pos, BookstackPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                        bookstacksInRoom.Add(pos);
+                        placedCount++;
                     }
                 }
             }
@@ -2385,7 +2474,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     tilemapFloor.SetTile(pos + offset, tileToPlace);
                 }
             }
-            else if (tileToPlace == tileFloorShadow01)
+            else if (tileToPlace == tileFloorShadow01 && room.GetSubType() != "library")
             {
                 room.SetFloorType("Shadow01");
                 List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
@@ -2396,7 +2485,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     tilemapFloor.SetTile(pos + offset, tileFloorShadow01);
                 }
             }
-            else if (tileToPlace == tileFloorLushDark01)
+            else if (tileToPlace == tileFloorLushDark01 && room.GetSubType() != "library")
             {
                 Tile tileFloorLush01 = tileFloorLushDark01;
                 room.SetFloorType("LushDark01");
@@ -2521,7 +2610,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void FillRoomWithBookshelves(Room room)
     {
-        if (Random.value < chanceBookshelf)
+        if (room.GetSubType() == "library")
         {
             List<Vector3Int> edges = GetRoomUpperEdgesExcludingEntrances(room); // Only upper edges
 
@@ -2543,6 +2632,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     bookshelvesInRoom.Add(worldPos);
                 }
             }
+
+            FillRoomWithBookstacks(room);
         }
     }
 
@@ -2836,6 +2927,18 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return false;
     }
 
+    private bool IsBookstackAtPosition(Vector3Int position)
+    {
+        foreach (var Pos in bookstacksInRoom)
+        {
+            if (Pos == position)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public bool IsTable1x2AtPositionAny(Vector3Int position)
     {
         Vector3Int down = position + Vector3Int.down;
@@ -2914,6 +3017,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         if (IsPotAtPosition(position))
+        {
+            return true;
+        }
+
+        if (IsBookstackAtPosition(position))
         {
             return true;
         }
@@ -3221,7 +3329,19 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 int randomHeight = Random.Range(5, 9);
                 room1 = CreateRoomSquare(randomWidth, randomHeight);
             }
+
+            string subType = "normal";
+
+            if (!roomTemplate(room1))
+            {
+                if (Random.value < chanceRoomBookshelf)
+                {
+                    subType = "library";
+                }
+            }
+
             room1.SetType(type);
+            room1.SetSubType(subType);
 
             Room room0 = null;
             bool roomPlaced = false;

@@ -56315,6 +56315,7 @@ MonoBehaviour:
   BuddhaPrefab01: {fileID: 6366033154286320870, guid: 317967b72abfe3d4dae8515e048d7026, type: 3}
   PotPrefab01: {fileID: 4782206260120530657, guid: 32b0f13c90a375940a29fb73aec71256, type: 3}
   BookshelfSmallPrefab01: {fileID: 6176904912386416665, guid: fa41df975bb06b1499cf3d520f5eefd5, type: 3}
+  BookstackPrefab01: {fileID: 2339089828451242048, guid: 1af572f269491fd4eaa763e3db3e8348, type: 3}
   Table2x2Prefab01: {fileID: 1961583833583492094, guid: f03ec2ad1168e304dba96fe98648b3ad, type: 3}
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
   chanceAdditionalHallways: 0.7
@@ -56352,12 +56353,17 @@ MonoBehaviour:
   chanceRoomPotEdges: 0.41
   chanceRoomPotCorners: 0.24
   chanceRoomPotRandom: 0.18
+  chanceRoomBookstack: 1
+  chanceRoomBookstackDoorway: 0.2
+  chanceRoomBookstackCorners: 0.8
+  chanceRoomBookstackRandom: 0.6
   chanceCarpet: 0.55
   chanceCarpetFull: 0.43
   chanceTable: 0.67
   chanceTableSmall: 0.3
-  chanceBookshelf: 0.22
+  chanceRoomBookshelf: 0.22
   chanceBookshelfSmall: 1
+  chanceBookstack: 1
   chanceEnemy01: 1
   chanceTileFloors:
   - 1
@@ -56774,6 +56780,7 @@ MonoBehaviour:
   BuddhaPrefab01: {fileID: 0}
   PotPrefab01: {fileID: 0}
   BookshelfSmallPrefab01: {fileID: 0}
+  BookstackPrefab01: {fileID: 0}
   Table2x2Prefab01: {fileID: 1961583833583492094, guid: f03ec2ad1168e304dba96fe98648b3ad, type: 3}
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
   chanceAdditionalHallways: 0.7
@@ -56811,12 +56818,17 @@ MonoBehaviour:
   chanceRoomPotEdges: 0
   chanceRoomPotCorners: 0
   chanceRoomPotRandom: 0
+  chanceRoomBookstack: 0
+  chanceRoomBookstackDoorway: 0
+  chanceRoomBookstackCorners: 0
+  chanceRoomBookstackRandom: 0
   chanceCarpet: 0
   chanceCarpetFull: 0
   chanceTable: 0.42
   chanceTableSmall: 0.23
-  chanceBookshelf: 0
+  chanceRoomBookshelf: 0
   chanceBookshelfSmall: 0
+  chanceBookstack: 0
   chanceEnemy01: 1
   chanceTileFloors:
   - 1
