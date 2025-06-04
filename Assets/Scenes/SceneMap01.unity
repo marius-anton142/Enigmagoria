@@ -56312,6 +56312,7 @@ MonoBehaviour:
   chanceRegionTileEmerald: 0.46
   PlantPrefab01: {fileID: 9037632988598735926, guid: 910934915f14c004ca1583249d2796ef, type: 3}
   CobwebPrefab01: {fileID: 8108525317376151511, guid: 7f916bec6434128499ef7838aa59f3fb, type: 3}
+  TreePrefab01: {fileID: 5517521068911098316, guid: 4ab994aabb97a3141a0f9b42d5aa65b3, type: 3}
   BuddhaPrefab01: {fileID: 6366033154286320870, guid: 317967b72abfe3d4dae8515e048d7026, type: 3}
   PotPrefab01: {fileID: 4782206260120530657, guid: 32b0f13c90a375940a29fb73aec71256, type: 3}
   BookshelfSmallPrefab01: {fileID: 6176904912386416665, guid: fa41df975bb06b1499cf3d520f5eefd5, type: 3}
@@ -56345,6 +56346,7 @@ MonoBehaviour:
   chancePlantAny: 0.018
   chanceRoomCobweb: 0.68
   chanceCornerCobweb: 0.39
+  chanceRoomTree: 0.23
   chanceRoomBuddha: 0.25
   chanceDoorwayBuddha: 1
   chanceRoomPot: 0.82
@@ -56777,6 +56779,7 @@ MonoBehaviour:
   chanceRegionTileEmerald: 0
   PlantPrefab01: {fileID: 9037632988598735926, guid: 910934915f14c004ca1583249d2796ef, type: 3}
   CobwebPrefab01: {fileID: 0}
+  TreePrefab01: {fileID: 0}
   BuddhaPrefab01: {fileID: 0}
   PotPrefab01: {fileID: 0}
   BookshelfSmallPrefab01: {fileID: 0}
@@ -56810,6 +56813,7 @@ MonoBehaviour:
   chancePlantAny: 0.02
   chanceRoomCobweb: 0
   chanceCornerCobweb: 0
+  chanceRoomTree: 0
   chanceRoomBuddha: 0
   chanceDoorwayBuddha: 0
   chanceRoomPot: 0

@@ -36,6 +36,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [Header("Objects")]
     [SerializeField] private GameObject PlantPrefab01;
     [SerializeField] private GameObject CobwebPrefab01;
+    [SerializeField] private GameObject TreePrefab01;
     [SerializeField] private GameObject BuddhaPrefab01;
     [SerializeField] private GameObject PotPrefab01;
     [SerializeField] private GameObject BookshelfSmallPrefab01;
@@ -71,6 +72,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chancePlantAny;
     [SerializeField] private float chanceRoomCobweb;
     [SerializeField] private float chanceCornerCobweb;
+    [SerializeField] private float chanceRoomTree;
     [SerializeField] private float chanceRoomBuddha;
     [SerializeField] private float chanceDoorwayBuddha;
     [SerializeField] private float chanceRoomPot;
@@ -133,6 +135,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Room> rooms = new List<Room>();
     private List<Vector3Int> plantsInRoom = new List<Vector3Int>();
     private List<Vector3Int> cobwebsInRoom = new List<Vector3Int>();
+    private List<Vector3Int> treesInRoom = new List<Vector3Int>();
     private List<Vector3Int> buddhasInRoom = new List<Vector3Int>();
     private List<Vector3Int> potsInRoom = new List<Vector3Int>();
     private List<Vector3Int> bookstacksInRoom = new List<Vector3Int>();
@@ -1783,6 +1786,23 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    public void FillRoomWithTrees(Room room)
+    {
+        if (Random.value < chanceRoomTree)
+        {
+            Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 1);
+            if (freePosition != null)
+            {
+                if (!IsEntityAtPosition(freePosition.Value + room.GetPosition()) && !IsEntityAtPosition(freePosition.Value + room.GetPosition() + Vector3Int.up))
+                {
+                    Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                    GameObject tree = PlaceObject(freePosition.Value + room.GetPosition(), TreePrefab01, new Vector3(0.5f, 0.5f, 0));
+                    treesInRoom.Add(freePosition.Value + room.GetPosition());
+                }
+            }
+        }
+    }
+
     // Helper method to get the perpendicular direction for edge placement
     private Vector3Int GetPerpendicularDirection(int dir)
     {
@@ -2893,6 +2913,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return cobwebsInRoom.Contains(position);
     }
 
+    private bool IsTreeAtPosition(Vector3Int position)
+    {
+        return treesInRoom.Contains(position);
+    }
+
     private bool IsBuddhaAtPosition(Vector3Int position)
     {
         return buddhasInRoom.Contains(position);
@@ -3007,6 +3032,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         if (IsCobwebAtPosition(position))
+        {
+            return true;
+        }
+
+        if (IsTreeAtPosition(position))
         {
             return true;
         }
@@ -3235,6 +3265,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 FillRoomWithPlants(room, PlantPrefab01, chancePlantAny);
                 FillRoomWithTables(room);
                 FillRoomWithCobweb(room);
+                FillRoomWithTrees(room);
 
                 FillRoomWithCarpet(room);
 
