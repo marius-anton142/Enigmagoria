@@ -150,7 +150,13 @@ public class PlayerScript : MonoBehaviour
 
     public void Move(Vector3 direction)
     {
-        if (bumpsStuck > 1)
+        Vector3Int pos = new Vector3Int(
+            Mathf.FloorToInt(transform.position.x),
+            Mathf.FloorToInt(transform.position.y),
+            Mathf.FloorToInt(transform.position.z)
+        );
+
+        if (bumpsStuck > 1 && DungeonManager.GetComponent<DungeonGenerationScript01>().IsCobwebAtPosition(pos))
         {
             if (direction.x != 0)
             {

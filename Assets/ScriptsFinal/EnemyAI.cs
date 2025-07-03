@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
@@ -22,6 +22,7 @@ public class EnemyAI : MonoBehaviour
     public Tilemap tilemapFloor;
     public GameObject player;
     public bool isLeaping = false;
+    public GameObject DungeonManager;
 
     private Vector3 targetPosition;
     private bool isMoving = false;
@@ -45,6 +46,7 @@ public class EnemyAI : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player");
         //DijkstraMap = GameObject.FindGameObjectWithTag("DijkstraMap");
         tilemapFloor = GameObject.FindGameObjectWithTag("TilemapFloor").GetComponent<Tilemap>();
+        DungeonManager = GameObject.FindGameObjectWithTag("DungeonManager");
     }
 
     private void Start()
@@ -118,7 +120,6 @@ public class EnemyAI : MonoBehaviour
                 return;
             }
 
-            // Check if leaping condition is met (distance of 2 or less cells to the player)
             if (path.Count > 7)
             {
                 SetStateToIdle();
@@ -126,22 +127,15 @@ public class EnemyAI : MonoBehaviour
             }
             else if (path.Count > 1 && path.Count <= 3 && !isLeaping)
             {
-                // Prepare to leap towards the player
                 leapCoroutine = StartCoroutine(PrepareAndLeap(Vector2Int.zero));
                 SetStateToPrepare();
                 return;
             }
 
-            // Proceed with regular movement towards the player
             if (path.Count > 1)
             {
-                Vector2Int bestMove = path[1]; // Next cell in the path
-
-                MoveToPosition(bestMove);
-                if (state != "chase")
-                {
-                    SetStateToChase();
-                }
+                TryPathMovesInOrder(path); // 🔄 New smarter path selection
+                if (state != "chase") SetStateToChase();
             }
             else if (state != "idle")
             {
@@ -155,25 +149,24 @@ public class EnemyAI : MonoBehaviour
                 if (state == "idle")
                 {
                     SetStateToChase();
-                } else if (state == "chase")
+                }
+                else if (state == "chase")
                 {
                     List<Vector2Int> neighbors = GetNeighbors(currentCell);
                     foreach (var neighbor in neighbors)
                     {
-                        if (neighbor != targetCell) // Move to a neighbor cell that is not the player's cell
+                        if (neighbor != targetCell)
                         {
-                            MoveToPosition(neighbor);
-                            return; // Exit after moving away to an adjacent cell
+                            MoveToPosition(neighbor); // ✅ simple L-shape jump
+                            return;
                         }
                     }
                 }
                 return;
             }
 
-
             if (path.Count > 1 && path[1] == targetCell && !isLeaping)
             {
-                // Start the leap coroutine (acts as a move with knockback if the player is in target cell)
                 leapCoroutine = StartCoroutine(PrepareAndLeap(targetCell));
                 SetStateToPrepare();
                 return;
@@ -186,12 +179,8 @@ public class EnemyAI : MonoBehaviour
             }
             else if (path.Count > 1)
             {
-                Vector2Int bestMove = path[1]; // Next cell in the path
-                MoveToPosition(bestMove);
-                if (state != "chase")
-                {
-                    SetStateToChase();
-                }
+                MoveToPosition(path[1]); // ✅ direct, no checks
+                if (state != "chase") SetStateToChase();
             }
             else if (state != "idle")
             {
@@ -215,6 +204,17 @@ public class EnemyAI : MonoBehaviour
     // Coroutine to handle the leap attack
     private IEnumerator PrepareAndLeap(Vector2Int targetCell)
     {
+        if (IsStuck())
+        {
+            Vector3 bumpDir = (player.transform.position - transform.position).normalized;
+            if (bumpDir == Vector3.zero) bumpDir = Vector3.right;
+
+            Vector3 bumpPos = transform.position + bumpDir * 0.23f;
+            transform.position = bumpPos; // <-- ✅ actually move visually
+            StartCoroutine(ReturnFromBump(transform.position - bumpDir * 0.23f));
+            yield break;
+        }
+
         isLeaping = true;
 
         // Prepare for 1 second before leaping
@@ -282,20 +282,72 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    // Move the enemy to the specified grid position
     private void MoveToPosition(Vector2Int targetCell)
     {
-        // Prevent moving if leaping
+        if (IsStuck())
+        {
+            Vector3 bumpDir = (player.transform.position - transform.position).normalized;
+            if (bumpDir == Vector3.zero) bumpDir = Vector3.right;
+
+            Vector3 bumpPos = transform.position + bumpDir * 0.23f;
+            transform.position = bumpPos; // <-- ✅ actually move visually
+            StartCoroutine(ReturnFromBump(transform.position - bumpDir * 0.23f));
+
+            return;
+        }
+
         if (isLeaping) return;
 
-        targetPosition = new Vector3(targetCell.x + 0.5f, targetCell.y + 0.5f, 0); // Align to grid
+        if (type == "Knight")
+        {
+            // Simple movement for Knight — no sliding
+            targetPosition = new Vector3(targetCell.x + 0.5f, targetCell.y + 0.5f, 0);
+            isMoving = true;
 
-        if (targetCell.x < transform.position.x - 0.5f)
-            spriteRenderer.flipX = true;
-        else if (targetCell.x > transform.position.x - 0.5f)
-            spriteRenderer.flipX = false;
+            if (targetCell.x < transform.position.x - 0.5f)
+                spriteRenderer.flipX = true;
+            else if (targetCell.x > transform.position.x - 0.5f)
+                spriteRenderer.flipX = false;
 
-        isMoving = true;
+            return;
+        }
+
+        // Sliding behavior for Critters
+        Vector2Int direction = targetCell - new Vector2Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y));
+        direction = new Vector2Int(Mathf.Clamp(direction.x, -1, 1), Mathf.Clamp(direction.y, -1, 1));
+
+        Vector2Int currentCell = new Vector2Int(Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y));
+        Vector3Int nextCell = new Vector3Int(currentCell.x + direction.x, currentCell.y + direction.y, 0);
+
+        float slideSpeed = moveSpeed * 1.2f;
+        Vector3 finalTarget = transform.position;
+
+        for (int i = 0; i < 10; i++)
+        {
+            if (tilemapFloor.GetTile(nextCell) == null) break;
+
+            bool blocked =
+                DungeonManager.GetComponent<DungeonGenerationScript01>().IsTable2x2AtPositionAny(nextCell) ||
+                DungeonManager.GetComponent<DungeonGenerationScript01>().IsTable1x2AtPositionAny(nextCell);
+
+            if (blocked)
+            {
+                nextCell += new Vector3Int(direction.x, direction.y, 0);
+                continue;
+            }
+            else
+            {
+                finalTarget = tilemapFloor.CellToWorld(nextCell) + new Vector3(0.5f, 0.5f, 0);
+                break;
+            }
+        }
+
+        if (Vector3.Distance(finalTarget, transform.position) > 0.1f)
+        {
+            targetPosition = finalTarget;
+            isMoving = true;
+            spriteRenderer.flipX = direction.x < 0;
+        }
     }
 
     public void TakeDamage(float damage)
@@ -316,6 +368,17 @@ public class EnemyAI : MonoBehaviour
 
     public void ApplyKnockback(Vector2 direction, float force, float knockTime, float damageOther)
     {
+        if (IsStuck())
+        {
+            Vector3 bumpDir = (player.transform.position - transform.position).normalized;
+            if (bumpDir == Vector3.zero) bumpDir = Vector3.right;
+
+            Vector3 bumpPos = transform.position + bumpDir * 0.23f;
+            transform.position = bumpPos; // <-- ✅ actually move visually
+            StartCoroutine(ReturnFromBump(transform.position - bumpDir * 0.23f));
+            return;
+        }
+
         // Stop the leap coroutine if it is running
         if (leapCoroutine != null)
         {
@@ -492,21 +555,23 @@ public class EnemyAI : MonoBehaviour
     private List<Vector2Int> GetNeighbors(Vector2Int cell)
     {
         List<Vector2Int> neighbors = new List<Vector2Int>();
-        Vector2Int[] directions = null;
+        Vector2Int[] directions;
 
         if (type == "Critter")
         {
             directions = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
         }
-        else if (type == "Knight")
+        else // Knight
         {
             directions = new Vector2Int[] {
-                new Vector2Int(2, 1), new Vector2Int(2, -1),
-                new Vector2Int(-2, 1), new Vector2Int(-2, -1),
-                new Vector2Int(1, 2), new Vector2Int(1, -2),
-                new Vector2Int(-1, 2), new Vector2Int(-1, -2)
-            };
+            new Vector2Int(2, 1), new Vector2Int(2, -1),
+            new Vector2Int(-2, 1), new Vector2Int(-2, -1),
+            new Vector2Int(1, 2), new Vector2Int(1, -2),
+            new Vector2Int(-1, 2), new Vector2Int(-1, -2)
+        };
         }
+
+        ShuffleArray(directions); // <--- shuffle directions before evaluating
 
         foreach (var direction in directions)
         {
@@ -518,6 +583,29 @@ public class EnemyAI : MonoBehaviour
         }
 
         return neighbors;
+    }
+
+    private bool CanMoveToCell(Vector2Int cell)
+    {
+        Vector3Int cell3D = new Vector3Int(cell.x, cell.y, 0);
+        // If the tile exists, we consider it reachable (table sliding logic will decide the rest)
+        return tilemapFloor.GetTile(cell3D) != null;
+    }
+
+    private void TryPathMovesInOrder(List<Vector2Int> path)
+    {
+        for (int i = 1; i < path.Count; i++)
+        {
+            Vector2Int step = path[i];
+
+            if (CanMoveToCell(step))
+            {
+                MoveToPosition(step); // will slide if needed
+                return;
+            }
+        }
+
+        // No valid moves found — stay idle or slide bump if desired
     }
 
     private HashSet<Vector2Int> GetWalkableTiles()
@@ -587,5 +675,50 @@ public class EnemyAI : MonoBehaviour
         }
 
         return path;
+    }
+
+    private bool IsStuck()
+    {
+        Vector3Int pos = new Vector3Int(
+            Mathf.FloorToInt(transform.position.x),
+            Mathf.FloorToInt(transform.position.y),
+            Mathf.FloorToInt(transform.position.z)
+        );
+
+        if (!(DungeonManager.GetComponent<DungeonGenerationScript01>().IsCobwebAtPosition(pos))) {
+            return false;
+        }
+
+        if (bumpsStuck == 1)
+        {
+            DungeonManager.GetComponent<DungeonGenerationScript01>().RemoveCobwebAtPosition(pos);
+            bumpsStuck = 0;
+        }
+
+        return bumpsStuck > 1;
+    }
+
+    private IEnumerator ReturnFromBump(Vector3 originalPosition)
+    {
+        yield return new WaitForSeconds(0.062f);
+        transform.position = originalPosition;
+
+        if (bumpsStuck > 1)
+        {
+            bumpsStuck--;
+        }
+        else if (bumpsStuck == 1)
+        {
+            Vector3Int pos = new Vector3Int(
+                Mathf.FloorToInt(transform.position.x),
+                Mathf.FloorToInt(transform.position.y),
+                Mathf.FloorToInt(transform.position.z)
+            );
+            DungeonManager.GetComponent<DungeonGenerationScript01>().RemoveCobwebAtPosition(pos);
+            bumpsStuck = 0;
+        }
+
+        isLeaping = false;
+        SetStateToIdle();
     }
 }

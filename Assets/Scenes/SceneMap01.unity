@@ -56361,7 +56361,7 @@ MonoBehaviour:
   chanceRoomBookstackRandom: 0.6
   chanceCarpet: 0.55
   chanceCarpetFull: 0.43
-  chanceTable: 0.67
+  chanceTable: 1
   chanceTableSmall: 0.3
   chanceRoomBookshelf: 0.22
   chanceBookshelfSmall: 1

@@ -2908,7 +2908,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return plantsInRoom.Contains(position);
     }
 
-    private bool IsCobwebAtPosition(Vector3Int position)
+    public bool IsCobwebAtPosition(Vector3Int position)
     {
         return cobwebsInRoom.Contains(position);
     }
