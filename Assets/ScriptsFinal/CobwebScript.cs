@@ -4,11 +4,33 @@ public class CobwebScript : MonoBehaviour
 {
     public int minBumpsToEscape = 2;
     public int maxBumpsToEscape = 5;
+
+    public int blackMinBumps = 7;
+    public int blackMaxBumps = 11;
+
+    public float chanceBlackCobweb = 0.02f;
+    public Sprite[] blackCobwebSprites;
+
     private int bumpsRequired;
     private int bumpCount = 0;
+    private bool isBlackCobweb = false;
 
     private void Start()
     {
+        // 2% chance to be a black cobweb
+        if (Random.value <= chanceBlackCobweb)
+        {
+            isBlackCobweb = true;
+            minBumpsToEscape = blackMinBumps;
+            maxBumpsToEscape = blackMaxBumps;
+
+            if (blackCobwebSprites != null && blackCobwebSprites.Length > 0)
+            {
+                int randomIndex = Random.Range(0, blackCobwebSprites.Length);
+                GetComponent<SpriteRenderer>().sprite = blackCobwebSprites[randomIndex];
+            }
+        }
+
         bumpsRequired = Random.Range(minBumpsToEscape, maxBumpsToEscape + 1);
     }
 

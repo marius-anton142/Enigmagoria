@@ -154,3 +154,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minBumpsToEscape: 2
   maxBumpsToEscape: 5
+  blackMinBumps: 7
+  blackMaxBumps: 10
+  chanceBlackCobweb: 0.02
+  blackCobwebSprites:
+  - {fileID: 21300000, guid: 9e60e3c7e166f3141b79c49294c413f8, type: 3}
+  - {fileID: 21300000, guid: 8046dfbf4fb7ef7409f4065caa7a16f4, type: 3}
+  - {fileID: 21300000, guid: a85bd1c68b98eac45b04da230474327d, type: 3}
+  - {fileID: 21300000, guid: 57c44bd324c6804419040b3f0bdaed28, type: 3}

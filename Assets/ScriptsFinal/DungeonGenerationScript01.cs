@@ -1798,6 +1798,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
                     GameObject tree = PlaceObject(freePosition.Value + room.GetPosition(), TreePrefab01, new Vector3(0.5f, 0.5f, 0));
                     treesInRoom.Add(freePosition.Value + room.GetPosition());
+                    //Debug.Log(freePosition.Value + room.GetPosition());
                 }
             }
         }
@@ -2901,6 +2902,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         cobwebsInRoom.Remove(position);
+    }
+
+    public bool IsSolidAtPosition(Vector3Int position)
+    {
+        return treesInRoom.Contains(position);
     }
 
     private bool IsPlantAtPosition(Vector3Int position)

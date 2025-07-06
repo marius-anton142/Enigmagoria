@@ -274,12 +274,12 @@ public class SwordController : MonoBehaviour
             float adjustedAngleRadians = adjustedAngle * Mathf.Deg2Rad;
             Vector3 adjustedDirection = new Vector3(Mathf.Cos(adjustedAngleRadians), Mathf.Sin(adjustedAngleRadians), 0);
 
-            // Move the object in the new direction
-            transform.position = player.transform.position + adjustedDirection * distanceFromPlayer;
+            // Move the object in the new direction (local to player)
+            transform.localPosition = adjustedDirection * distanceFromPlayer;
 
-            // Rotate the object as well
+            // Rotate the object relative to the player
             float angleForRotation = adjustedAngle + angleOffset;
-            transform.rotation = Quaternion.AngleAxis(angleForRotation, Vector3.forward);
+            transform.localRotation = Quaternion.AngleAxis(angleForRotation, Vector3.forward);
         }
     }
 

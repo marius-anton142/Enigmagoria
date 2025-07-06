@@ -335,7 +335,7 @@ public class EnemyAI : MonoBehaviour
                 nextCell += new Vector3Int(direction.x, direction.y, 0);
                 continue;
             }
-            else
+            else if (!DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(nextCell))
             {
                 finalTarget = tilemapFloor.CellToWorld(nextCell) + new Vector3(0.5f, 0.5f, 0);
                 break;
@@ -368,6 +368,8 @@ public class EnemyAI : MonoBehaviour
 
     public void ApplyKnockback(Vector2 direction, float force, float knockTime, float damageOther)
     {
+        TakeDamage(damageOther);
+
         if (IsStuck())
         {
             Vector3 bumpDir = (player.transform.position - transform.position).normalized;
@@ -390,9 +392,10 @@ public class EnemyAI : MonoBehaviour
         isMoving = false;
 
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0f;
         rb.AddForce(direction * force, ForceMode2D.Impulse);
         SetStateToKnocked(knockTime);
-        TakeDamage(damageOther);
         float distance = (force / rb.mass) / (1 + rb.drag);
     }
 
@@ -482,13 +485,14 @@ public class EnemyAI : MonoBehaviour
     {
         state = "knocked";
         StartCoroutine(ResetStateAfterKnock(knockTime * knockResistance));
+        mainCollider.enabled = true;
     }
 
     private IEnumerator ResetStateAfterKnock(float knockTime)
     {
         yield return new WaitForSeconds(knockTime);
         state = "idle";
-        //ResumeInvokeNextStep();
+        mainCollider.enabled = false;
     }
 
     void SetStateToPrepare()
@@ -500,11 +504,17 @@ public class EnemyAI : MonoBehaviour
     {
         state = "attack";
         hitEntities = new HashSet<GameObject>();
+
+        if (type != "Knight")
+        {
+            mainCollider.enabled = true;
+        }
     }
 
     void SetStateToCooldown()
     {
         state = "cooldown";
+        mainCollider.enabled = false;
     }
 
     void SetStateToIdle()
@@ -588,7 +598,8 @@ public class EnemyAI : MonoBehaviour
     private bool CanMoveToCell(Vector2Int cell)
     {
         Vector3Int cell3D = new Vector3Int(cell.x, cell.y, 0);
-        // If the tile exists, we consider it reachable (table sliding logic will decide the rest)
+        //Debug.Log(cell.x);
+        //Debug.Log(DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(cell3D));
         return tilemapFloor.GetTile(cell3D) != null;
     }
 
@@ -612,18 +623,21 @@ public class EnemyAI : MonoBehaviour
     {
         HashSet<Vector2Int> walkable = new HashSet<Vector2Int>();
 
-        // Iterate over all positions within the bounds of the tilemapFloor
         foreach (var pos in tilemapFloor.cellBounds.allPositionsWithin)
         {
-            Vector3Int tilePosition = new Vector3Int(pos.x, pos.y, pos.z);
-            if (tilemapFloor.GetTile(tilePosition) != null) // Check if tile exists
+            Vector3Int tilePosition = new Vector3Int(pos.x, pos.y, 0);
+
+            // Only consider it walkable if it's a tile and not a tree
+            if (tilemapFloor.GetTile(tilePosition) != null &&
+                !DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilePosition))
             {
-                walkable.Add((Vector2Int)tilePosition); // Add as walkable position
+                walkable.Add((Vector2Int)tilePosition);
             }
         }
 
         return walkable;
     }
+
 
     private List<Vector2Int> AStarPathfinding(Vector2Int start, Vector2Int goal)
     {

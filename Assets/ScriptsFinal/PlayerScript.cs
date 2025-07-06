@@ -30,12 +30,32 @@ public class PlayerScript : MonoBehaviour
     public bool isSliding = false;
     public int bumpsStuck = 0;
 
+    private Collider2D mainCollider;
+    private Collider2D triggerCollider;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         targetPosition = transform.position; // Initialize targetPosition
         normalMoveSpeed = moveSpeed;
+    }
+
+    private void Start()
+    {
+        Collider2D[] playerColliders = GetComponents<Collider2D>();
+
+        foreach (var col in playerColliders)
+        {
+            if (col.isTrigger)
+            {
+                triggerCollider = col;
+            }
+            else
+            {
+                mainCollider = col;
+            }
+        }
     }
 
     private void Update()
@@ -78,12 +98,14 @@ public class PlayerScript : MonoBehaviour
     {
         state = "knocked";
         StartCoroutine(ResetStateAfterKnock(knockTime * knockResistance));
+        mainCollider.enabled = true;
     }
 
     private IEnumerator ResetStateAfterKnock(float knockTime)
     {
         yield return new WaitForSeconds(knockTime);
         state = "alive";
+        mainCollider.enabled = false;
     }
 
     public void SetStuck(int bumpsStuck)
@@ -210,7 +232,7 @@ public class PlayerScript : MonoBehaviour
         }
 
         // Only proceed with the movement if a valid target position was found
-        if (positionFound && !isMoving)
+        if (positionFound && !isMoving && !DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition)))
         {
             // Proceed with setting movement flags and initiating movement
             GetComponent<Rigidbody2D>().velocity = Vector2.zero;
@@ -237,7 +259,7 @@ public class PlayerScript : MonoBehaviour
                 bumpsStuck = 0;
             }
         }
-        else if (!positionFound)
+        else if (!positionFound || (DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition))))
         {
             if (direction.x != 0)
             {

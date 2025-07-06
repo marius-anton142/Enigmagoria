@@ -66,6 +66,7 @@ MonoBehaviour:
   tilemapFloor: {fileID: 0}
   player: {fileID: 0}
   isLeaping: 0
+  DungeonManager: {fileID: 0}
 --- !u!50 &4874580794905576107
 Rigidbody2D:
   serializedVersion: 4
@@ -173,7 +174,7 @@ BoxCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3758618160080207739}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
