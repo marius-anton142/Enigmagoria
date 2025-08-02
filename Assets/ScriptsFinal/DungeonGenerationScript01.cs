@@ -6,6 +6,7 @@ using DelaunatorSharp;
 using DelaunatorSharp.Unity.Extensions;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using static DungeonGenerationScript01;
 
 public class DungeonGenerationScript01 : MonoBehaviour
 {
@@ -491,7 +492,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         // Get all floor tiles in the room
         HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
 
-        foreach (Vector3Int tile in room.FloorTileCoordinates)
+        foreach (Vector3Int tile in room.FloorTileCoordinates.Except(room.ExpandedTiles))
         {
             // Check for left connections
             if (!floorTiles.Contains(tile + Vector3Int.left) && // Must be an edge tile
@@ -595,6 +596,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
         private int width;
         private int height;
 
+        public List<Vector3Int> ExpandedTiles { get; private set; } = new List<Vector3Int>();
+        public bool HasEdgeExpansion => hasEdgeExpansion;
+        private bool hasEdgeExpansion = false;
+
         public Room(List<Vector3Int> floorTileCoordinates)
         {
             FloorTileCoordinates = floorTileCoordinates;
@@ -687,6 +692,114 @@ public class DungeonGenerationScript01 : MonoBehaviour
             }
 
             return innerTiles;
+        }
+
+        public void AddEdgeExpansion(int width, int height)
+        {
+            var tileSet = new HashSet<Vector3Int>(FloorTileCoordinates);
+            List<(Vector3Int anchor, Vector3Int dir)> validEdges = new List<(Vector3Int, Vector3Int)>();
+
+            int maxX = FloorTileCoordinates.Max(t => t.x);
+            int maxY = FloorTileCoordinates.Max(t => t.y);
+            int minX = FloorTileCoordinates.Min(t => t.x);
+            int minY = FloorTileCoordinates.Min(t => t.y);
+
+            // Helper to check if a buffer around the expansion is clear
+            bool IsBufferAreaClear(Vector3Int start, int width, int height, Vector3Int direction)
+            {
+                for (int dx = -2; dx < width + 2; dx++)
+                {
+                    for (int dy = -2; dy < height + 2; dy++)
+                    {
+                        // Skip inside the actual expansion area
+                        if (dx >= 0 && dx < width && dy >= 0 && dy < height)
+                            continue;
+
+                        // Skip side touching the main room (based on expansion direction)
+                        if (direction == Vector3Int.down && dy >= height) continue;
+                        if (direction == Vector3Int.up && dy < 0) continue;
+                        if (direction == Vector3Int.left && dx >= width) continue;
+                        if (direction == Vector3Int.right && dx < 0) continue;
+
+                        Vector3Int checkPos = start + new Vector3Int(dx, dy, 0);
+                        if (tileSet.Contains(checkPos))
+                            return false;
+                    }
+                }
+                return true;
+            }
+
+            foreach (var tile in FloorTileCoordinates)
+            {
+                // Right
+                if (tile.x <= maxX - 2 &&
+                    tileSet.Contains(tile) &&
+                    tileSet.Contains(tile + Vector3Int.right) &&
+                    tileSet.Contains(tile + Vector3Int.right * 2) &&
+                    !tileSet.Contains(tile + Vector3Int.right * 3))
+                {
+                    Vector3Int startPos = tile + Vector3Int.right * 3;
+                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.right))
+                        validEdges.Add((startPos, Vector3Int.right));
+                }
+
+                // Left
+                if (tile.x >= minX + 2 &&
+                    tileSet.Contains(tile) &&
+                    tileSet.Contains(tile + Vector3Int.left) &&
+                    tileSet.Contains(tile + Vector3Int.left * 2) &&
+                    !tileSet.Contains(tile + Vector3Int.left * 3))
+                {
+                    Vector3Int startPos = tile + Vector3Int.left * 3 - new Vector3Int(width - 1, 0, 0);
+                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.left))
+                        validEdges.Add((startPos, Vector3Int.left));
+                }
+
+                // Up
+                if (tile.y <= maxY - 2 &&
+                    tileSet.Contains(tile) &&
+                    tileSet.Contains(tile + Vector3Int.up) &&
+                    tileSet.Contains(tile + Vector3Int.up * 2) &&
+                    !tileSet.Contains(tile + Vector3Int.up * 3))
+                {
+                    Vector3Int startPos = tile + Vector3Int.up * 3;
+                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.up))
+                        validEdges.Add((startPos, Vector3Int.up));
+                }
+
+                // Down
+                if (tile.y >= minY + 2 &&
+                    tileSet.Contains(tile) &&
+                    tileSet.Contains(tile + Vector3Int.down) &&
+                    tileSet.Contains(tile + Vector3Int.down * 2) &&
+                    !tileSet.Contains(tile + Vector3Int.down * 3))
+                {
+                    Vector3Int startPos = tile + Vector3Int.down * 3 - new Vector3Int(0, height - 1, 0);
+                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.down))
+                        validEdges.Add((startPos, Vector3Int.down));
+                }
+            }
+
+            if (validEdges.Count == 0) return;
+
+            var (startPosFinal, directionFinal) = validEdges[Random.Range(0, validEdges.Count)];
+
+            for (int dx = 0; dx < width; dx++)
+            {
+                for (int dy = 0; dy < height; dy++)
+                {
+                    Vector3Int offset = new Vector3Int(dx, dy, 0);
+                    Vector3Int tilePos = startPosFinal + offset;
+
+                    if (!tileSet.Contains(tilePos))
+                    {
+                        FloorTileCoordinates.Add(tilePos);
+                        ExpandedTiles.Add(tilePos);
+                    }
+                }
+            }
+
+            hasEdgeExpansion = true;
         }
     }
 
@@ -1603,6 +1716,24 @@ public class DungeonGenerationScript01 : MonoBehaviour
     //[SerializeField] private float chanceRoomPotEdges;
     //[SerializeField] private float chanceRoomPotCorners;
     //[SerializeField] private float chanceRoomPotRandom;
+
+    public void FillEdgeExpansionWithPots(Room room)
+    {
+        if (!room.HasEdgeExpansion || room.ExpandedTiles.Count == 0)
+            return;
+
+        Sprite selectedSprite = PotPrefab01.GetComponent<SpriteScript>().GetRandomSpriteWithProbabilities(new List<float> { 1f });
+
+        foreach (var tile in room.ExpandedTiles)
+        {
+            Vector3Int worldPos = tile + room.GetPosition();
+            if (!IsEntityAtPosition(worldPos))
+            {
+                GameObject obj = PlaceObject(worldPos, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                potsInRoom.Add(worldPos);
+            }
+        }
+    }
 
     public void FillRoomWithPots(Room room)
     {
@@ -3375,6 +3506,10 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 {
                     subType = "library";
                 }
+
+                int w = Random.Range(3, 7);
+                int h = Random.Range(3, 7);
+                room1.AddEdgeExpansion(3, 3);
             }
 
             room1.SetType(type);
@@ -3558,6 +3693,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
             if (roomPlaced)
             {
                 TryBuildAdditionalHallways(room1, room0);
+
+                FillEdgeExpansionWithPots(room1);
             }
         }
     }

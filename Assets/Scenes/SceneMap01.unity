@@ -56349,7 +56349,7 @@ MonoBehaviour:
   chanceRoomTree: 0.4
   chanceRoomBuddha: 0.25
   chanceDoorwayBuddha: 1
-  chanceRoomPot: 0.82
+  chanceRoomPot: 0.31
   chanceRoomPotDoorway: 0.2
   chanceRoomPotEntrance: 0.09
   chanceRoomPotEdges: 0.41
