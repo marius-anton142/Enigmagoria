@@ -55755,7 +55755,7 @@ MonoBehaviour:
   knockbackForce: 15
   knockTime: 1
   cameraShakeDuration: 0.07
-  cameraShakeMagnitude: 0.08
+  cameraShakeMagnitude: 0.1
   baseAngle: 0
   adjustedAngle: 0
   additionalAngleValue: 120
@@ -66224,7 +66224,7 @@ MonoBehaviour:
   knockbackForce: 5
   knockTime: 0.5
   cameraShakeDuration: 0.07
-  cameraShakeMagnitude: 0.04
+  cameraShakeMagnitude: 0.07
   baseAngle: 0
   adjustedAngle: 0
   additionalAngleValue: 120

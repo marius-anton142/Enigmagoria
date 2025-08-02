@@ -322,12 +322,12 @@ public class PlayerScript : MonoBehaviour
         float scaledDamage = Mathf.Max(0, damageOther - 20f);
         float scaledKnockback = Mathf.Max(0, force - 20f);
 
-        float shakeMagnitude = 0.07f + (scaledDamage * 0.004f);
-        float shakeDuration = 0.07f + (scaledKnockback * 0.004f);
+        float shakeMagnitude = 0.12f + (scaledDamage * 0.005f);
+        float shakeDuration = 0.07f + (scaledKnockback * 0.005f);
 
         // Clamp to avoid excessive shake
-        shakeMagnitude = Mathf.Min(shakeMagnitude, 0.7f);
-        shakeDuration = Mathf.Min(shakeDuration, 0.4f);
+        shakeMagnitude = Mathf.Min(shakeMagnitude, 1f);
+        shakeDuration = Mathf.Min(shakeDuration, 0.6f);
 
         // Trigger camera shake
         Camera.main.GetComponent<FollowScript>()?.Shake(shakeDuration, shakeMagnitude);

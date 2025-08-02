@@ -101,9 +101,19 @@ public class SwordController : MonoBehaviour
 
             case WeaponState.Equipped:
                 transform.SetParent(player.transform);
-                transform.localPosition = Vector3.zero;
-                transform.localRotation = Quaternion.identity;
                 gameObject.SetActive(true);
+
+                // Default direction right
+                direction = Vector3.right;
+                baseAngle = 0f;
+                additionalAngle = 0f;
+                adjustedAngle = baseAngle;
+
+                // Apply initial position and rotation
+                Vector3 adjustedDirection = new Vector3(Mathf.Cos(adjustedAngle * Mathf.Deg2Rad), Mathf.Sin(adjustedAngle * Mathf.Deg2Rad), 0);
+                transform.localPosition = adjustedDirection * distanceFromPlayer;
+                float angleForRotation = adjustedAngle + angleOffset;
+                transform.localRotation = Quaternion.AngleAxis(angleForRotation, Vector3.forward);
                 break;
 
             case WeaponState.Inventory:
