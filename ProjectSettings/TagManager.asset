@@ -12,6 +12,7 @@ TagManager:
   - Plant
   - Cobweb
   - Buddha
+  - AudioSource
   layers:
   - Default
   - TransparentFX

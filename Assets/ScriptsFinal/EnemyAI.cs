@@ -24,6 +24,8 @@ public class EnemyAI : MonoBehaviour
     public bool isLeaping = false;
     public GameObject DungeonManager;
 
+    public AudioPlayer audioPlayer;
+
     private Vector3 targetPosition;
     private bool isMoving = false;
     private Animator animator;
@@ -38,6 +40,10 @@ public class EnemyAI : MonoBehaviour
     private HashSet<Vector2Int> walkableTiles;
     private int bumpsStuck = 0;
 
+    public Material whiteFlashMaterial;
+    private Material originalMaterial;
+    private Coroutine flashCoroutine;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -47,6 +53,9 @@ public class EnemyAI : MonoBehaviour
         //DijkstraMap = GameObject.FindGameObjectWithTag("DijkstraMap");
         tilemapFloor = GameObject.FindGameObjectWithTag("TilemapFloor").GetComponent<Tilemap>();
         DungeonManager = GameObject.FindGameObjectWithTag("DungeonManager");
+
+        audioPlayer = GameObject.FindGameObjectWithTag("AudioSource").GetComponent<AudioPlayer>();
+        originalMaterial = spriteRenderer.material;
     }
 
     private void Start()
@@ -235,7 +244,7 @@ public class EnemyAI : MonoBehaviour
             ApplyKnockbackToOverlappingEntities(leapDirection);
 
             rb.AddForce(leapDirection * leapForce, ForceMode2D.Impulse);
-        } 
+        }
         else if (type == "Knight")
         {
             targetPosition = new Vector3(targetCell.x + 0.5f, targetCell.y + 0.5f, 0);
@@ -397,6 +406,11 @@ public class EnemyAI : MonoBehaviour
         rb.AddForce(direction * force, ForceMode2D.Impulse);
         SetStateToKnocked(knockTime);
         float distance = (force / rb.mass) / (1 + rb.drag);
+
+        audioPlayer.PlaySound(audioPlayer.hit02);
+        if (flashCoroutine != null)
+            StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashWhite(0.15f));
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -424,7 +438,8 @@ public class EnemyAI : MonoBehaviour
             if (type == "Critter")
             {
                 knockbackDirection = rb.velocity.normalized;
-            } else if (type == "Knight")
+            }
+            else if (type == "Knight")
             {
                 knockbackDirection = (other.transform.position - transform.position).normalized;
             }
@@ -699,7 +714,8 @@ public class EnemyAI : MonoBehaviour
             Mathf.FloorToInt(transform.position.z)
         );
 
-        if (!(DungeonManager.GetComponent<DungeonGenerationScript01>().IsCobwebAtPosition(pos))) {
+        if (!(DungeonManager.GetComponent<DungeonGenerationScript01>().IsCobwebAtPosition(pos)))
+        {
             return false;
         }
 
@@ -734,5 +750,12 @@ public class EnemyAI : MonoBehaviour
 
         isLeaping = false;
         SetStateToIdle();
+    }
+
+    private IEnumerator FlashWhite(float duration)
+    {
+        spriteRenderer.material = whiteFlashMaterial;
+        yield return new WaitForSeconds(duration);
+        spriteRenderer.material = originalMaterial;
     }
 }

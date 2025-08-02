@@ -3509,7 +3509,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
                 int w = Random.Range(3, 7);
                 int h = Random.Range(3, 7);
-                room1.AddEdgeExpansion(3, 3);
+                //room1.AddEdgeExpansion(3, 3);
             }
 
             room1.SetType(type);
@@ -3694,7 +3694,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             {
                 TryBuildAdditionalHallways(room1, room0);
 
-                FillEdgeExpansionWithPots(room1);
+                //FillEdgeExpansionWithPots(room1);
             }
         }
     }

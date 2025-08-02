@@ -1,6 +1,7 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using System.Collections;
 
 public class SwordController : MonoBehaviour
 {
@@ -19,10 +20,15 @@ public class SwordController : MonoBehaviour
     public float damage = 50;
     public float knockbackForce = 10.0f;
     public float knockTime = 1f;
+    [SerializeField] private float cameraShakeDuration = 0.07f;
+    [SerializeField] private float cameraShakeMagnitude = 0.06f;
 
     public float baseAngle;
     public float adjustedAngle;
     public float additionalAngleValue = 20f;
+
+    [SerializeField] private GameObject slashPrefab;
+    public List<Sprite> slashFrames;
 
     public LayerMask enemyLayer;
     private float targetAngleOffset; // Target angle for the current attack phase
@@ -42,6 +48,8 @@ public class SwordController : MonoBehaviour
     public RectTransform canvasRect;
     public Vector3 bottomRightReferencePoint = new Vector3();
     public GameObject WeaponDot;
+
+    private GameObject attackCircleVisual;
 
     void Update()
     {
@@ -184,11 +192,17 @@ public class SwordController : MonoBehaviour
             isResetting = true; // Start resetting after the attack
             resetStartTime = Time.time; // Mark the start time for the reset
             attacked = false;
-        } else if (!attacked && percentageComplete >= 0.2f)
+        }
+        else if (!attacked && percentageComplete >= 0.2f)
         {
             Vector3 attackPoint = player.transform.position + direction * attackRange;
             Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint, attackSize, enemyLayer);
             attacked = true;
+
+            float attackAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            SpawnSlash(attackPoint, attackAngle, attackSize);
+
+            //DrawAttackVisual(attackPoint, attackSize);
 
             foreach (Collider2D collider in hitEnemies)
             {
@@ -204,11 +218,18 @@ public class SwordController : MonoBehaviour
                 if (enemy != null)
                 {
                     enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
+                    Camera.main.GetComponent<FollowScript>()?.Shake(duration: cameraShakeDuration, magnitude: cameraShakeMagnitude);
                 }
 
                 //Debug.Log("We hit " + enemy.name);
             }
         }
+    }
+
+    private void SpawnSlash(Vector3 position, float angle, float size)
+    {
+        GameObject slash = Instantiate(slashPrefab, position, Quaternion.identity);
+        slash.GetComponent<SlashEffect>().Initialize(slashFrames, angle, size, !isAttackPhaseOne);
     }
 
     void HandleResetting()
@@ -339,4 +360,39 @@ public class SwordController : MonoBehaviour
             Gizmos.DrawWireSphere(attackPoint, attackSize);
         }
     }
+
+    /*
+    void DrawAttackVisual(Vector3 position, float radius)
+    {
+        if (attackCircleVisual != null)
+            Destroy(attackCircleVisual);
+
+        attackCircleVisual = new GameObject("AttackCircle");
+        attackCircleVisual.transform.position = position;
+
+        LineRenderer line = attackCircleVisual.AddComponent<LineRenderer>();
+        line.useWorldSpace = true;
+        line.loop = true;
+        line.widthMultiplier = 0.05f;
+
+        line.material = new Material(Shader.Find("Sprites/Default"));
+        line.startColor = Color.red;
+        line.endColor = Color.red;
+
+        line.sortingLayerName = "UI";
+        line.sortingOrder = 100;
+
+        int segments = 40;
+        line.positionCount = segments;
+
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = i * Mathf.PI * 2f / segments;
+            Vector3 point = new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0);
+            line.SetPosition(i, position + point);
+        }
+
+        Destroy(attackCircleVisual, 0.5f);
+    }
+    */
 }

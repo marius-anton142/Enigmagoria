@@ -9,6 +9,8 @@ public class PlayerScript : MonoBehaviour
     public float moveSpeed = 5.0f;
     public float knockResistance = 1f;
 
+    public AudioPlayer audioPlayer;
+
     public float tileSize = 1.0f;
     public Tilemap tilemapFloor;
 
@@ -33,12 +35,18 @@ public class PlayerScript : MonoBehaviour
     private Collider2D mainCollider;
     private Collider2D triggerCollider;
 
+    public Material whiteFlashMaterial;
+    private Material originalMaterial;
+    private Coroutine flashCoroutine;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         targetPosition = transform.position; // Initialize targetPosition
         normalMoveSpeed = moveSpeed;
+
+        originalMaterial = spriteRenderer.material;
     }
 
     private void Start()
@@ -258,6 +266,8 @@ public class PlayerScript : MonoBehaviour
                 DungeonManager.GetComponent<DungeonGenerationScript01>().RemoveCobwebAtPosition(flooredPosition);
                 bumpsStuck = 0;
             }
+
+            audioPlayer.PlaySound(audioPlayer.walk01);
         }
         else if (!positionFound || (DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition))))
         {
@@ -307,6 +317,24 @@ public class PlayerScript : MonoBehaviour
         rb.AddForce(direction * force, ForceMode2D.Impulse);
         SetStateToKnocked(knockTime);
         TakeDamage(damageOther);
+
+        // Calculate camera shake based on damage and knockback force (only after 20)
+        float scaledDamage = Mathf.Max(0, damageOther - 20f);
+        float scaledKnockback = Mathf.Max(0, force - 20f);
+
+        float shakeMagnitude = 0.07f + (scaledDamage * 0.004f);
+        float shakeDuration = 0.07f + (scaledKnockback * 0.004f);
+
+        // Clamp to avoid excessive shake
+        shakeMagnitude = Mathf.Min(shakeMagnitude, 0.7f);
+        shakeDuration = Mathf.Min(shakeDuration, 0.4f);
+
+        // Trigger camera shake
+        Camera.main.GetComponent<FollowScript>()?.Shake(shakeDuration, shakeMagnitude);
+        audioPlayer.PlaySound(audioPlayer.hit01);
+        if (flashCoroutine != null)
+            StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashWhite(0.15f));
     }
 
     private Vector2 SnapToGrid(Vector2 position)
@@ -325,5 +353,12 @@ public class PlayerScript : MonoBehaviour
     float GetDecimalPart(float value)
     {
         return value - Mathf.Floor(value);
+    }
+
+    private IEnumerator FlashWhite(float duration)
+    {
+        spriteRenderer.material = whiteFlashMaterial;
+        yield return new WaitForSeconds(duration);
+        spriteRenderer.material = originalMaterial;
     }
 }

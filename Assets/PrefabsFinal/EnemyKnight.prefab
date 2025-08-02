@@ -67,6 +67,7 @@ MonoBehaviour:
   player: {fileID: 0}
   isLeaping: 0
   DungeonManager: {fileID: 0}
+  whiteFlashMaterial: {fileID: 2100000, guid: edf1081e67352294082b231b5341e25f, type: 2}
 --- !u!50 &3677713093103319148
 Rigidbody2D:
   serializedVersion: 4
