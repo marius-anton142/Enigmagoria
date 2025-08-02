@@ -55754,8 +55754,8 @@ MonoBehaviour:
   damage: 40
   knockbackForce: 15
   knockTime: 1
-  cameraShakeDuration: 0.07
-  cameraShakeMagnitude: 0.1
+  cameraShakeDuration: 0.28
+  cameraShakeMagnitude: 0.15
   baseAngle: 0
   adjustedAngle: 0
   additionalAngleValue: 120
@@ -66223,8 +66223,8 @@ MonoBehaviour:
   damage: 25
   knockbackForce: 5
   knockTime: 0.5
-  cameraShakeDuration: 0.07
-  cameraShakeMagnitude: 0.07
+  cameraShakeDuration: 0.28
+  cameraShakeMagnitude: 0.06
   baseAngle: 0
   adjustedAngle: 0
   additionalAngleValue: 120
