@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 8926625490271637929}
   - component: {fileID: 2314041901184741993}
   - component: {fileID: -3195011284958263245}
-  m_Layer: 10
+  m_Layer: 11
   m_Name: BookshelfSmallPrefab01
-  m_TagString: Buddha
+  m_TagString: Bookshelf
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

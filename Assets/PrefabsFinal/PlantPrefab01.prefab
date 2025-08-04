@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6625131690300616620}
   - component: {fileID: -6645550623700118989}
   - component: {fileID: 2190214609403169837}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: PlantPrefab01
   m_TagString: Plant
   m_Icon: {fileID: 0}

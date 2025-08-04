@@ -21,6 +21,7 @@ public class SwordController : MonoBehaviour
     public float damage = 50;
     public float knockbackForce = 10.0f;
     public float knockTime = 1f;
+    [SerializeField] private bool treeCutter = false;
     [SerializeField] private float cameraShakeDuration = 0.07f;
     [SerializeField] private float cameraShakeMagnitude = 0.06f;
 
@@ -227,6 +228,7 @@ public class SwordController : MonoBehaviour
             foreach (Collider2D collider in hitEnemies)
             {
                 GameObject hitObject = collider?.gameObject;
+                //Debug.Log(hitObject);
 
                 if (collider == null || hitEntities.Contains(hitObject) || hitObject == gameObject)
                     continue;
@@ -241,6 +243,19 @@ public class SwordController : MonoBehaviour
                     Camera.main.GetComponent<CameraEffects>()?.Shake(duration: cameraShakeDuration, magnitude: cameraShakeMagnitude);
 
                     RDG.Vibration.Vibrate(3);
+                }
+
+                if (treeCutter)
+                {
+                    TreeScript treeScript = collider.GetComponent<TreeScript>();
+
+                    if (treeScript != null)
+                    {
+                        treeScript.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
+                        Camera.main.GetComponent<CameraEffects>()?.Shake(duration: cameraShakeDuration, magnitude: cameraShakeMagnitude);
+
+                        RDG.Vibration.Vibrate(30);
+                    }
                 }
 
                 //Debug.Log("We hit " + enemy.name);

@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 9038261715804563278}
   - component: {fileID: 6291533127609562798}
   - component: {fileID: 2629521129954876703}
-  m_Layer: 10
+  m_Layer: 15
   m_Name: PotPrefab01
-  m_TagString: Buddha
+  m_TagString: Pot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

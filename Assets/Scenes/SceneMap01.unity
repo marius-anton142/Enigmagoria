@@ -55767,6 +55767,7 @@ MonoBehaviour:
   damage: 40
   knockbackForce: 15
   knockTime: 1
+  treeCutter: 1
   cameraShakeDuration: 0.28
   cameraShakeMagnitude: 0.15
   baseAngle: 0
@@ -55779,7 +55780,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 47f7c10f2d407b942a0eddf6fb58d51d, type: 3}
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 65600
   additionalAngle: 0
   attacked: 0
   canvasRect: {fileID: 561306941}
@@ -66335,6 +66336,7 @@ MonoBehaviour:
   damage: 25
   knockbackForce: 5
   knockTime: 0.5
+  treeCutter: 0
   cameraShakeDuration: 0.28
   cameraShakeMagnitude: 0.06
   baseAngle: 0
@@ -66347,7 +66349,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 47f7c10f2d407b942a0eddf6fb58d51d, type: 3}
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 65600
   additionalAngle: 0
   attacked: 0
   canvasRect: {fileID: 561306941}

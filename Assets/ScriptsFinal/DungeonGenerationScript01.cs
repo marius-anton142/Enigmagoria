@@ -3035,6 +3035,22 @@ public class DungeonGenerationScript01 : MonoBehaviour
         cobwebsInRoom.Remove(position);
     }
 
+    public void RemoveTreeAtPosition(Vector3Int position)
+    {
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        float detectionRadius = 0.3f; // Small radius for detection
+        int treeLayer = LayerMask.GetMask("Tree"); // Make sure the cobweb is assigned to this layer
+        Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, treeLayer);
+
+        if (hitCollider != null && hitCollider.CompareTag("Tree"))
+        {
+            Destroy(hitCollider.gameObject);
+        }
+
+        treesInRoom.Remove(position);
+    }
+
     public bool IsSolidAtPosition(Vector3Int position)
     {
         return treesInRoom.Contains(position);
