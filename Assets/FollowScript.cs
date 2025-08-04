@@ -187,19 +187,26 @@ public class FollowScript : MonoBehaviour
 
     private IEnumerator ShakeCoroutine(float duration, float magnitude)
     {
-        Vector3 originalPos = transform.position;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
+            float interpolation = speed * Time.deltaTime;
+
+            // Get latest follow position every frame
+            Vector3 position = transform.position;
+            position.y = Mathf.Lerp(position.y, objectToFollow.transform.position.y + additionalOffset.y, interpolation);
+            position.x = Mathf.Lerp(position.x, objectToFollow.transform.position.x + additionalOffset.x, interpolation);
+
+            Vector3 originalPos = position;
+
             float offsetX = Random.Range(-1f, 1f) * magnitude;
             float offsetY = Random.Range(-1f, 1f) * magnitude;
 
             transform.position = originalPos + new Vector3(offsetX, offsetY, 0f);
+
             elapsed += Time.deltaTime;
             yield return null;
         }
-
-        transform.position = originalPos;
     }
 }

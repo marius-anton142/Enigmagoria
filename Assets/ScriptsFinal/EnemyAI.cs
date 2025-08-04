@@ -537,7 +537,6 @@ public class EnemyAI : MonoBehaviour
     void SetStateToCooldown()
     {
         state = "cooldown";
-        mainCollider.enabled = false;
     }
 
     void SetStateToIdle()

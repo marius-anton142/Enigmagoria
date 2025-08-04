@@ -98,7 +98,7 @@ public class PlayerScript : MonoBehaviour
             SetStateToDead();
         }
 
-        RDG.Vibration.Vibrate(80);
+        RDG.Vibration.Vibrate((int)(damage * 2.5f));
     }
 
     void SetStateToDead()
