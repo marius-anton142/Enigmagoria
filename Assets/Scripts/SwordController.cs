@@ -238,9 +238,9 @@ public class SwordController : MonoBehaviour
                 if (enemy != null)
                 {
                     enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
-                    Camera.main.GetComponent<FollowScript>()?.Shake(duration: cameraShakeDuration, magnitude: cameraShakeMagnitude);
+                    Camera.main.GetComponent<CameraEffects>()?.Shake(duration: cameraShakeDuration, magnitude: cameraShakeMagnitude);
 
-                    RDG.Vibration.Vibrate(5);
+                    RDG.Vibration.Vibrate(3);
                 }
 
                 //Debug.Log("We hit " + enemy.name);

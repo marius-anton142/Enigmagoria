@@ -51,7 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: Critter
   state: idle
-  hp: 100
+  hp: 200
   damage: 30
   moveSpeed: 12
   moveIntervalMin: 0.5

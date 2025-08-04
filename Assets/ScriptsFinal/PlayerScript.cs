@@ -343,7 +343,7 @@ public class PlayerScript : MonoBehaviour
         shakeDuration = Mathf.Min(shakeDuration, 0.6f);
 
         // Trigger camera shake
-        Camera.main.GetComponent<FollowScript>()?.Shake(shakeDuration, shakeMagnitude);
+        Camera.main.GetComponent<CameraEffects>()?.Shake(shakeDuration, shakeMagnitude);
 
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);

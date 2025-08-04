@@ -293,6 +293,7 @@ public class EnemyAI : MonoBehaviour
 
     private void MoveToPosition(Vector2Int targetCell)
     {
+        mainCollider.enabled = false;
         if (IsStuck())
         {
             Vector3 bumpDir = (player.transform.position - transform.position).normalized;
@@ -515,7 +516,6 @@ public class EnemyAI : MonoBehaviour
     {
         yield return new WaitForSeconds(knockTime);
         state = "idle";
-        mainCollider.enabled = false;
     }
 
     void SetStateToPrepare()
@@ -537,6 +537,7 @@ public class EnemyAI : MonoBehaviour
     void SetStateToCooldown()
     {
         state = "cooldown";
+        mainCollider.enabled = false;
     }
 
     void SetStateToIdle()

@@ -7,11 +7,11 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public Vector3 direction;
 
     private bool isHolding = false;
-    private FollowScript followScript;
+    private CameraRigController cameraRig; // Renamed from FollowScript
 
     private void Start()
     {
-        followScript = Camera.main.GetComponent<FollowScript>();
+        cameraRig = Camera.main.transform.parent.GetComponent<CameraRigController>(); // Camera is child, rig is parent
     }
 
     private void Update()
@@ -19,7 +19,7 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         if (isHolding && !playerScript.isSliding && playerScript.bumpsStuck <= 0)
         {
             playerScript.Move(direction);
-            followScript.OnArrowHeld(direction); // Notify FollowScript
+            cameraRig.OnArrowHeld(direction); // Notify CameraRigController
         }
     }
 
@@ -35,6 +35,6 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public void OnPointerUp(PointerEventData eventData)
     {
         isHolding = false;
-        followScript.OnArrowReleased(); // Notify FollowScript when released
+        cameraRig.OnArrowReleased(); // Notify CameraRigController
     }
 }
