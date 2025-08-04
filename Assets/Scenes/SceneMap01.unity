@@ -60824,6 +60824,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioSource: {fileID: 1630120884}
+  slide:
+  - {fileID: 8300000, guid: 072452ac715b34f4c9bd8f1b6ea9a4ba, type: 3}
   slash:
   - {fileID: 8300000, guid: 5a5f6bdc864781341a6cfa83df1967d8, type: 3}
   - {fileID: 8300000, guid: 075d9ac4c3723584c88600700e83c8f0, type: 3}
@@ -66889,5 +66891,5 @@ SceneRoots:
   - {fileID: 811528364}
   - {fileID: 123554367}
   - {fileID: 352315195}
-  - {fileID: 1630120885}
   - {fileID: 2041596262}
+  - {fileID: 1630120885}

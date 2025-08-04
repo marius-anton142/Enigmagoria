@@ -44,6 +44,8 @@ public class EnemyAI : MonoBehaviour
     private Material originalMaterial;
     private Coroutine flashCoroutine;
 
+    private bool hasPlayedSlideSound = false;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -98,6 +100,7 @@ public class EnemyAI : MonoBehaviour
                 transform.position = targetPosition;
                 isMoving = false;
                 animator.SetBool("IsWalking", false);
+                hasPlayedSlideSound = false;
             }
         }
     }
@@ -353,13 +356,29 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
+        bool isSliding = false;
+
+        Vector3Int slideCheckCell = new Vector3Int(currentCell.x + direction.x, currentCell.y + direction.y, 0);
+        if (DungeonManager.GetComponent<DungeonGenerationScript01>().IsTable2x2AtPositionAny(slideCheckCell) ||
+            DungeonManager.GetComponent<DungeonGenerationScript01>().IsTable1x2AtPositionAny(slideCheckCell))
+        {
+            isSliding = true;
+        }
+
         if (Vector3.Distance(finalTarget, transform.position) > 0.1f)
         {
             targetPosition = finalTarget;
             isMoving = true;
             spriteRenderer.flipX = direction.x < 0;
 
-            audioPlayer.PlayWalkCritterSound();
+            if (isSliding && !hasPlayedSlideSound)
+            {
+                audioPlayer.PlaySlideSound();
+                hasPlayedSlideSound = true;
+            } else
+            {
+                audioPlayer.PlayWalkCritterSound();
+            }
         }
     }
 
@@ -409,6 +428,7 @@ public class EnemyAI : MonoBehaviour
 
         isLeaping = false; // Ensure leaping state is reset
         isMoving = false;
+        hasPlayedSlideSound = false;
 
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         rb.velocity = Vector2.zero;

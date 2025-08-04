@@ -39,6 +39,8 @@ public class PlayerScript : MonoBehaviour
     private Material originalMaterial;
     private Coroutine flashCoroutine;
 
+    private bool hasPlayedSlideSound = false;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
@@ -152,6 +154,7 @@ public class PlayerScript : MonoBehaviour
                 isMoving = false;
                 isSliding = false; // Reset isSliding to false
                 moveSpeed = normalMoveSpeed; // Reset speed to normal
+                hasPlayedSlideSound = false;
 
                 animator.SetBool("IsWalking", false);
 
@@ -278,7 +281,15 @@ public class PlayerScript : MonoBehaviour
                 bumpsStuck = 0;
             }
 
-            FindObjectOfType<AudioPlayer>().PlayWalkSound();
+            if (isSliding && !hasPlayedSlideSound)
+            {
+                hasPlayedSlideSound = true;
+                FindObjectOfType<AudioPlayer>().PlaySlideSound();
+            }
+            else
+            {
+                FindObjectOfType<AudioPlayer>().PlayWalkSound();
+            }
         }
         else if (!positionFound || (DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition))))
         {
