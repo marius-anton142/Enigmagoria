@@ -55772,6 +55772,7 @@ MonoBehaviour:
   canvasRect: {fileID: 561306941}
   bottomRightReferencePoint: {x: 0, y: 0, z: 0}
   WeaponDot: {fileID: 1018892078}
+  audioPlayer: {fileID: 0}
 --- !u!61 &839997651
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -60809,9 +60810,54 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioSource: {fileID: 1630120884}
-  walk01: {fileID: 8300000, guid: c0d847eefe7bae3438477b7873927e33, type: 3}
-  hit01: {fileID: 8300000, guid: 0e82041bebeeb744e93757b0572bacec, type: 3}
-  hit02: {fileID: 8300000, guid: 692fedf9f82ec604da378a5734eabbec, type: 3}
+  slash:
+  - {fileID: 8300000, guid: 5a5f6bdc864781341a6cfa83df1967d8, type: 3}
+  - {fileID: 8300000, guid: 075d9ac4c3723584c88600700e83c8f0, type: 3}
+  - {fileID: 8300000, guid: a793f4f9d0511834a816d50663ffd699, type: 3}
+  - {fileID: 8300000, guid: b242f9d1ff204124fab59b97862e8748, type: 3}
+  - {fileID: 8300000, guid: 782abe1788d882a4ebae7b43fc4df35b, type: 3}
+  - {fileID: 8300000, guid: 1bcb60ad5a374d046ae17f56d590f878, type: 3}
+  - {fileID: 8300000, guid: 78d473c29bfaeb644b14905760e131a4, type: 3}
+  pickup:
+  - {fileID: 8300000, guid: 7703a0b0d57031647aadb00545a5d686, type: 3}
+  bump:
+  - {fileID: 8300000, guid: 0f84520cc105c1148bb8f74750cf47a7, type: 3}
+  walk:
+  - {fileID: 8300000, guid: baef3f114277a524bb1a55e4835ff98a, type: 3}
+  - {fileID: 8300000, guid: e3cc94b63cc6c674585c14ebf71f3f87, type: 3}
+  - {fileID: 8300000, guid: 7bf36581bd191b542b28bd7fb0788289, type: 3}
+  - {fileID: 8300000, guid: 7d882bd7d6122dc4fb2e8910023ba440, type: 3}
+  walk_critter:
+  - {fileID: 8300000, guid: 736ebf240bdbb1f49a5b4b2deae212e9, type: 3}
+  - {fileID: 8300000, guid: cec0f0a58b133b34183d2227c7c80711, type: 3}
+  - {fileID: 8300000, guid: 379fde96695817b4690c74c1eca2d412, type: 3}
+  walk_knight:
+  - {fileID: 8300000, guid: 4a5fbc0e25e521344b60b3ed01d2b85c, type: 3}
+  - {fileID: 8300000, guid: 5f0c8ce012775804e80977d8b4c5f4d3, type: 3}
+  - {fileID: 8300000, guid: 819f807fe3eb4d045be38e45920c0a99, type: 3}
+  hit:
+  - {fileID: 8300000, guid: 1a1de60b25ca94146b00f1f16492d060, type: 3}
+  - {fileID: 8300000, guid: ce823f35f907dd042b70083b98acbf5f, type: 3}
+  - {fileID: 8300000, guid: 347033183496b4b4a9e2c118eec03dc2, type: 3}
+  - {fileID: 8300000, guid: 0a8fdfae0c6a77b4a999110df6ff5bcc, type: 3}
+  hit_player:
+  - {fileID: 8300000, guid: 306bf6122665c4b4690b2b63a47debe8, type: 3}
+  - {fileID: 8300000, guid: 3fc39c2433a84094c95eacd1e4ee0a9e, type: 3}
+  - {fileID: 8300000, guid: f65f8a5c7d67be142a28e36fc0f41065, type: 3}
+  kill:
+  - {fileID: 8300000, guid: 39377caeeaa89e843a9a5748474d327d, type: 3}
+  - {fileID: 8300000, guid: cf3612b217085db409d16661830401ad, type: 3}
+  - {fileID: 8300000, guid: f8fc0b9150b3ca745ae8be66c52c6ecc, type: 3}
+  - {fileID: 8300000, guid: 5fd7ecd98010c8445ba81f8cdad3ba84, type: 3}
+  - {fileID: 8300000, guid: 3dede0990398f8549af83b59a9a4d197, type: 3}
+  cobweb:
+  - {fileID: 8300000, guid: 20aa5af70ed60da4b8d91c613380774f, type: 3}
+  - {fileID: 8300000, guid: 4f94ff7f38395c746bda9a1d581d8a23, type: 3}
+  cobweb_stuck:
+  - {fileID: 8300000, guid: 3943f508fffd2df4aba11172534ad6b2, type: 3}
+  - {fileID: 8300000, guid: 154888e13fe633849a442fcacfc5900f, type: 3}
+  cobweb_break:
+  - {fileID: 8300000, guid: 9bd062801675d134e8700fa293ea4b28, type: 3}
 --- !u!82 &1630120884
 AudioSource:
   m_ObjectHideFlags: 0
@@ -66241,6 +66287,7 @@ MonoBehaviour:
   canvasRect: {fileID: 561306941}
   bottomRightReferencePoint: {x: 0, y: 0, z: 0}
   WeaponDot: {fileID: 1018892078}
+  audioPlayer: {fileID: 0}
 --- !u!212 &2063201719
 SpriteRenderer:
   m_ObjectHideFlags: 0

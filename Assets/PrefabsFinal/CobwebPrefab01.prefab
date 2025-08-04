@@ -162,3 +162,4 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 8046dfbf4fb7ef7409f4065caa7a16f4, type: 3}
   - {fileID: 21300000, guid: a85bd1c68b98eac45b04da230474327d, type: 3}
   - {fileID: 21300000, guid: 57c44bd324c6804419040b3f0bdaed28, type: 3}
+  audioPlayer: {fileID: 0}

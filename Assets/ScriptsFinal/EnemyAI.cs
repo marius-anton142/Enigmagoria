@@ -318,6 +318,7 @@ public class EnemyAI : MonoBehaviour
             else if (targetCell.x > transform.position.x - 0.5f)
                 spriteRenderer.flipX = false;
 
+            audioPlayer.PlayWalkKnightSound();
             return;
         }
 
@@ -356,6 +357,8 @@ public class EnemyAI : MonoBehaviour
             targetPosition = finalTarget;
             isMoving = true;
             spriteRenderer.flipX = direction.x < 0;
+
+            audioPlayer.PlayWalkCritterSound();
         }
     }
 
@@ -366,12 +369,18 @@ public class EnemyAI : MonoBehaviour
         if (hp <= 0)
         {
             SetStateToDead();
+        } else
+        {
+            FindObjectOfType<AudioPlayer>().PlayHitSound();
         }
     }
 
     void SetStateToDead()
     {
         state = "dead";
+        FindObjectOfType<AudioPlayer>().PlayKillSound();
+        RDG.Vibration.Vibrate(15);
+
         Destroy(gameObject);
     }
 
@@ -407,7 +416,6 @@ public class EnemyAI : MonoBehaviour
         SetStateToKnocked(knockTime);
         float distance = (force / rb.mass) / (1 + rb.drag);
 
-        audioPlayer.PlaySound(audioPlayer.hit02);
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashWhite(0.15f));
@@ -545,6 +553,7 @@ public class EnemyAI : MonoBehaviour
     public void SetStuck(int bumpsStuck)
     {
         this.bumpsStuck = bumpsStuck;
+        FindObjectOfType<AudioPlayer>().PlayCobwebStuckSound();
     }
 
     Vector2 GetRandomDirection()
@@ -730,6 +739,8 @@ public class EnemyAI : MonoBehaviour
 
     private IEnumerator ReturnFromBump(Vector3 originalPosition)
     {
+        FindObjectOfType<AudioPlayer>().PlayCobwebSound();
+
         yield return new WaitForSeconds(0.062f);
         transform.position = originalPosition;
 
@@ -744,6 +755,8 @@ public class EnemyAI : MonoBehaviour
                 Mathf.FloorToInt(transform.position.y),
                 Mathf.FloorToInt(transform.position.z)
             );
+
+            FindObjectOfType<AudioPlayer>().PlayCobwebBreakSound();
             DungeonManager.GetComponent<DungeonGenerationScript01>().RemoveCobwebAtPosition(pos);
             bumpsStuck = 0;
         }

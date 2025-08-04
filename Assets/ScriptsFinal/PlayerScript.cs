@@ -47,6 +47,8 @@ public class PlayerScript : MonoBehaviour
         normalMoveSpeed = moveSpeed;
 
         originalMaterial = spriteRenderer.material;
+
+        audioPlayer = GameObject.FindGameObjectWithTag("AudioSource").GetComponent<AudioPlayer>();
     }
 
     private void Start()
@@ -89,10 +91,14 @@ public class PlayerScript : MonoBehaviour
     {
         hp -= damage;
 
+        FindObjectOfType<AudioPlayer>().PlayHitPlayerSound();
+
         if (hp <= 0)
         {
             SetStateToDead();
         }
+
+        RDG.Vibration.Vibrate(80);
     }
 
     void SetStateToDead()
@@ -119,6 +125,7 @@ public class PlayerScript : MonoBehaviour
     public void SetStuck(int bumpsStuck)
     {
         this.bumpsStuck = bumpsStuck;
+        FindObjectOfType<AudioPlayer>().PlayCobwebStuckSound();
     }
 
     private void HandleMovement()
@@ -197,6 +204,9 @@ public class PlayerScript : MonoBehaviour
             StartCoroutine(ReturnFromBump(transform.position));
             transform.position = bumpPosition;
             isSliding = false;
+
+            FindObjectOfType<AudioPlayer>().PlayCobwebSound();
+
             return;
         }
 
@@ -263,11 +273,12 @@ public class PlayerScript : MonoBehaviour
                     Mathf.FloorToInt(transform.position.y),
                     Mathf.FloorToInt(transform.position.z)
                 );
+                FindObjectOfType<AudioPlayer>().PlayCobwebBreakSound();
                 DungeonManager.GetComponent<DungeonGenerationScript01>().RemoveCobwebAtPosition(flooredPosition);
                 bumpsStuck = 0;
             }
 
-            audioPlayer.PlaySound(audioPlayer.walk01);
+            FindObjectOfType<AudioPlayer>().PlayWalkSound();
         }
         else if (!positionFound || (DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition))))
         {
@@ -281,6 +292,8 @@ public class PlayerScript : MonoBehaviour
             StartCoroutine(ReturnFromBump(currentPosition));
             isSliding = false;
             canMove = false;
+
+            FindObjectOfType<AudioPlayer>().PlayBumpSound();
         }
     }
 
@@ -331,7 +344,7 @@ public class PlayerScript : MonoBehaviour
 
         // Trigger camera shake
         Camera.main.GetComponent<FollowScript>()?.Shake(shakeDuration, shakeMagnitude);
-        audioPlayer.PlaySound(audioPlayer.hit01);
+
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashWhite(0.15f));

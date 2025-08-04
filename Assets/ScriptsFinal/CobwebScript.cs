@@ -15,6 +15,13 @@ public class CobwebScript : MonoBehaviour
     private int bumpCount = 0;
     private bool isBlackCobweb = false;
 
+    public AudioPlayer audioPlayer;
+
+    private void Awake()
+    {
+        audioPlayer = GameObject.FindGameObjectWithTag("AudioSource").GetComponent<AudioPlayer>();
+    }
+
     private void Start()
     {
         // 2% chance to be a black cobweb
@@ -47,6 +54,8 @@ public class CobwebScript : MonoBehaviour
 
             other.GetComponent<PlayerScript>().SetStuck(bumpsRequired);
             other.transform.position = transform.position;
+
+            FindObjectOfType<AudioPlayer>().PlayCobwebStuckSound();
         }
 
         if (other.CompareTag("Enemy"))

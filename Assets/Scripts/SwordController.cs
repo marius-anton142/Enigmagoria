@@ -2,6 +2,7 @@
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System.Collections;
+using RDG;
 
 public class SwordController : MonoBehaviour
 {
@@ -50,6 +51,13 @@ public class SwordController : MonoBehaviour
     public GameObject WeaponDot;
 
     private GameObject attackCircleVisual;
+
+    public AudioPlayer audioPlayer;
+
+    private void Awake()
+    {
+        audioPlayer = GameObject.FindGameObjectWithTag("AudioSource").GetComponent<AudioPlayer>();
+    }
 
     void Update()
     {
@@ -131,6 +139,7 @@ public class SwordController : MonoBehaviour
             if (inventory != null)
             {
                 bool added = inventory.GetComponent<WeaponDotScript>().AddWeapon(gameObject, gameObject.GetComponent<SpriteRenderer>().sprite, new Vector2(16f, 24f));
+                FindObjectOfType<AudioPlayer>().PlayPickupSound();
             }
         }
     }
@@ -171,6 +180,7 @@ public class SwordController : MonoBehaviour
         isAttacking = true;
         isResetting = false;
         hitEntities = new HashSet<GameObject>();
+        FindObjectOfType<AudioPlayer>().PlaySlashSound();
 
         // Initialize additional logic for starting the attack here if necessary
         if (isAttackPhaseOne)
@@ -229,6 +239,8 @@ public class SwordController : MonoBehaviour
                 {
                     enemy.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
                     Camera.main.GetComponent<FollowScript>()?.Shake(duration: cameraShakeDuration, magnitude: cameraShakeMagnitude);
+
+                    RDG.Vibration.Vibrate(5);
                 }
 
                 //Debug.Log("We hit " + enemy.name);
