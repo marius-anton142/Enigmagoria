@@ -274,7 +274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   state: alive
-  hp: 100
+  hp: 300
   moveSpeed: 35
   knockResistance: 1
   audioPlayer: {fileID: 1630120883}

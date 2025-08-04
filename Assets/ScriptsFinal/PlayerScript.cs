@@ -119,7 +119,6 @@ public class PlayerScript : MonoBehaviour
     {
         yield return new WaitForSeconds(knockTime);
         state = "alive";
-        mainCollider.enabled = false;
     }
 
     public void SetStuck(int bumpsStuck)
@@ -253,6 +252,7 @@ public class PlayerScript : MonoBehaviour
         if (positionFound && !isMoving && !DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition)))
         {
             // Proceed with setting movement flags and initiating movement
+            mainCollider.enabled = false;
             GetComponent<Rigidbody2D>().velocity = Vector2.zero;
             isMoving = true;
             if (direction.x != 0)
