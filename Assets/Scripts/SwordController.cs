@@ -235,7 +235,7 @@ public class SwordController : MonoBehaviour
 
                 hitEntities.Add(hitObject);
                 EnemyAI enemy = collider.GetComponent<EnemyAI>();
-                Vector2 knockbackDirection = (hitObject.transform.position - player.transform.position).normalized;
+                Vector2 knockbackDirection = direction;
 
                 if (enemy != null)
                 {
@@ -256,6 +256,16 @@ public class SwordController : MonoBehaviour
 
                         RDG.Vibration.Vibrate(30);
                     }
+                }
+
+                StoneScript stoneScript = collider.GetComponent<StoneScript>();
+
+                if (stoneScript != null)
+                {
+                    stoneScript.ApplyKnockback(knockbackDirection, knockbackForce, knockTime, damage);
+                    Camera.main.GetComponent<CameraEffects>()?.Shake(duration: cameraShakeDuration, magnitude: cameraShakeMagnitude);
+
+                    RDG.Vibration.Vibrate(5);
                 }
 
                 //Debug.Log("We hit " + enemy.name);

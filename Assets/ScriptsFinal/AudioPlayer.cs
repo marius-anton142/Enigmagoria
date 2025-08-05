@@ -5,6 +5,7 @@ public class AudioPlayer : MonoBehaviour
 {
     public AudioSource audioSource;
 
+    [SerializeField] List<AudioClip> stone;
     [SerializeField] List<AudioClip> slide;
     [SerializeField] List<AudioClip> slash;
     [SerializeField] List<AudioClip> pickup;
@@ -19,6 +20,7 @@ public class AudioPlayer : MonoBehaviour
     [SerializeField] List<AudioClip> cobweb_stuck;
     [SerializeField] List<AudioClip> cobweb_break;
 
+    public void PlayStoneSound() => PlayRandom(stone);
     public void PlaySlideSound() => PlayRandom(slide);
     public void PlaySlashSound() => PlayRandom(slash);
     public void PlayPickupSound() => PlayRandom(pickup);

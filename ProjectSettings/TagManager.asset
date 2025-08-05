@@ -17,6 +17,7 @@ TagManager:
   - Tree
   - Bookstack
   - Pot
+  - Stone
   layers:
   - Default
   - TransparentFX
@@ -35,7 +36,7 @@ TagManager:
   - Plant
   - Pot
   - Tree
-  - 
+  - Stone
   - 
   - 
   - 

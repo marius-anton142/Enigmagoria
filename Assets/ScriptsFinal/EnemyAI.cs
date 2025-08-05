@@ -430,10 +430,9 @@ public class EnemyAI : MonoBehaviour
         isMoving = false;
         hasPlayedSlideSound = false;
 
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0f;
-        rb.AddForce(direction * force, ForceMode2D.Impulse);
+        rb.AddForce(direction * force * knockResistance, ForceMode2D.Impulse);
         SetStateToKnocked(knockTime);
         float distance = (force / rb.mass) / (1 + rb.drag);
 

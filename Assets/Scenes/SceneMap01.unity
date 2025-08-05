@@ -274,7 +274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   state: alive
-  hp: 300
+  hp: 900
   moveSpeed: 35
   knockResistance: 1
   audioPlayer: {fileID: 1630120883}
@@ -55780,7 +55780,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 47f7c10f2d407b942a0eddf6fb58d51d, type: 3}
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 65600
+    m_Bits: 196672
   additionalAngle: 0
   attacked: 0
   canvasRect: {fileID: 561306941}
@@ -56343,6 +56343,7 @@ MonoBehaviour:
   BookstackPrefab01: {fileID: 2339089828451242048, guid: 1af572f269491fd4eaa763e3db3e8348, type: 3}
   Table2x2Prefab01: {fileID: 1961583833583492094, guid: f03ec2ad1168e304dba96fe98648b3ad, type: 3}
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
+  StonePrefab01: {fileID: 1232522092826622473, guid: 8c69bf03306630d43a76bdf6ba48dc1f, type: 3}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloorsMin: 0.26
@@ -56379,6 +56380,8 @@ MonoBehaviour:
   chanceRoomPotEdges: 0.41
   chanceRoomPotCorners: 0.24
   chanceRoomPotRandom: 0.18
+  chanceRoomStones: 0.2
+  chanceStonesMany: 0.3
   chanceRoomBookstack: 1
   chanceRoomBookstackDoorway: 0.2
   chanceRoomBookstackCorners: 0.8
@@ -56810,6 +56813,7 @@ MonoBehaviour:
   BookstackPrefab01: {fileID: 0}
   Table2x2Prefab01: {fileID: 1961583833583492094, guid: f03ec2ad1168e304dba96fe98648b3ad, type: 3}
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
+  StonePrefab01: {fileID: 0}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
   chanceAnyTileFloorsMin: 0
@@ -56846,6 +56850,8 @@ MonoBehaviour:
   chanceRoomPotEdges: 0
   chanceRoomPotCorners: 0
   chanceRoomPotRandom: 0
+  chanceRoomStones: 0
+  chanceStonesMany: 0
   chanceRoomBookstack: 0
   chanceRoomBookstackDoorway: 0
   chanceRoomBookstackCorners: 0
@@ -60824,6 +60830,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioSource: {fileID: 1630120884}
+  stone:
+  - {fileID: 8300000, guid: 3d89be8f09b77de4b9e30d0702efb6f5, type: 3}
   slide:
   - {fileID: 8300000, guid: 072452ac715b34f4c9bd8f1b6ea9a4ba, type: 3}
   slash:
@@ -66351,7 +66359,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 47f7c10f2d407b942a0eddf6fb58d51d, type: 3}
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 65600
+    m_Bits: 196672
   additionalAngle: 0
   attacked: 0
   canvasRect: {fileID: 561306941}

@@ -44,6 +44,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject BookstackPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
+    [SerializeField] private GameObject StonePrefab01;
 
     [Header("Parameters")]
     [SerializeField] private float chanceAdditionalHallways;
@@ -82,6 +83,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceRoomPotEdges;
     [SerializeField] private float chanceRoomPotCorners;
     [SerializeField] private float chanceRoomPotRandom;
+    [SerializeField] private float chanceRoomStones;
+    [SerializeField] private float chanceStonesMany;
 
     [SerializeField] private float chanceRoomBookstack;
     [SerializeField] private float chanceRoomBookstackDoorway;
@@ -143,6 +146,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> bookshelvesInRoom = new List<Vector3Int>();
     private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
+    private List<Vector3Int> stonesInRoom = new List<Vector3Int>();
 
     private TilemapBaker floorBaker;
     private TilemapBaker wallsBaker;
@@ -1935,6 +1939,34 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    public void FillRoomWithStones(Room room)
+    {
+        if (Random.value < chanceRoomStones)
+        {
+            int totalToPlace = Random.Range(1, 4); // 1 to 3 stones
+
+            if (Random.value < chanceStonesMany)
+            {
+                totalToPlace += Random.Range(7, 13); // 7 to 12 stones
+            }
+
+            if (totalToPlace == 0)
+                return;
+
+            List<Vector3Int> randomPositions = GetRandomRoomPositions(room, totalToPlace, totalToPlace);
+
+            foreach (var position in randomPositions)
+            {
+                if (!IsEntityAtPosition(position))
+                {
+                    Sprite selectedSprite = StonePrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                    GameObject obj = PlaceObject(position, StonePrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
+                    stonesInRoom.Add(position);
+                }
+            }
+        }
+    }
+
     // Helper method to get the perpendicular direction for edge placement
     private Vector3Int GetPerpendicularDirection(int dir)
     {
@@ -3081,6 +3113,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return potsInRoom.Contains(position);
     }
 
+    private bool IsStoneAtPosition(Vector3Int position)
+    {
+        return stonesInRoom.Contains(position);
+    }
+
     private bool IsTable1x2AtPosition(Vector3Int position)
     {
         foreach (var tablePos in tables1x2InRoom)
@@ -3220,6 +3257,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         if (IsTable2x2AtPositionAny(position))
+        {
+            return true;
+        }
+
+        if (IsStoneAtPosition(position))
         {
             return true;
         }
@@ -3378,6 +3420,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void Start()
     {
+        Time.fixedDeltaTime = 0.003f;
+
         //Dungeon Level Chances
         if (Random.value < chanceDungeonFloorNew)
         {
@@ -3419,6 +3463,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 FillRoomWithTables(room);
                 FillRoomWithCobweb(room);
                 FillRoomWithTrees(room);
+                FillRoomWithStones(room);
 
                 FillRoomWithCarpet(room);
 
