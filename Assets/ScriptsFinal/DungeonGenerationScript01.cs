@@ -44,6 +44,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject BookstackPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
+    [SerializeField] private GameObject DoorDownPrefab01, DoorUpPrefab01;
     [SerializeField] private GameObject StonePrefab01;
 
     [Header("Parameters")]
@@ -146,6 +147,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> bookshelvesInRoom = new List<Vector3Int>();
     private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
+    private List<Vector3Int> doorsHorizontalInRoom = new List<Vector3Int>();
     private List<Vector3Int> stonesInRoom = new List<Vector3Int>();
 
     private TilemapBaker floorBaker;
@@ -2219,6 +2221,49 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return doorways;
     }
 
+    private List<Vector3Int>[] GetDoorwaysUnique(Room room)
+    {
+        var doorways = GetDoorways(room);
+        var uniqueDoorways = new List<Vector3Int>[doorways.Length];
+
+        for (int dir = 0; dir < doorways.Length; dir++)
+        {
+            // Sort to ensure consecutive order (important if original order isn't guaranteed)
+            var sorted = doorways[dir]
+                .OrderBy(tile => tile.x)
+                .ThenBy(tile => tile.y)
+                .ToList();
+
+            uniqueDoorways[dir] = new List<Vector3Int>();
+
+            // For Up/Down, consecutive means consecutive in X (same Y)
+            // For Left/Right, consecutive means consecutive in Y (same X)
+            bool vertical = (dir == 0 || dir == 2); // Down/Up
+
+            Vector3Int? prev = null;
+            foreach (var tile in sorted)
+            {
+                if (prev == null)
+                {
+                    uniqueDoorways[dir].Add(tile);
+                }
+                else
+                {
+                    bool sameLine = vertical ? (tile.y == prev.Value.y) : (tile.x == prev.Value.x);
+                    int diff = vertical ? tile.x - prev.Value.x : tile.y - prev.Value.y;
+
+                    if (!sameLine || diff > 1) // new run starts
+                    {
+                        uniqueDoorways[dir].Add(tile);
+                    }
+                }
+                prev = tile;
+            }
+        }
+
+        return uniqueDoorways;
+    }
+
     //Get further entrance doorway tile
     private List<Vector3Int>[] GetEntrances(Room room)
     {
@@ -2789,8 +2834,31 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    private void FillRoomWithDoors(Room room)
+    {
+        var doorways = GetDoorwaysUnique(room);
 
+        int[] verticalDirs = { 0, 2 }; // Down = 0, Up = 2
+        foreach (int dir in verticalDirs)
+        {
+            // Base pivot
+            Vector3 pivotOffset = (dir == 2)  // Up
+                ? new Vector3(-1f, 1.5f, 0f)
+                : new Vector3(-1f, -0.5f, 0f);
 
+            // Shift pivot down by 3 pixels (3 / 16 = 0.1875 units)
+            pivotOffset.y -= 4 / 16f;
+
+            foreach (var tile in doorways[dir])
+            {
+                GameObject doorObj = PlaceObject(tile, dir == 2 ? DoorDownPrefab01 : DoorUpPrefab01, room.GetPosition() + pivotOffset);
+
+                Vector3Int adjustedTile = tile;
+                adjustedTile.y += (dir == 2) ? 1 : -1;
+                doorsHorizontalInRoom.Add(adjustedTile + room.GetPosition());
+            }
+        }
+    }
 
     private void FillRoomWithBookshelves(Room room)
     {
@@ -3067,6 +3135,70 @@ public class DungeonGenerationScript01 : MonoBehaviour
         cobwebsInRoom.Remove(position);
     }
 
+    public void RemoveDoorHorizontalAtPosition(Vector3Int position)
+    {
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        float detectionRadius = 0.3f; // Small radius for detection
+        int doorLayer = LayerMask.GetMask("Door"); // Make sure the cobweb is assigned to this layer
+        Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, doorLayer);
+
+        doorsHorizontalInRoom.Remove(position);
+        doorsHorizontalInRoom.Remove(position + new Vector3Int(-1, 0, 0));
+    }
+
+    public GameObject IdentifyDoorHorizontalAtPosition(Vector3Int position)
+    {
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        float detectionRadius = 0.3f; // Small radius for detection
+        int doorLayer = LayerMask.GetMask("Door"); // Make sure the cobweb is assigned to this layer
+        Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, doorLayer);
+
+        if (hitCollider != null && hitCollider.CompareTag("Door"))
+        {
+            return hitCollider.gameObject;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public void HitDoorHorizontalAtPosition(Vector3Int position)
+    {
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        float detectionRadius = 0.3f; // Small radius for detection
+        int doorLayer = LayerMask.GetMask("Door"); // Make sure the cobweb is assigned to this layer
+        Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, doorLayer);
+
+        if (hitCollider != null && hitCollider.CompareTag("Door"))
+        {
+            hitCollider.gameObject.GetComponent<DoorScript>().DecreaseHp();
+
+            if (hitCollider.gameObject.GetComponent<DoorScript>().GetHp() == -1)
+            {
+                RemoveDoorHorizontalAtPosition(position);
+            }
+        }
+    }
+
+    public int GetDoorHorizontalAtPositionHp(Vector3Int position)
+    {
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        float detectionRadius = 0.3f; // Small radius for detection
+        int doorLayer = LayerMask.GetMask("Door"); // Make sure the cobweb is assigned to this layer
+        Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, doorLayer);
+
+        if (hitCollider != null && hitCollider.CompareTag("Door"))
+        {
+            return hitCollider.gameObject.GetComponent<DoorScript>().GetHp();
+        }
+        return -1;
+    }
+
     public void RemoveTreeAtPosition(Vector3Int position)
     {
         Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
@@ -3081,11 +3213,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         treesInRoom.Remove(position);
-    }
-
-    public bool IsSolidAtPosition(Vector3Int position)
-    {
-        return treesInRoom.Contains(position);
     }
 
     private bool IsPlantAtPosition(Vector3Int position)
@@ -3130,30 +3257,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return false;
     }
 
-    private bool IsBookshelfSmallAtPosition(Vector3Int position)
-    {
-        foreach (var bookshelfPos in bookshelvesInRoom)
-        {
-            if (bookshelfPos == position)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private bool IsBookstackAtPosition(Vector3Int position)
-    {
-        foreach (var Pos in bookstacksInRoom)
-        {
-            if (Pos == position)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public bool IsTable1x2AtPositionAny(Vector3Int position)
     {
         Vector3Int down = position + Vector3Int.down;
@@ -3168,6 +3271,18 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return false;
     }
 
+    private bool IsBookshelfSmallAtPosition(Vector3Int position)
+    {
+        foreach (var bookshelfPos in bookshelvesInRoom)
+        {
+            if (bookshelfPos == position)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public bool IsBookshelfSmallAtPositionAny(Vector3Int position)
     {
         Vector3Int down = position + Vector3Int.down;
@@ -3175,6 +3290,18 @@ public class DungeonGenerationScript01 : MonoBehaviour
         foreach (var bookshelfPos in bookshelvesInRoom)
         {
             if (bookshelfPos == position || bookshelfPos == down)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private bool IsBookstackAtPosition(Vector3Int position)
+    {
+        foreach (var Pos in bookstacksInRoom)
+        {
+            if (Pos == position)
             {
                 return true;
             }
@@ -3208,6 +3335,42 @@ public class DungeonGenerationScript01 : MonoBehaviour
             }
         }
         return false;
+    }
+
+    public bool IsDoorHorizontalAtPosition(Vector3Int position)
+    {
+        foreach (var doorPos in doorsHorizontalInRoom)
+        {
+            if (doorPos == position)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool IsDoorHorizontalAtPositionAny(Vector3Int position)
+    {
+        Vector3Int left = position + Vector3Int.left;
+
+        foreach (var doorPos in doorsHorizontalInRoom)
+        {
+            if (doorPos == position || doorPos == left)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool IsSolidAtPosition(Vector3Int position, bool breakDoors = false)
+    {
+        if (breakDoors)
+        {
+            return IsTreeAtPosition(position) || (IsDoorHorizontalAtPositionAny(position) && GetDoorHorizontalAtPositionHp(position) > 0);
+        }
+
+        return IsTreeAtPosition(position) || IsDoorHorizontalAtPositionAny(position);
     }
 
     private bool IsEntityAtPosition(Vector3Int position)
@@ -3448,6 +3611,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
         {
             if (!roomTemplate(room))
             {
+                FillRoomWithDoors(room);
+
                 FillRoomWithFloor(room, tileFloorFour01);
                 AddFloorCornerBroken(room);
                 FillRoomWithFloorFull(room, tileFloorFour01, chanceRoomFloorFourFull);

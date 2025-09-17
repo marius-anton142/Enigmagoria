@@ -6,35 +6,53 @@ public class HoldButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public PlayerScript playerScript;
     public Vector3 direction;
 
+    [SerializeField] private KeyCode hotkey = KeyCode.None; // set per arrow: W/A/S/D
+
     private bool isHolding = false;
-    private CameraRigController cameraRig; // Renamed from FollowScript
+    private CameraRigController cameraRig;
 
     private void Start()
     {
-        cameraRig = Camera.main.transform.parent.GetComponent<CameraRigController>(); // Camera is child, rig is parent
+        if (Application.platform != RuntimePlatform.Android)
+            GetComponent<UnityEngine.UI.Image>().enabled = false;
+
+        cameraRig = Camera.main.transform.parent.GetComponent<CameraRigController>();
     }
 
     private void Update()
     {
+        // Keyboard mirrors pointer
+        if (hotkey != KeyCode.None)
+        {
+            if (Input.GetKeyDown(hotkey)) BeginHold();
+            if (Input.GetKeyUp(hotkey)) EndHold();
+        }
+
+        // While held, repeatedly request moves; PlayerScript will ignore if mid-move
         if (isHolding && !playerScript.isSliding && playerScript.bumpsStuck <= 0)
         {
             playerScript.Move(direction);
-            cameraRig.OnArrowHeld(direction); // Notify CameraRigController
+            if (cameraRig) cameraRig.OnArrowHeld(direction);
         }
     }
 
-    public void OnPointerDown(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData) { BeginHold(); }
+    public void OnPointerUp(PointerEventData eventData) { EndHold(); }
+
+    private void BeginHold()
     {
         isHolding = true;
+
+        // One immediate move if you're in the cobweb “bump out” case
         if (!playerScript.isSliding && playerScript.bumpsStuck > 0)
         {
             playerScript.Move(direction);
         }
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    private void EndHold()
     {
         isHolding = false;
-        cameraRig.OnArrowReleased(); // Notify CameraRigController
+        if (cameraRig) cameraRig.OnArrowReleased();
     }
 }

@@ -75,7 +75,7 @@ public class PlayerScript : MonoBehaviour
         HandleMovement();
         if (!isMoving) // Only check for input if not currently moving
         {
-            CheckForInput();
+            //CheckForInput();
             HandleSwipeInput(); // Handle swipe inputs
         }
     }
@@ -252,7 +252,7 @@ public class PlayerScript : MonoBehaviour
         }
 
         // Only proceed with the movement if a valid target position was found
-        if (positionFound && !isMoving && !DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition)))
+        if (positionFound && !isMoving && !DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition), breakDoors: true))
         {
             // Proceed with setting movement flags and initiating movement
             mainCollider.enabled = false;
@@ -289,9 +289,14 @@ public class PlayerScript : MonoBehaviour
             else
             {
                 FindObjectOfType<AudioPlayer>().PlayWalkSound();
+
+                if (DungeonManager.GetComponent<DungeonGenerationScript01>().IdentifyDoorHorizontalAtPosition(tilemapFloor.WorldToCell(targetPosition)) != null)
+                {
+                    DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorHorizontalAtPosition(tilemapFloor.WorldToCell(targetPosition));
+                }
             }
         }
-        else if (!positionFound || (DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition))))
+        else if (!positionFound || (DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition), breakDoors: true)))
         {
             if (direction.x != 0)
             {
@@ -305,6 +310,11 @@ public class PlayerScript : MonoBehaviour
             canMove = false;
 
             FindObjectOfType<AudioPlayer>().PlayBumpSound();
+
+            if (DungeonManager.GetComponent<DungeonGenerationScript01>().IsDoorHorizontalAtPositionAny(tilemapFloor.WorldToCell(targetPosition)))
+            {
+                DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorHorizontalAtPosition(tilemapFloor.WorldToCell(targetPosition));
+            }
         }
     }
 

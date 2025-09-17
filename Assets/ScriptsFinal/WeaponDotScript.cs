@@ -31,6 +31,15 @@ public class WeaponDotScript : MonoBehaviour
     {
         RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
 
+        if (Application.platform != RuntimePlatform.Android)
+        {
+            rectTransform.anchoredPosition = Vector2.zero;
+            if (TryGetComponent(out Image img))
+            {
+                img.enabled = false;
+            }
+        }
+
         // Anchor to the center of the canvas instead of the bottom-left
         rectTransform.anchorMin = new Vector2(0.5f, 0.5f); // Center anchor
         rectTransform.anchorMax = new Vector2(0.5f, 0.5f); // Center anchor

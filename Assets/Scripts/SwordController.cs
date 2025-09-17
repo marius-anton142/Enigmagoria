@@ -302,7 +302,11 @@ public class SwordController : MonoBehaviour
         Vector3 inputPosition = Vector3.zero;
 
         // Use viewport coordinates instead of canvas width/height to get the bottom-right reference point
-        Vector2 viewportReferencePoint = new Vector2(6.5f / 8f, 3f / 8f); // Normalized values (0 to 1) for 6.5/8 and 3/8
+        Vector2 viewportReferencePoint;
+        if (Application.platform == RuntimePlatform.Android)
+            viewportReferencePoint = new Vector2(6.5f / 8f, 3f / 8f); // old mobile offset - Normalized values (0 to 1) for 6.5/8 and 3/8
+        else
+            viewportReferencePoint = new Vector2(0.5f, 0.5f); // center for PC
 
         // Convert viewport reference point directly to world space
         Vector3 worldReferencePoint = Camera.main.ViewportToWorldPoint(new Vector3(viewportReferencePoint.x, viewportReferencePoint.y, Camera.main.nearClipPlane));

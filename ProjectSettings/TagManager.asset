@@ -18,6 +18,7 @@ TagManager:
   - Bookstack
   - Pot
   - Stone
+  - Door
   layers:
   - Default
   - TransparentFX
@@ -37,7 +38,7 @@ TagManager:
   - Pot
   - Tree
   - Stone
-  - 
+  - Door
   - 
   - 
   - 

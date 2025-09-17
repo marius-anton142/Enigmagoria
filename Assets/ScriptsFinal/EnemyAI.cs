@@ -111,6 +111,8 @@ public class EnemyAI : MonoBehaviour
 
         if (!CanMove() || isMoving || isLeaping) return; // Skip if already moving or leaping
 
+        walkableTiles = GetWalkableTiles();
+
         Vector2Int currentCell = new Vector2Int(
             Mathf.FloorToInt(transform.position.x),
             Mathf.FloorToInt(transform.position.y)

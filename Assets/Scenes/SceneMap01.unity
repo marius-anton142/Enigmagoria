@@ -28267,7 +28267,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 480838835}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -28385,7 +28385,6 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
-  - component: {fileID: 519420033}
   - component: {fileID: 519420034}
   m_Layer: 0
   m_Name: Main Camera
@@ -28481,7 +28480,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 3.8
+  orthographic size: 5.5
   m_Depth: 100
   m_CullingMask:
     serializedVersion: 2
@@ -28512,27 +28511,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2041596262}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &519420033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 688f91ebebb45d147b32499568af00d1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  objectToFollow: {fileID: 21251022}
-  speed: 3
-  newSize: 3.5
-  lerpDuration: 0.6
-  spawnedPlayer: 0
-  cameraShiftAmount: 2.8
-  shiftDelay: 0.1
-  releaseDelay: 0.1
-  verticalShiftMultiplier: 1.16
 --- !u!114 &519420034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28545,6 +28523,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 534eb5dfe9788f04c9f20a3394f14bee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sizeA: 5.5
+  sizeB: 60
+  zoomDuration: 0.6
 --- !u!1 &534339085
 GameObject:
   m_ObjectHideFlags: 0
@@ -30059,6 +30040,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerScript: {fileID: 21251030}
   direction: {x: 0, y: -1, z: 0}
+  hotkey: 115
 --- !u!114 &723627758
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56343,6 +56325,8 @@ MonoBehaviour:
   BookstackPrefab01: {fileID: 2339089828451242048, guid: 1af572f269491fd4eaa763e3db3e8348, type: 3}
   Table2x2Prefab01: {fileID: 1961583833583492094, guid: f03ec2ad1168e304dba96fe98648b3ad, type: 3}
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
+  DoorDownPrefab01: {fileID: 6301132239871281204, guid: 90cb92e20d9daff4bb16e6d498f6880b, type: 3}
+  DoorUpPrefab01: {fileID: 7886514384026042335, guid: 1994b1e0252f539438575a899d455a67, type: 3}
   StonePrefab01: {fileID: 1232522092826622473, guid: 8c69bf03306630d43a76bdf6ba48dc1f, type: 3}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
@@ -56813,6 +56797,8 @@ MonoBehaviour:
   BookstackPrefab01: {fileID: 0}
   Table2x2Prefab01: {fileID: 1961583833583492094, guid: f03ec2ad1168e304dba96fe98648b3ad, type: 3}
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
+  DoorDownPrefab01: {fileID: 0}
+  DoorUpPrefab01: {fileID: 0}
   StonePrefab01: {fileID: 0}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
@@ -57875,6 +57861,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerScript: {fileID: 21251030}
   direction: {x: -1, y: 0, z: 0}
+  hotkey: 97
 --- !u!114 &1231017795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -58124,6 +58111,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerScript: {fileID: 21251030}
   direction: {x: 0, y: 1, z: 0}
+  hotkey: 119
 --- !u!114 &1248146179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60000,6 +59988,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerScript: {fileID: 21251030}
   direction: {x: 1, y: 0, z: 0}
+  hotkey: 100
 --- !u!114 &1519633384
 MonoBehaviour:
   m_ObjectHideFlags: 0
