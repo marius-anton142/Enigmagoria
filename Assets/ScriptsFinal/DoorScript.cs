@@ -38,6 +38,8 @@ public class DoorScript : MonoBehaviour
 
             Destroy(GetComponent<Rigidbody2D>());
             Destroy(GetComponent<PolygonCollider2D>());
+
+            RDG.Vibration.Vibrate(3);
         }
     }
 }
