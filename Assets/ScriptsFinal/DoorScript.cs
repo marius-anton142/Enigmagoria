@@ -7,6 +7,7 @@ public class DoorScript : MonoBehaviour
     [SerializeField] private int hp = 3;
     [SerializeField] private Sprite doorOpenSprite;
     [SerializeField] private Sprite doorOpenFloorSprite;
+    [SerializeField] private AudioPlayer audioPlayer;
 
     private SpriteRenderer sr;
     private SpriteRenderer childSr;
@@ -19,12 +20,15 @@ public class DoorScript : MonoBehaviour
         {
             childSr = transform.GetChild(0).GetComponent<SpriteRenderer>();
         }
+
+        audioPlayer = GameObject.FindGameObjectWithTag("AudioSource").GetComponent<AudioPlayer>();
     }
 
     public int GetHp() { return hp; }
     public void DecreaseHp()
     {
         hp--;
+        FindObjectOfType<AudioPlayer>().PlayDoorBumpSound();
 
         if (hp == -1 && doorOpenSprite != null)
         {
@@ -40,6 +44,7 @@ public class DoorScript : MonoBehaviour
             Destroy(GetComponent<PolygonCollider2D>());
 
             RDG.Vibration.Vibrate(3);
+            FindObjectOfType<AudioPlayer>().PlayDoorOpenSound();
         }
     }
 }

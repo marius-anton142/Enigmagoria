@@ -56327,6 +56327,8 @@ MonoBehaviour:
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
   DoorDownPrefab01: {fileID: 6301132239871281204, guid: 90cb92e20d9daff4bb16e6d498f6880b, type: 3}
   DoorUpPrefab01: {fileID: 7886514384026042335, guid: 1994b1e0252f539438575a899d455a67, type: 3}
+  DoorDownPrefab02: {fileID: 8429081219401784377, guid: a33e09eec039f7543b0b95ccd29e7012, type: 3}
+  DoorUpPrefab02: {fileID: 5859642139726753364, guid: 1cd9c15899a8e1c40ba6f70bf9a8fda0, type: 3}
   StonePrefab01: {fileID: 1232522092826622473, guid: 8c69bf03306630d43a76bdf6ba48dc1f, type: 3}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
@@ -56799,6 +56801,8 @@ MonoBehaviour:
   Table1x2Prefab01: {fileID: 1961583833583492094, guid: a92a789b03f33b5469ba6a938a65b098, type: 3}
   DoorDownPrefab01: {fileID: 0}
   DoorUpPrefab01: {fileID: 0}
+  DoorDownPrefab02: {fileID: 0}
+  DoorUpPrefab02: {fileID: 0}
   StonePrefab01: {fileID: 0}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
@@ -56865,7 +56869,7 @@ MonoBehaviour:
   tilemapFloor: {fileID: 1738476036}
   tilemapWalls: {fileID: 34731195}
   tilemapWallsFix: {fileID: 800668273}
-  tileFloor01: {fileID: 11400000, guid: 309e84caab7209f4f9d45ed2b38346bc, type: 2}
+  tileFloor01: {fileID: 11400000, guid: 33038e240b4af824fb5f66529344c02c, type: 2}
   tileFloorFour01: {fileID: 11400000, guid: 7578daf38f5157f4a9443c959ac04b90, type: 2}
   tileFloorOptions:
   - {fileID: 11400000, guid: 44fc378ba21aa3e46a578905bcd8baa4, type: 2}
@@ -60835,6 +60839,16 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 7703a0b0d57031647aadb00545a5d686, type: 3}
   bump:
   - {fileID: 8300000, guid: 0f84520cc105c1148bb8f74750cf47a7, type: 3}
+  door_bump:
+  - {fileID: 8300000, guid: cf13793ee45807646a00867be827bebe, type: 3}
+  - {fileID: 8300000, guid: 7996029a2f056e54b954aba11e144e06, type: 3}
+  - {fileID: 8300000, guid: 00208c1bd98333e49a98e14910f26a72, type: 3}
+  - {fileID: 8300000, guid: 46530d7e763254b47b6f90bab0722c5e, type: 3}
+  door_open:
+  - {fileID: 8300000, guid: 09389ed9411088644ade6747cd221853, type: 3}
+  - {fileID: 8300000, guid: f6f5fe4aa9ea4d94d98d0cde51425c43, type: 3}
+  - {fileID: 8300000, guid: bd64c6f79c10ab240a0f186d5bef0ffd, type: 3}
+  - {fileID: 8300000, guid: 1d31afeddf7df2947bb6851f4cf0d2d1, type: 3}
   walk:
   - {fileID: 8300000, guid: baef3f114277a524bb1a55e4835ff98a, type: 3}
   - {fileID: 8300000, guid: e3cc94b63cc6c674585c14ebf71f3f87, type: 3}

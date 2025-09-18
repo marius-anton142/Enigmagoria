@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -44,7 +44,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject BookstackPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
-    [SerializeField] private GameObject DoorDownPrefab01, DoorUpPrefab01;
+    [SerializeField] private GameObject DoorDownPrefab01, DoorUpPrefab01, DoorDownPrefab02, DoorUpPrefab02;
     [SerializeField] private GameObject StonePrefab01;
 
     [Header("Parameters")]
@@ -2264,6 +2264,74 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return uniqueDoorways;
     }
 
+    private List<Vector3Int>[] GetDoorwaysUniqueWidth1(Room room)
+    {
+        var doorways = GetDoorways(room);
+        var result = new List<Vector3Int>[doorways.Length];
+
+        for (int dir = 0; dir < doorways.Length; dir++)
+        {
+            bool vertical = (dir == 0 || dir == 2); // Down/Up → group along X on same Y
+            var sorted = doorways[dir]
+                .OrderBy(t => vertical ? t.y : t.x)
+                .ThenBy(t => vertical ? t.x : t.y)
+                .ToList();
+
+            result[dir] = new List<Vector3Int>();
+            Vector3Int? runStart = null;
+            int runLen = 0;
+            int fixedVal = 0; // y for vertical, x for horizontal
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                var t = sorted[i];
+                if (runLen == 0)
+                {
+                    runStart = t;
+                    runLen = 1;
+                    fixedVal = vertical ? t.y : t.x;
+                }
+                else
+                {
+                    bool sameLine = vertical ? (t.y == fixedVal) : (t.x == fixedVal);
+                    int delta = vertical ? (t.x - runStart.Value.x + (runLen - 1)) : (t.y - runStart.Value.y + (runLen - 1));
+                    bool consecutive = sameLine && (vertical ? (t.x == runStart.Value.x + runLen) : (t.y == runStart.Value.y + runLen));
+
+                    if (consecutive)
+                    {
+                        runLen++;
+                    }
+                    else
+                    {
+                        if (runLen == 1) result[dir].Add(runStart.Value);
+                        runStart = t;
+                        runLen = 1;
+                        fixedVal = vertical ? t.y : t.x;
+                    }
+                }
+            }
+            if (runLen == 1 && runStart.HasValue) result[dir].Add(runStart.Value);
+        }
+
+        return result;
+    }
+
+    private List<Vector3Int>[] GetDoorwaysUniqueWidthNot1(Room room)
+    {
+        var startsAll = GetDoorwaysUnique(room);       // starts of every run
+        var startsWidth1 = GetDoorwaysUniqueWidth1(room); // starts of runs with length == 1
+
+        var result = new List<Vector3Int>[startsAll.Length];
+        for (int dir = 0; dir < startsAll.Length; dir++)
+        {
+            var setWidth1 = new HashSet<Vector3Int>(startsWidth1[dir]);
+            result[dir] = new List<Vector3Int>();
+            foreach (var t in startsAll[dir])
+                if (!setWidth1.Contains(t)) result[dir].Add(t); // keep only width > 1
+        }
+        return result;
+    }
+
     //Get further entrance doorway tile
     private List<Vector3Int>[] GetEntrances(Room room)
     {
@@ -2836,26 +2904,31 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
     private void FillRoomWithDoors(Room room)
     {
-        var doorways = GetDoorwaysUnique(room);
+        var doorStartsWgt = GetDoorwaysUniqueWidthNot1(room); // width > 1 → Prefab01
+        var doorStartsW1 = GetDoorwaysUniqueWidth1(room);     // width == 1 → Prefab02
 
         int[] verticalDirs = { 0, 2 }; // Down = 0, Up = 2
         foreach (int dir in verticalDirs)
         {
-            // Base pivot
-            Vector3 pivotOffset = (dir == 2)  // Up
-                ? new Vector3(-1f, 1.5f, 0f)
-                : new Vector3(-1f, -0.5f, 0f);
-
-            // Shift pivot down by 3 pixels (3 / 16 = 0.1875 units)
+            Vector3 pivotOffset = (dir == 2) ? new Vector3(-1f, 1.5f, 0f)
+                                             : new Vector3(-1f, -0.5f, 0f);
+            // Shift pivot down by 4 px at PPU=16
             pivotOffset.y -= 4 / 16f;
 
-            foreach (var tile in doorways[dir])
+            // Place multi-width doors (Prefab01)
+            foreach (var tile in doorStartsWgt[dir])
             {
-                GameObject doorObj = PlaceObject(tile, dir == 2 ? DoorDownPrefab01 : DoorUpPrefab01, room.GetPosition() + pivotOffset);
+                var doorObj = PlaceObject(tile, dir == 2 ? DoorUpPrefab01 : DoorDownPrefab01, room.GetPosition() + pivotOffset);
+                Vector3Int adjusted = tile; adjusted.y += (dir == 2) ? 1 : -1;
+                doorsHorizontalInRoom.Add(adjusted + room.GetPosition());
+            }
 
-                Vector3Int adjustedTile = tile;
-                adjustedTile.y += (dir == 2) ? 1 : -1;
-                doorsHorizontalInRoom.Add(adjustedTile + room.GetPosition());
+            // Place 1-width doors (Prefab02)
+            foreach (var tile in doorStartsW1[dir])
+            {
+                var doorObj = PlaceObject(tile, dir == 2 ? DoorUpPrefab02 : DoorDownPrefab02, room.GetPosition() + pivotOffset);
+                Vector3Int adjusted = tile; adjusted.y += (dir == 2) ? 1 : -1;
+                doorsHorizontalInRoom.Add(adjusted + room.GetPosition());
             }
         }
     }

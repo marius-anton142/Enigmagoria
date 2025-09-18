@@ -10,6 +10,8 @@ public class AudioPlayer : MonoBehaviour
     [SerializeField] List<AudioClip> slash;
     [SerializeField] List<AudioClip> pickup;
     [SerializeField] List<AudioClip> bump;
+    [SerializeField] List<AudioClip> door_bump;
+    [SerializeField] List<AudioClip> door_open;
     [SerializeField] List<AudioClip> walk;
     [SerializeField] List<AudioClip> walk_critter;
     [SerializeField] List<AudioClip> walk_knight;
@@ -20,11 +22,14 @@ public class AudioPlayer : MonoBehaviour
     [SerializeField] List<AudioClip> cobweb_stuck;
     [SerializeField] List<AudioClip> cobweb_break;
 
+
     public void PlayStoneSound() => PlayRandom(stone);
     public void PlaySlideSound() => PlayRandom(slide);
     public void PlaySlashSound() => PlayRandom(slash);
     public void PlayPickupSound() => PlayRandom(pickup);
     public void PlayBumpSound() => PlayRandom(bump);
+    public void PlayDoorBumpSound() => PlayRandom(door_bump);
+    public void PlayDoorOpenSound() => PlayRandom(door_open);
     public void PlayWalkSound() => PlayRandom(walk);
     public void PlayWalkCritterSound() => PlayRandom(walk_critter);
     public void PlayWalkKnightSound() => PlayRandom(walk_knight);
