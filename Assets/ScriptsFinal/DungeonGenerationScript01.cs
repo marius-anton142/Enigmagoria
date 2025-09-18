@@ -148,6 +148,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> tables1x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> doorsHorizontalInRoom = new List<Vector3Int>();
+    private List<Vector3Int> doorsHorizontalInRoomWidth1 = new List<Vector3Int>();
     private List<Vector3Int> stonesInRoom = new List<Vector3Int>();
 
     private TilemapBaker floorBaker;
@@ -2928,7 +2929,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             {
                 var doorObj = PlaceObject(tile, dir == 2 ? DoorUpPrefab02 : DoorDownPrefab02, room.GetPosition() + pivotOffset);
                 Vector3Int adjusted = tile; adjusted.y += (dir == 2) ? 1 : -1;
-                doorsHorizontalInRoom.Add(adjusted + room.GetPosition());
+                doorsHorizontalInRoomWidth1.Add(adjusted + room.GetPosition());
             }
         }
     }
@@ -2961,12 +2962,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
             FillRoomWithBookstacks(room);
         }
     }
-
-
-
-
-
-
 
     private void FillRoomWithEnemies(Room room)
     {
@@ -3218,6 +3213,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
         doorsHorizontalInRoom.Remove(position);
         doorsHorizontalInRoom.Remove(position + new Vector3Int(-1, 0, 0));
+        doorsHorizontalInRoomWidth1.Remove(position);
     }
 
     public GameObject IdentifyDoorHorizontalAtPosition(Vector3Int position)
@@ -3419,6 +3415,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 return true;
             }
         }
+
+        foreach (var doorPos in doorsHorizontalInRoomWidth1)
+        {
+            if (doorPos == position)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -3433,6 +3438,15 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 return true;
             }
         }
+
+        foreach (var doorPos in doorsHorizontalInRoomWidth1)
+        {
+            if (doorPos == position)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
