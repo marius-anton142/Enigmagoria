@@ -44,7 +44,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject BookstackPrefab01;
     [SerializeField] private GameObject Table2x2Prefab01;
     [SerializeField] private GameObject Table1x2Prefab01;
-    [SerializeField] private GameObject DoorDownPrefab01, DoorUpPrefab01, DoorDownPrefab02, DoorUpPrefab02;
+    [SerializeField] private GameObject DoorDownPrefab01, DoorUpPrefab01, DoorDownPrefab02, DoorUpPrefab02, DoorRightPrefab01, DoorLeftPrefab01;
     [SerializeField] private GameObject StonePrefab01;
 
     [Header("Parameters")]
@@ -149,6 +149,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     private List<Vector3Int> tables2x2InRoom = new List<Vector3Int>();
     private List<Vector3Int> doorsHorizontalInRoom = new List<Vector3Int>();
     private List<Vector3Int> doorsHorizontalInRoomWidth1 = new List<Vector3Int>();
+    private List<Vector3Int> doorsVerticalInRoom = new List<Vector3Int>();
+    private List<Vector3Int> doorsVerticalInRoomWidth1 = new List<Vector3Int>();
     private List<Vector3Int> stonesInRoom = new List<Vector3Int>();
 
     private TilemapBaker floorBaker;
@@ -2919,7 +2921,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             // Place multi-width doors (Prefab01)
             foreach (var tile in doorStartsWgt[dir])
             {
-                var doorObj = PlaceObject(tile, dir == 2 ? DoorUpPrefab01 : DoorDownPrefab01, room.GetPosition() + pivotOffset);
+                var doorObj = PlaceObject(tile, dir == 2 ? DoorDownPrefab01 : DoorUpPrefab01, room.GetPosition() + pivotOffset);
                 Vector3Int adjusted = tile; adjusted.y += (dir == 2) ? 1 : -1;
                 doorsHorizontalInRoom.Add(adjusted + room.GetPosition());
             }
@@ -2932,6 +2934,39 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 doorsHorizontalInRoomWidth1.Add(adjusted + room.GetPosition());
             }
         }
+
+        // ----- Left/Right (new) -----
+        int[] horizontalDirs = { 1, 3 }; // Left = 1, Right = 3
+        foreach (int dir in horizontalDirs)
+        {
+            Vector3 pivotOffset = (dir == 3) ? new Vector3(1f, 2f, 0f)   // Right
+                                             : new Vector3(0f, 2f, 0f);  // Left
+
+            foreach (var tile in doorStartsWgt[dir])
+            {
+                var prefab = (dir == 3) ? DoorRightPrefab01 : DoorLeftPrefab01;
+                var doorObj = PlaceObject(tile, prefab, room.GetPosition() + pivotOffset);
+
+                Vector3Int adjusted = tile;
+                adjusted.x += (dir == 3) ? 1 : -1;
+                doorsVerticalInRoom.Add(adjusted + room.GetPosition());
+
+                // GameObject cobweb = PlaceObject(adjusted + room.GetPosition(), CobwebPrefab01, new Vector3(0.5f, 0.5f, 0));
+            }
+        }
+
+        /*
+        // 1-width vertical doors (reuse Right prefab; flip for Left)
+        foreach (var tile in doorStartsW1[dir])
+        {
+            var doorObj = PlaceObject(tile, DoorRightPrefab01, room.GetPosition() + pivotOffset);
+            var sr = doorObj.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.flipX = (dir == 1);
+
+            Vector3Int adjusted = tile; adjusted.x += (dir == 3) ? 1 : -1;
+            doorsVerticalInRoomWidth1.Add(adjusted + room.GetPosition());
+        }
+        */
     }
 
     private void FillRoomWithBookshelves(Room room)
@@ -3216,7 +3251,20 @@ public class DungeonGenerationScript01 : MonoBehaviour
         doorsHorizontalInRoomWidth1.Remove(position);
     }
 
-    public GameObject IdentifyDoorHorizontalAtPosition(Vector3Int position)
+    public void RemoveDoorVerticalAtPosition(Vector3Int position)
+    {
+        Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
+
+        float detectionRadius = 0.3f; // Small radius for detection
+        int doorLayer = LayerMask.GetMask("Door"); // Make sure the cobweb is assigned to this layer
+        Collider2D hitCollider = Physics2D.OverlapCircle(worldPosition, detectionRadius, doorLayer);
+
+        doorsVerticalInRoom.Remove(position);
+        doorsVerticalInRoom.Remove(position + new Vector3Int(0, -1, 0));
+        doorsVerticalInRoomWidth1.Remove(position);
+    }
+
+    public GameObject IdentifyDoorAtPosition(Vector3Int position)
     {
         Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
 
@@ -3234,7 +3282,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
-    public void HitDoorHorizontalAtPosition(Vector3Int position)
+    public void HitDoorAtPosition(Vector3Int position)
     {
         Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
 
@@ -3249,11 +3297,12 @@ public class DungeonGenerationScript01 : MonoBehaviour
             if (hitCollider.gameObject.GetComponent<DoorScript>().GetHp() == -1)
             {
                 RemoveDoorHorizontalAtPosition(position);
+                RemoveDoorVerticalAtPosition(position);
             }
         }
     }
 
-    public int GetDoorHorizontalAtPositionHp(Vector3Int position)
+    public int GetDoorAtPositionHp(Vector3Int position)
     {
         Vector3 worldPosition = position + new Vector3(0.5f, 0.5f, 0);
 
@@ -3450,14 +3499,63 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return false;
     }
 
+    public bool IsDoorVerticalAtPosition(Vector3Int position)
+    {
+        foreach (var doorPos in doorsVerticalInRoom)
+        {
+            if (doorPos == position)
+            {
+                return true;
+            }
+        }
+
+        foreach (var doorPos in doorsVerticalInRoomWidth1)
+        {
+            if (doorPos == position)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsDoorVerticalAtPositionAny(Vector3Int position)
+    {
+        Vector3Int down = position + Vector3Int.down;
+
+        foreach (var doorPos in doorsVerticalInRoom)
+        {
+            if (doorPos == position || doorPos == down)
+            {
+                return true;
+            }
+        }
+
+        foreach (var doorPos in doorsVerticalInRoomWidth1)
+        {
+            if (doorPos == position)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool IsDoorAtPositionAny(Vector3Int position)
+    {
+        return (IsDoorHorizontalAtPositionAny(position) || IsDoorVerticalAtPositionAny(position));
+    }
+
     public bool IsSolidAtPosition(Vector3Int position, bool breakDoors = false)
     {
         if (breakDoors)
         {
-            return IsTreeAtPosition(position) || (IsDoorHorizontalAtPositionAny(position) && GetDoorHorizontalAtPositionHp(position) > 0);
+            return IsTreeAtPosition(position) || (IsDoorAtPositionAny(position) && GetDoorAtPositionHp(position) > 0);
         }
 
-        return IsTreeAtPosition(position) || IsDoorHorizontalAtPositionAny(position);
+        return IsTreeAtPosition(position) || IsDoorHorizontalAtPositionAny(position) || IsDoorVerticalAtPositionAny(position);
     }
 
     private bool IsEntityAtPosition(Vector3Int position)

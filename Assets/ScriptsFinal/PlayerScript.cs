@@ -290,9 +290,9 @@ public class PlayerScript : MonoBehaviour
             {
                 FindObjectOfType<AudioPlayer>().PlayWalkSound();
 
-                if (DungeonManager.GetComponent<DungeonGenerationScript01>().IdentifyDoorHorizontalAtPosition(tilemapFloor.WorldToCell(targetPosition)) != null)
+                if (DungeonManager.GetComponent<DungeonGenerationScript01>().IdentifyDoorAtPosition(tilemapFloor.WorldToCell(targetPosition)) != null)
                 {
-                    DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorHorizontalAtPosition(tilemapFloor.WorldToCell(targetPosition));
+                    DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorAtPosition(tilemapFloor.WorldToCell(targetPosition));
                 }
             }
         }
@@ -311,9 +311,9 @@ public class PlayerScript : MonoBehaviour
 
             FindObjectOfType<AudioPlayer>().PlayBumpSound();
 
-            if (DungeonManager.GetComponent<DungeonGenerationScript01>().IsDoorHorizontalAtPositionAny(tilemapFloor.WorldToCell(targetPosition)))
+            if (DungeonManager.GetComponent<DungeonGenerationScript01>().IsDoorAtPositionAny(tilemapFloor.WorldToCell(targetPosition)))
             {
-                DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorHorizontalAtPosition(tilemapFloor.WorldToCell(targetPosition));
+                DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorAtPosition(tilemapFloor.WorldToCell(targetPosition));
             }
         }
     }

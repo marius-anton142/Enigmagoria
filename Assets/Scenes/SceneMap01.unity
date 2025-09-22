@@ -55711,7 +55711,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 48445645
-  m_SortingLayer: 3
+  m_SortingLayer: 4
   m_SortingOrder: 100
   m_Sprite: {fileID: 914872027, guid: 5c53ab3f8cba42147b9ba4159bb6d32a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -56329,6 +56329,8 @@ MonoBehaviour:
   DoorUpPrefab01: {fileID: 7886514384026042335, guid: 1994b1e0252f539438575a899d455a67, type: 3}
   DoorDownPrefab02: {fileID: 8429081219401784377, guid: a33e09eec039f7543b0b95ccd29e7012, type: 3}
   DoorUpPrefab02: {fileID: 5859642139726753364, guid: 1cd9c15899a8e1c40ba6f70bf9a8fda0, type: 3}
+  DoorRightPrefab01: {fileID: 2839003298968355639, guid: 9d356870be54f02448e100a81a32884c, type: 3}
+  DoorLeftPrefab01: {fileID: 7342055125755313052, guid: ab3e71310bfee934286f886ded079be4, type: 3}
   StonePrefab01: {fileID: 1232522092826622473, guid: 8c69bf03306630d43a76bdf6ba48dc1f, type: 3}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
@@ -56803,6 +56805,8 @@ MonoBehaviour:
   DoorUpPrefab01: {fileID: 0}
   DoorDownPrefab02: {fileID: 0}
   DoorUpPrefab02: {fileID: 0}
+  DoorRightPrefab01: {fileID: 0}
+  DoorLeftPrefab01: {fileID: 0}
   StonePrefab01: {fileID: 0}
   chanceAdditionalHallways: 0.7
   maxAdditionalHallways: 5
@@ -66408,7 +66412,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 48445645
-  m_SortingLayer: 3
+  m_SortingLayer: 4
   m_SortingOrder: 100
   m_Sprite: {fileID: -1986940415, guid: 5c53ab3f8cba42147b9ba4159bb6d32a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
