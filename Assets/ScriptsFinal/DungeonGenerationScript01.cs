@@ -46,6 +46,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private GameObject Table1x2Prefab01;
     [SerializeField] private GameObject DoorDownPrefab01, DoorUpPrefab01, DoorDownPrefab02, DoorUpPrefab02, DoorRightPrefab01, DoorLeftPrefab01;
     [SerializeField] private GameObject StonePrefab01;
+    [SerializeField] private GameObject TorchPrefab01;
 
     [Header("Parameters")]
     [SerializeField] private float chanceAdditionalHallways;
@@ -1972,6 +1973,77 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    public void FillRoomWithTorches(DungeonGenerationScript01.Room room)
+    {
+        var edgesUD = GetUpDownEdgeTiles(room);
+        var edgesNoDoors = ExcludeDoorwaysFromUpDownEdges(room, edgesUD);
+
+        var downRuns = SplitIntoConsecutiveRunsByRow(edgesNoDoors[0]);
+        var upRuns = SplitIntoConsecutiveRunsByRow(edgesNoDoors[1]);
+
+        Vector3 baseOffset = room.GetPosition() + new Vector3(0.5f, 0.5f, 0f);
+
+        // Up pivots (y = 5 px)
+        Vector3 torchPivotUpOdd = new Vector3(-0.5f, -2f / 16f, 0f);
+        Vector3 torchPivotUpEven = new Vector3(-1.0f, -2f / 16f, 0f);
+
+        // Down pivots (y = 6 px)
+        Vector3 torchPivotDownOdd = new Vector3(-0.5f, 0f / 16f, 0f);
+        Vector3 torchPivotDownEven = new Vector3(-1.0f, 0f / 16f, 0f);
+
+        // ----- UP wall
+        foreach (var run in upRuns)
+        {
+            int n = run.Count;
+            if (n == 0) continue;
+
+            if (n >= 8)
+            {
+                var first = run[0] + Vector3Int.up;
+                var last = run[n - 1] + Vector3Int.up;
+
+                PlaceObject(first, TorchPrefab01, baseOffset + torchPivotUpOdd);
+                PlaceObject(last, TorchPrefab01, baseOffset + torchPivotUpOdd);
+            }
+            else if (n % 2 == 1)
+            {
+                var mid = run[n / 2] + Vector3Int.up;
+                PlaceObject(mid, TorchPrefab01, baseOffset + torchPivotUpOdd);
+            }
+            else
+            {
+                var midRight = run[n / 2] + Vector3Int.up;
+                PlaceObject(midRight, TorchPrefab01, baseOffset + torchPivotUpEven);
+            }
+        }
+
+        // ----- DOWN wall
+        foreach (var run in downRuns)
+        {
+            int n = run.Count;
+            if (n == 0) continue;
+
+            if (n >= 8)
+            {
+                var first = run[0] + Vector3Int.down;
+                var last = run[n - 1] + Vector3Int.down;
+
+                PlaceObject(first, TorchPrefab01, baseOffset + torchPivotDownOdd);
+                PlaceObject(last, TorchPrefab01, baseOffset + torchPivotDownOdd);
+            }
+            else if (n % 2 == 1)
+            {
+                var mid = run[n / 2] + Vector3Int.down;
+                PlaceObject(mid, TorchPrefab01, baseOffset + torchPivotDownOdd);
+            }
+            else
+            {
+                var midRight = run[n / 2] + Vector3Int.down;
+                PlaceObject(midRight, TorchPrefab01, baseOffset + torchPivotDownEven);
+            }
+        }
+    }
+
     // Helper method to get the perpendicular direction for edge placement
     private Vector3Int GetPerpendicularDirection(int dir)
     {
@@ -2543,6 +2615,66 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
 
         return edgeSides;
+    }
+
+    //Get edges code
+
+    // 1) Get all UP/DOWN edge floor tiles (local to the room)
+    private List<Vector3Int>[] GetUpDownEdgeTiles(DungeonGenerationScript01.Room room)
+    {
+        var up = new List<Vector3Int>();
+        var down = new List<Vector3Int>();
+
+        var tiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
+        foreach (var t in room.FloorTileCoordinates)
+        {
+            if (!tiles.Contains(t + Vector3Int.up)) up.Add(t);   // edge to the UP side
+            if (!tiles.Contains(t + Vector3Int.down)) down.Add(t); // edge to the DOWN side
+        }
+        return new List<Vector3Int>[] { down, up }; // [0]=Down, [1]=Up
+    }
+
+    // 2) Exclude positions that are doorways (check the WALL cell: tile ± 1 on Y)
+    //    Uses your existing IsDoorHorizontalAtPositionAny(...) from this class. :contentReference[oaicite:0]{index=0}
+    private List<Vector3Int>[] ExcludeDoorwaysFromUpDownEdges(DungeonGenerationScript01.Room room, List<Vector3Int>[] edges)
+    {
+        var down = new List<Vector3Int>();
+        var up = new List<Vector3Int>();
+
+        // For UP edges, torches go at (tile + (0,+1)); for DOWN edges, at (tile + (0,-1))
+        foreach (var t in edges[1]) // Up
+        {
+            var wallLocal = t + Vector3Int.up;
+            var wallWorld = wallLocal + room.GetPosition();
+            if (!IsDoorHorizontalAtPositionAny(wallWorld)) up.Add(t);
+        }
+        foreach (var t in edges[0]) // Down
+        {
+            var wallLocal = t + Vector3Int.down;
+            var wallWorld = wallLocal + room.GetPosition();
+            if (!IsDoorHorizontalAtPositionAny(wallWorld)) down.Add(t);
+        }
+        return new List<Vector3Int>[] { down, up }; // [0]=Down(no doors), [1]=Up(no doors)
+    }
+
+    // 3) Split any set of (same-edge) tiles into consecutive runs by X on the same Y
+    private List<List<Vector3Int>> SplitIntoConsecutiveRunsByRow(List<Vector3Int> tiles)
+    {
+        var runs = new List<List<Vector3Int>>();
+        var grouped = tiles.GroupBy(t => t.y);
+        foreach (var g in grouped)
+        {
+            var row = g.OrderBy(t => t.x).ToList();
+            int i = 0;
+            while (i < row.Count)
+            {
+                int j = i + 1;
+                while (j < row.Count && row[j].x == row[j - 1].x + 1) j++;
+                runs.Add(row.GetRange(i, j - i));
+                i = j;
+            }
+        }
+        return runs;
     }
 
     private List<Vector3Int> RandomWalk(Room room, int maxSteps, int iterations, int stepSize = 1)
@@ -3794,10 +3926,11 @@ public class DungeonGenerationScript01 : MonoBehaviour
         BuildRooms();
         foreach (Room room in rooms)
         {
+            FillRoomWithDoors(room);
+            FillRoomWithTorches(room);
+
             if (!roomTemplate(room))
             {
-                FillRoomWithDoors(room);
-
                 FillRoomWithFloor(room, tileFloorFour01);
                 AddFloorCornerBroken(room);
                 FillRoomWithFloorFull(room, tileFloorFour01, chanceRoomFloorFourFull);

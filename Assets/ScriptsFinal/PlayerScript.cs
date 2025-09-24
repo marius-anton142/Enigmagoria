@@ -298,23 +298,25 @@ public class PlayerScript : MonoBehaviour
         }
         else if (!positionFound || (DungeonManager.GetComponent<DungeonGenerationScript01>().IsSolidAtPosition(tilemapFloor.WorldToCell(targetPosition), breakDoors: true)))
         {
+            float bumpAmount = 0.23f;
+
             if (direction.x != 0)
             {
                 spriteRenderer.flipX = (direction.x < 0);
             }
 
-            Vector3 bumpPosition = currentPosition + direction * 0.23f;
+            if (DungeonManager.GetComponent<DungeonGenerationScript01>().IsDoorAtPositionAny(tilemapFloor.WorldToCell(targetPosition)))
+            {
+                DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorAtPosition(tilemapFloor.WorldToCell(targetPosition));
+            }
+
+            Vector3 bumpPosition = currentPosition + direction * bumpAmount;
             transform.position = bumpPosition;
             StartCoroutine(ReturnFromBump(currentPosition));
             isSliding = false;
             canMove = false;
 
             FindObjectOfType<AudioPlayer>().PlayBumpSound();
-
-            if (DungeonManager.GetComponent<DungeonGenerationScript01>().IsDoorAtPositionAny(tilemapFloor.WorldToCell(targetPosition)))
-            {
-                DungeonManager.GetComponent<DungeonGenerationScript01>().HitDoorAtPosition(tilemapFloor.WorldToCell(targetPosition));
-            }
         }
     }
 
