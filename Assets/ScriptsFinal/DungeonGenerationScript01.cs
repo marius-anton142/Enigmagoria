@@ -1965,7 +1965,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             {
                 if (!IsEntityAtPosition(position))
                 {
-                    Sprite selectedSprite = StonePrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                    Sprite selectedSprite = StonePrefab01.GetComponent<SpriteScript>().GetRandomSprite(rotate: true);
                     GameObject obj = PlaceObject(position, StonePrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
                     stonesInRoom.Add(position);
                 }
@@ -2065,7 +2065,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     {
                         if (!IsEntityAtPosition(tilePos))
                         {
-                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite(rotate: true);
                             GameObject cobweb = PlaceObject(tilePos, CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
                             cobwebsInRoom.Add(tilePos);
                         }
@@ -2074,7 +2074,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     {
                         if (!IsEntityAtPosition(tilePos + new Vector3Int(1, 0, 0)))
                         {
-                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite(rotate: true);
                             GameObject cobweb = PlaceObject(tilePos + new Vector3Int(1, 0, 0), CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
                             cobwebsInRoom.Add(tilePos + new Vector3Int(1, 0, 0));
                         }
@@ -2083,7 +2083,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     {
                         if (!IsEntityAtPosition(tilePos + new Vector3Int(0, 1, 0)))
                         {
-                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite(rotate: true);
                             GameObject cobweb = PlaceObject(tilePos + new Vector3Int(0, 1, 0), CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
                             cobwebsInRoom.Add(tilePos + new Vector3Int(0, 1, 0));
                         }
@@ -2092,7 +2092,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                     {
                         if (!IsEntityAtPosition(tilePos + new Vector3Int(1, 1, 0)))
                         {
-                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite();
+                            Sprite selectedCobwebSprite = CobwebPrefab01.GetComponent<SpriteScript>().GetRandomSprite(rotate: true);
                             GameObject cobweb = PlaceObject(tilePos + new Vector3Int(1, 1, 0), CobwebPrefab01, new Vector3(0.5f, 0.5f, 0), selectedCobwebSprite);
                             cobwebsInRoom.Add(tilePos + new Vector3Int(1, 1, 0));
                         }
