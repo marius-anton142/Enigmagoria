@@ -9,6 +9,11 @@ The procedural generation algorithm is the most essential part of the game. It c
 
 | <img src="img/dungeon02.png" width="500"> |
 |:--:|
-| *Example of a generated dungeon.* |
+| *Example 1 of a generated dungeon.* |
+
+| <img src="img/dungeon02.png" width="500"> |
+|:--:|
+| *Example 2 of a generated dungeon.* |
 
 By having a strong variety of room shapes, object prefabs, traps, enemies, and items, the replayability of the game is incredibly high compared to some of the most popular games in the genre.
+
