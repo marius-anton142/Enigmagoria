@@ -7,7 +7,7 @@ A mobile roguelike game with procedural dungeon generation, responsive combat sy
 
 The procedural generation algorithm is the most essential part of the game. It can connect arbitrary room shapes with hallways and is very customizable. Inspired from multiple lesser known procgen algorithms, but generally original.
 
-| ![Example 1 of a generated dungeon](img/dungeon01.png) | ![Example 2 of a generated dungeon](img/dungeon02.png) |
+| ![Example 1 of a generated dungeon](img/dungeon02.png) | ![Example 2 of a generated dungeon](img/dungeon03.png) |
 |:--:|:--:|
 | *Example 1 of a generated dungeon* | *Example 2 of a generated dungeon* |
 
