@@ -54,15 +54,15 @@ MonoBehaviour:
   hp: 125
   damage: 50
   moveSpeed: 11
-  moveIntervalMin: 0.67
-  moveIntervalMax: 0.8
+  moveIntervalMin: 0.47
+  moveIntervalMax: 0.6
   leapForce: 50
   knockbackForce: 32
-  prepareTime: 0.12
-  leapTime: 0.4
+  prepareTime: 0.05
+  leapTime: 0.2
   cooldownTime: 0.3
   knockTime: 0.42
-  knockResistance: 2.2
+  knockResistance: 0.8
   tilemapFloor: {fileID: 0}
   player: {fileID: 0}
   isLeaping: 0

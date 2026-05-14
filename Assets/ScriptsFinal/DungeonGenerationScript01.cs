@@ -101,12 +101,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceBookshelfSmall;
     [SerializeField] private float chanceBookstack;
     [SerializeField] private float chanceEnemy01;
+    [SerializeField] private float chanceAntennae;
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
 
     [Header("Enemies")]
     [SerializeField] private GameObject EnemyPrefab01;
     [SerializeField] private GameObject EnemyKnightPrefab;
+    [SerializeField] private GameObject AntennaePrefab;
 
     [Header("Tile Maps")]
     [SerializeField] private Tilemap tilemapFloor;
@@ -3134,11 +3136,22 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         if (room.GetType() != "start")
         {
-            if (Random.value < chanceEnemy01)
-            {
-                int numberOfPlacements = Random.Range(1, 4); // Random number between 1 and 4
+            int numberOfPlacements = Random.Range(1, 4);
 
-                for (int i = 0; i < numberOfPlacements; i++)
+            GameObject enemyToSpawn = null;
+
+            if (Random.value < chanceAntennae)
+            {
+                enemyToSpawn = AntennaePrefab;
+            }
+            else if (Random.value < chanceEnemy01)
+            {
+                enemyToSpawn = EnemyPrefab01;
+            }
+
+            for (int i = 0; i < numberOfPlacements; i++)
+            {
+                if (enemyToSpawn != null)
                 {
                     Vector3Int? freePosition = GetRectanglesInRoomFree(room, 1, 2);
                     if (freePosition != null)
@@ -3148,7 +3161,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                         float yOffset = spriteHeightInUnits * pivotYPercentage;
                         Vector3 pivotOffset = new Vector3(0.5f, yOffset, 0f);
 
-                        PlaceObject(freePosition.Value, EnemyPrefab01, room.GetPosition() + pivotOffset);
+                        PlaceObject(freePosition.Value, enemyToSpawn, room.GetPosition() + pivotOffset);
                     }
                 }
             }

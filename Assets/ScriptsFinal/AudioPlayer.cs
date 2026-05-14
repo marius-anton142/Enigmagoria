@@ -15,6 +15,7 @@ public class AudioPlayer : MonoBehaviour
     [SerializeField] List<AudioClip> walk;
     [SerializeField] List<AudioClip> walk_critter;
     [SerializeField] List<AudioClip> walk_knight;
+    [SerializeField] List<AudioClip> walk_antennae;
     [SerializeField] List<AudioClip> hit;
     [SerializeField] List<AudioClip> hit_player;
     [SerializeField] List<AudioClip> kill;
@@ -33,6 +34,7 @@ public class AudioPlayer : MonoBehaviour
     public void PlayWalkSound() => PlayRandom(walk);
     public void PlayWalkCritterSound() => PlayRandom(walk_critter);
     public void PlayWalkKnightSound() => PlayRandom(walk_knight);
+    public void PlayWalkAntennaeSound() => PlayRandom(walk_antennae);
     public void PlayHitSound() => PlayRandom(hit);
     public void PlayHitPlayerSound() => PlayRandom(hit_player);
     public void PlayKillSound() => PlayRandom(kill);

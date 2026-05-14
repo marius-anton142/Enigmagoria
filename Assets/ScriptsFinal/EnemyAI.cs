@@ -125,7 +125,7 @@ public class EnemyAI : MonoBehaviour
 
         List<Vector2Int> path = AStarPathfinding(currentCell, targetCell);
 
-        if (type == "Critter")
+        if (type == "Critter" || type == "Antennae")
         {
             if (currentCell == targetCell)
             {
@@ -239,7 +239,7 @@ public class EnemyAI : MonoBehaviour
 
         Vector3 initialPosition = transform.position;
 
-        if (type == "Critter")
+        if (type == "Critter" || type == "Antennae")
         {
             Vector2 leapDirection = (player.transform.position - transform.position).normalized;
             if (leapDirection == Vector2.zero)
@@ -379,7 +379,14 @@ public class EnemyAI : MonoBehaviour
                 hasPlayedSlideSound = true;
             } else
             {
-                audioPlayer.PlayWalkCritterSound();
+                if (type == "Critter")
+                {
+                    audioPlayer.PlayWalkCritterSound();
+                }
+                else if (type == "Antennae")
+                {
+                    audioPlayer.PlayWalkAntennaeSound();
+                }
             }
         }
     }
@@ -445,7 +452,7 @@ public class EnemyAI : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (type == "Critter")
+        if (type == "Critter" || type == "Antennae")
         {
             // Check if we collided with the player or another enemy while leaping
             if (state == "attack" && !hitEntities.Contains(other.gameObject) && (other.CompareTag("Player") || other.CompareTag("Enemy")))
@@ -465,7 +472,7 @@ public class EnemyAI : MonoBehaviour
     {
         if (knockbackDirection == Vector2.zero)
         {
-            if (type == "Critter")
+            if (type == "Critter" || type == "Antennae")
             {
                 knockbackDirection = rb.velocity.normalized;
             }
@@ -612,7 +619,7 @@ public class EnemyAI : MonoBehaviour
         List<Vector2Int> neighbors = new List<Vector2Int>();
         Vector2Int[] directions;
 
-        if (type == "Critter")
+        if (type == "Critter" || type == "Antennae")
         {
             directions = new Vector2Int[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
         }

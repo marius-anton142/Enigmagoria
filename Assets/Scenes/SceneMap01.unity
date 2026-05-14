@@ -56383,6 +56383,7 @@ MonoBehaviour:
   chanceBookshelfSmall: 1
   chanceBookstack: 1
   chanceEnemy01: 1
+  chanceAntennae: 0.5
   chanceTileFloors:
   - 1
   - 1
@@ -56395,6 +56396,7 @@ MonoBehaviour:
   - 0.8
   EnemyPrefab01: {fileID: 3758618160080207739, guid: 373d3e1841104e349ac791928d647abc, type: 3}
   EnemyKnightPrefab: {fileID: 6368015847119204790, guid: c4733161c502dce4b882923ac4d3a8b9, type: 3}
+  AntennaePrefab: {fileID: 3758618160080207739, guid: 3030cfc2c735f694d8d7a26db22abe87, type: 3}
   tilemapFloor: {fileID: 1738476036}
   tilemapWalls: {fileID: 34731195}
   tilemapWallsFix: {fileID: 800668273}
@@ -56860,6 +56862,7 @@ MonoBehaviour:
   chanceBookshelfSmall: 0
   chanceBookstack: 0
   chanceEnemy01: 1
+  chanceAntennae: 0
   chanceTileFloors:
   - 1
   - 1
@@ -56872,6 +56875,7 @@ MonoBehaviour:
   - 0.8
   EnemyPrefab01: {fileID: 3758618160080207739, guid: 373d3e1841104e349ac791928d647abc, type: 3}
   EnemyKnightPrefab: {fileID: 0}
+  AntennaePrefab: {fileID: 0}
   tilemapFloor: {fileID: 1738476036}
   tilemapWalls: {fileID: 34731195}
   tilemapWallsFix: {fileID: 800668273}
@@ -60868,6 +60872,11 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 4a5fbc0e25e521344b60b3ed01d2b85c, type: 3}
   - {fileID: 8300000, guid: 5f0c8ce012775804e80977d8b4c5f4d3, type: 3}
   - {fileID: 8300000, guid: 819f807fe3eb4d045be38e45920c0a99, type: 3}
+  walk_antennae:
+  - {fileID: 8300000, guid: ae0161f42dd5f58429bc18e995d9b739, type: 3}
+  - {fileID: 8300000, guid: f38cdc5276f8eb94b9fac83d5e43764a, type: 3}
+  - {fileID: 8300000, guid: 8768b5ce52c658248b47214fc87c8e8e, type: 3}
+  - {fileID: 8300000, guid: f23d8050927d0de40a8ee818cdade341, type: 3}
   hit:
   - {fileID: 8300000, guid: 1a1de60b25ca94146b00f1f16492d060, type: 3}
   - {fileID: 8300000, guid: ce823f35f907dd042b70083b98acbf5f, type: 3}
