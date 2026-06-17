@@ -52,6 +52,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float chanceAdditionalHallways;
     [SerializeField] private int maxAdditionalHallways;
     [SerializeField] private float chanceAnyTileFloorsMin, chanceAnyTileFloorsMax;
+    private int totalAdditionalHallwaysBuilt = 0;
     private float chanceAnyTileFloors;
     [SerializeField] private float chanceHallwayColumns;
     [SerializeField] private float chanceHallwayWidth1;
@@ -105,6 +106,27 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private float[] chanceTileFloors = new float[5];
     [SerializeField] private float[] chanceTileWallBaseBroken = new float[3];
 
+    [Header("Extension Parameters")]
+    [SerializeField] private int extCountMin = 1; // Minimum extensions to attempt
+    [SerializeField] private int extCountMax = 3; // Maximum extensions to attempt
+
+    [SerializeField] private float chanceExtension = 0.75f;
+    [SerializeField] private float chanceExtensionDeadendSquare = 0.20f;
+    [SerializeField] private float chanceExtensionStairsHall = 0.25f;
+
+    [SerializeField] private int extSquareHallwayMin = 2;
+    [SerializeField] private int extSquareHallwayMax = 4;
+    [SerializeField] private int extSquareWidthMin = 3;
+    [SerializeField] private int extSquareWidthMax = 5;
+
+    [SerializeField] private int extSquareHeightMin = 3;
+    [SerializeField] private int extSquareHeightMax = 5;
+
+    [SerializeField] private int extStairsHallWidthMin = 3;
+    [SerializeField] private int extStairsHallWidthMax = 5;
+    [SerializeField] private int extStairsHallHeightMin = 2;
+    [SerializeField] private int extStairsHallHeightMax = 4;
+
     [Header("Enemies")]
     [SerializeField] private GameObject EnemyPrefab01;
     [SerializeField] private GameObject EnemyKnightPrefab;
@@ -131,6 +153,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
     [SerializeField] private Tile tileCarpet02CornerUpLeft, tileCarpet02CornerUpRight, tileCarpet02CornerDownLeft, tileCarpet02CornerDownRight;
     [SerializeField] private Tile tileCarpet02Up, tileCarpet02Down, tileCarpet02Left, tileCarpet02Right;
     [SerializeField] private Tile tileCarpet02Full;
+
+    [SerializeField] private Tile stairs01_left01, stairs01_left02, stairs01_left03, stairs01_right01, stairs01_right02, stairs01_right03;
 
     [Header("Wall Tiles")]
     [SerializeField] private Tile tileWallHorizontal;
@@ -504,7 +528,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
         // Get all floor tiles in the room
         HashSet<Vector3Int> floorTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
 
-        foreach (Vector3Int tile in room.FloorTileCoordinates.Except(room.ExpandedTiles))
+        foreach (Vector3Int tile in room.FloorTileCoordinates.Except(room.ExcludedTiles))
         {
             // Check for left connections
             if (!floorTiles.Contains(tile + Vector3Int.left) && // Must be an edge tile
@@ -609,8 +633,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
         private int height;
 
         public List<Vector3Int> ExpandedTiles { get; private set; } = new List<Vector3Int>();
-        public bool HasEdgeExpansion => hasEdgeExpansion;
-        private bool hasEdgeExpansion = false;
+        public Dictionary<Vector3Int, TileBase> PreassignedTiles { get; private set; } = new Dictionary<Vector3Int, TileBase>();
+        public List<Vector3Int> ExcludedTiles { get; private set; } = new List<Vector3Int>();
 
         public Room(List<Vector3Int> floorTileCoordinates)
         {
@@ -705,114 +729,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
             return innerTiles;
         }
-
-        public void AddEdgeExpansion(int width, int height)
-        {
-            var tileSet = new HashSet<Vector3Int>(FloorTileCoordinates);
-            List<(Vector3Int anchor, Vector3Int dir)> validEdges = new List<(Vector3Int, Vector3Int)>();
-
-            int maxX = FloorTileCoordinates.Max(t => t.x);
-            int maxY = FloorTileCoordinates.Max(t => t.y);
-            int minX = FloorTileCoordinates.Min(t => t.x);
-            int minY = FloorTileCoordinates.Min(t => t.y);
-
-            // Helper to check if a buffer around the expansion is clear
-            bool IsBufferAreaClear(Vector3Int start, int width, int height, Vector3Int direction)
-            {
-                for (int dx = -2; dx < width + 2; dx++)
-                {
-                    for (int dy = -2; dy < height + 2; dy++)
-                    {
-                        // Skip inside the actual expansion area
-                        if (dx >= 0 && dx < width && dy >= 0 && dy < height)
-                            continue;
-
-                        // Skip side touching the main room (based on expansion direction)
-                        if (direction == Vector3Int.down && dy >= height) continue;
-                        if (direction == Vector3Int.up && dy < 0) continue;
-                        if (direction == Vector3Int.left && dx >= width) continue;
-                        if (direction == Vector3Int.right && dx < 0) continue;
-
-                        Vector3Int checkPos = start + new Vector3Int(dx, dy, 0);
-                        if (tileSet.Contains(checkPos))
-                            return false;
-                    }
-                }
-                return true;
-            }
-
-            foreach (var tile in FloorTileCoordinates)
-            {
-                // Right
-                if (tile.x <= maxX - 2 &&
-                    tileSet.Contains(tile) &&
-                    tileSet.Contains(tile + Vector3Int.right) &&
-                    tileSet.Contains(tile + Vector3Int.right * 2) &&
-                    !tileSet.Contains(tile + Vector3Int.right * 3))
-                {
-                    Vector3Int startPos = tile + Vector3Int.right * 3;
-                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.right))
-                        validEdges.Add((startPos, Vector3Int.right));
-                }
-
-                // Left
-                if (tile.x >= minX + 2 &&
-                    tileSet.Contains(tile) &&
-                    tileSet.Contains(tile + Vector3Int.left) &&
-                    tileSet.Contains(tile + Vector3Int.left * 2) &&
-                    !tileSet.Contains(tile + Vector3Int.left * 3))
-                {
-                    Vector3Int startPos = tile + Vector3Int.left * 3 - new Vector3Int(width - 1, 0, 0);
-                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.left))
-                        validEdges.Add((startPos, Vector3Int.left));
-                }
-
-                // Up
-                if (tile.y <= maxY - 2 &&
-                    tileSet.Contains(tile) &&
-                    tileSet.Contains(tile + Vector3Int.up) &&
-                    tileSet.Contains(tile + Vector3Int.up * 2) &&
-                    !tileSet.Contains(tile + Vector3Int.up * 3))
-                {
-                    Vector3Int startPos = tile + Vector3Int.up * 3;
-                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.up))
-                        validEdges.Add((startPos, Vector3Int.up));
-                }
-
-                // Down
-                if (tile.y >= minY + 2 &&
-                    tileSet.Contains(tile) &&
-                    tileSet.Contains(tile + Vector3Int.down) &&
-                    tileSet.Contains(tile + Vector3Int.down * 2) &&
-                    !tileSet.Contains(tile + Vector3Int.down * 3))
-                {
-                    Vector3Int startPos = tile + Vector3Int.down * 3 - new Vector3Int(0, height - 1, 0);
-                    if (IsBufferAreaClear(startPos, width, height, Vector3Int.down))
-                        validEdges.Add((startPos, Vector3Int.down));
-                }
-            }
-
-            if (validEdges.Count == 0) return;
-
-            var (startPosFinal, directionFinal) = validEdges[Random.Range(0, validEdges.Count)];
-
-            for (int dx = 0; dx < width; dx++)
-            {
-                for (int dy = 0; dy < height; dy++)
-                {
-                    Vector3Int offset = new Vector3Int(dx, dy, 0);
-                    Vector3Int tilePos = startPosFinal + offset;
-
-                    if (!tileSet.Contains(tilePos))
-                    {
-                        FloorTileCoordinates.Add(tilePos);
-                        ExpandedTiles.Add(tilePos);
-                    }
-                }
-            }
-
-            hasEdgeExpansion = true;
-        }
     }
 
     public void InstantiateRoom(Room room, Vector3Int startPosition)
@@ -823,7 +739,17 @@ public class DungeonGenerationScript01 : MonoBehaviour
         foreach (Vector3Int tileCoord in room.FloorTileCoordinates)
         {
             Vector3Int tilePosition = startPosition + tileCoord;
-            BuildFloor(tilePosition);
+
+            if (room.PreassignedTiles.ContainsKey(tileCoord))
+            {
+                tilemapFloor.SetTile(tilePosition, room.PreassignedTiles[tileCoord]);
+                ClearWalls(tilePosition);
+                BuildWall(tilePosition);
+            }
+            else
+            {
+                BuildFloor(tilePosition); // Your normal randomized floor logic
+            }
         }
     }
 
@@ -1267,6 +1193,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
             if (BuildHallwayBetweenRooms(currentRoom, targetRoom))
             {
                 hallwaysBuilt++;
+                totalAdditionalHallwaysBuilt++;
 
                 if ((hallwayAttempts == 2 && hallwaysBuilt >= 1) ||
                     (hallwayAttempts == 3 && hallwaysBuilt >= 2) ||
@@ -1659,13 +1586,16 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 if (Random.value < chanceCornerFloorCornerBroken)
                 {
                     if (tilemapFloor.GetTile(tilePos) != null)
-                        tilemapFloor.SetTile(tilePos, tileFloorBrokenDownLeft);
+                        SafeSetFloorTile(room, tilePos, tileFloorBrokenDownLeft);
+
                     if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 0, 0)) != null)
-                        tilemapFloor.SetTile(tilePos + new Vector3Int(1, 0, 0), tileFloorBrokenDownRight);
+                        SafeSetFloorTile(room, tilePos + new Vector3Int(1, 0, 0), tileFloorBrokenDownRight);
+
                     if (tilemapFloor.GetTile(tilePos + new Vector3Int(0, 1, 0)) != null)
-                        tilemapFloor.SetTile(tilePos + new Vector3Int(0, 1, 0), tileFloorBrokenUpLeft);
+                        SafeSetFloorTile(room, tilePos + new Vector3Int(0, 1, 0), tileFloorBrokenUpLeft);
+
                     if (tilemapFloor.GetTile(tilePos + new Vector3Int(1, 1, 0)) != null)
-                        tilemapFloor.SetTile(tilePos + new Vector3Int(1, 1, 0), tileFloorBrokenUpRight);
+                        SafeSetFloorTile(room, tilePos + new Vector3Int(1, 1, 0), tileFloorBrokenUpRight);
                 }
             }
         }
@@ -1728,24 +1658,6 @@ public class DungeonGenerationScript01 : MonoBehaviour
     //[SerializeField] private float chanceRoomPotEdges;
     //[SerializeField] private float chanceRoomPotCorners;
     //[SerializeField] private float chanceRoomPotRandom;
-
-    public void FillEdgeExpansionWithPots(Room room)
-    {
-        if (!room.HasEdgeExpansion || room.ExpandedTiles.Count == 0)
-            return;
-
-        Sprite selectedSprite = PotPrefab01.GetComponent<SpriteScript>().GetRandomSpriteWithProbabilities(new List<float> { 1f });
-
-        foreach (var tile in room.ExpandedTiles)
-        {
-            Vector3Int worldPos = tile + room.GetPosition();
-            if (!IsEntityAtPosition(worldPos))
-            {
-                GameObject obj = PlaceObject(worldPos, PotPrefab01, new Vector3(0.5f, 0.5f, 0), selectedSprite);
-                potsInRoom.Add(worldPos);
-            }
-        }
-    }
 
     public void FillRoomWithPots(Room room)
     {
@@ -2792,17 +2704,47 @@ public class DungeonGenerationScript01 : MonoBehaviour
                         {
                             Vector3Int pos = offset + new Vector3Int(x, y, 0);
 
-                            tilemapFloor.SetTile(pos, tileFloorBigDownLeft);
-                            tilemapFloor.SetTile(pos + Vector3Int.right, tileFloorBigDownRight);
-                            tilemapFloor.SetTile(pos + Vector3Int.up, tileFloorBigUpLeft);
-                            tilemapFloor.SetTile(pos + Vector3Int.right + Vector3Int.up, tileFloorBigUpRight);
+                            Vector3Int posBL = pos;
+                            Vector3Int posBR = pos + Vector3Int.right;
+                            Vector3Int posTL = pos + Vector3Int.up;
+                            Vector3Int posTR = pos + Vector3Int.right + Vector3Int.up;
+
+                            // Check if ANY of them are protected by the stairs
+                            if (!IsTileProtected(room, posBL) &&
+                                !IsTileProtected(room, posBR) &&
+                                !IsTileProtected(room, posTL) &&
+                                !IsTileProtected(room, posTR))
+                            {
+                                // It's totally safe! Paint the whole 2x2 block.
+                                tilemapFloor.SetTile(posBL, tileFloorBigDownLeft);
+                                tilemapFloor.SetTile(posBR, tileFloorBigDownRight);
+                                tilemapFloor.SetTile(posTL, tileFloorBigUpLeft);
+                                tilemapFloor.SetTile(posTR, tileFloorBigUpRight);
+                            }
                         }
                     }
-                } else
+                }
+                else
                 {
                     var validPositions = GetRectanglesInRoomFloorValid(room, 2, 2);
                     if (validPositions.Count == 0) return;
                     Vector3Int offset = room.GetPosition();
+
+                    // --- NEW: PRE-FILTER PROTECTED TILES ---
+                    // We loop backwards to safely remove invalid spots before placing any tiles
+                    for (int v = validPositions.Count - 1; v >= 0; v--)
+                    {
+                        Vector3Int checkPos = validPositions[v] + offset;
+
+                        if (IsTileProtected(room, checkPos) ||
+                            IsTileProtected(room, checkPos + Vector3Int.right) ||
+                            IsTileProtected(room, checkPos + Vector3Int.up) ||
+                            IsTileProtected(room, checkPos + Vector3Int.right + Vector3Int.up))
+                        {
+                            validPositions.RemoveAt(v);
+                        }
+                    }
+                    // ---------------------------------------
 
                     int floorTileCount = room.FloorTileCoordinates.Count;
                     int numBigTiles = floorTileCount > 100
@@ -2813,23 +2755,26 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
                     for (int i = 0; i < numBigTiles && validPositions.Count > 0; i++)
                     {
-                        Vector3Int pos = validPositions[Random.Range(0, validPositions.Count)] + offset;
+                        // Note: validPositions[x] is local, so we add the offset here
+                        Vector3Int localPos = validPositions[Random.Range(0, validPositions.Count)];
+                        Vector3Int pos = localPos + offset;
 
                         tilemapFloor.SetTile(pos, tileFloorBigDownLeft);
                         tilemapFloor.SetTile(pos + Vector3Int.right, tileFloorBigDownRight);
                         tilemapFloor.SetTile(pos + Vector3Int.up, tileFloorBigUpLeft);
                         tilemapFloor.SetTile(pos + Vector3Int.right + Vector3Int.up, tileFloorBigUpRight);
 
-                        validPositions.Remove(pos); // Remove used position to avoid overlap
-                        validPositions.Remove(pos + Vector3Int.right - offset);
-                        validPositions.Remove(pos + Vector3Int.up - offset);
-                        validPositions.Remove(pos + Vector3Int.right + Vector3Int.up - offset);
+                        // Remove used position and surrounding local positions to avoid overlap
+                        validPositions.Remove(localPos);
+                        validPositions.Remove(localPos + Vector3Int.right);
+                        validPositions.Remove(localPos + Vector3Int.up);
+                        validPositions.Remove(localPos + Vector3Int.right + Vector3Int.up);
 
-                        validPositions.Remove(pos + Vector3Int.left - offset);
-                        validPositions.Remove(pos + Vector3Int.down - offset);
-                        validPositions.Remove(pos + Vector3Int.left + Vector3Int.down - offset);
-                        validPositions.Remove(pos + Vector3Int.left + Vector3Int.up - offset);
-                        validPositions.Remove(pos + Vector3Int.down + Vector3Int.right - offset);
+                        validPositions.Remove(localPos + Vector3Int.left);
+                        validPositions.Remove(localPos + Vector3Int.down);
+                        validPositions.Remove(localPos + Vector3Int.left + Vector3Int.down);
+                        validPositions.Remove(localPos + Vector3Int.left + Vector3Int.up);
+                        validPositions.Remove(localPos + Vector3Int.down + Vector3Int.right);
                     }
                 }
             }
@@ -2843,8 +2788,8 @@ public class DungeonGenerationScript01 : MonoBehaviour
             if (tileToPlace == tileFloorFour01)
             {
                 List<Vector3Int> walkedTilesFloorFour = RandomWalk(room, 8, 6);
-
                 Vector3Int offset = room.GetPosition();
+
                 foreach (Vector3Int pos in walkedTilesFloorFour)
                 {
                     if (Random.value < chanceTileFloorFour)
@@ -2852,12 +2797,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
                         if (Random.value < chanceRoomFloorFourOne)
                         {
                             tileToPlace = tileFloorOptions[Random.Range(0, tileFloorOptions.Count)];
-                        } else
+                        }
+                        else
                         {
                             tileToPlace = tileFloorFour01;
                         }
 
-                        tilemapFloor.SetTile(pos + offset, tileToPlace);
+                        // PROTECTED
+                        SafeSetFloorTile(room, pos + offset, tileToPlace);
                     }
                 }
             }
@@ -2868,6 +2815,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
     {
         if (Random.value < chance)
         {
+            // Now this function ONLY cares about the Four01 tiles!
             if (tileToPlace == tileFloorFour01)
             {
                 bool noBroken = false, fullBroken = false;
@@ -2905,57 +2853,58 @@ public class DungeonGenerationScript01 : MonoBehaviour
                         tileToPlace = tileFloorFour01;
                     }
 
-                    tilemapFloor.SetTile(pos + offset, tileToPlace);
+                    // PROTECTED
+                    SafeSetFloorTile(room, pos + offset, tileToPlace);
                 }
             }
-            else if (tileToPlace == tileFloorShadow01 && room.GetSubType() != "library")
-            {
-                room.SetFloorType("Shadow01");
-                List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
-                Vector3Int offset = room.GetPosition();
+        }
+    }
 
-                foreach (Vector3Int pos in fullTilesFloorFour)
-                {
-                    tilemapFloor.SetTile(pos + offset, tileFloorShadow01);
-                }
+    private void PaintBiomeFloors(Room room)
+    {
+        // If it's a library or default, this simply does nothing!
+
+        if (room.GetFloorType() == "Shadow01")
+        {
+            List<Vector3Int> floorTiles = room.FloorTileCoordinates;
+            Vector3Int offset = room.GetPosition();
+
+            foreach (Vector3Int pos in floorTiles)
+            {
+                SafeSetFloorTile(room, pos + offset, tileFloorShadow01);
             }
-            else if (tileToPlace == tileFloorLushDark01 && room.GetSubType() != "library")
+        }
+        else if (room.GetFloorType() == "LushDark01")
+        {
+            Tile tileFloorLush01 = tileFloorLushDark01;
+
+            // Secondary rolls to determine exact lush styling
+            if (Random.value < chanceLushLight)
             {
-                Tile tileFloorLush01 = tileFloorLushDark01;
-                room.SetFloorType("LushDark01");
-                if (Random.value < chanceLushLight)
+                tileFloorLush01 = tileFloorLushLight01;
+                room.SetFloorType("LushLight01");
+            }
+
+            bool lushMixed = false;
+            float lushMixedDistribution = Random.Range(0.33f, 0.67f);
+
+            if (Random.value < chanceLushMixed)
+            {
+                lushMixed = true;
+                room.SetFloorType("LushMixed");
+            }
+
+            List<Vector3Int> floorTiles = room.FloorTileCoordinates;
+            Vector3Int offset = room.GetPosition();
+
+            foreach (Vector3Int pos in floorTiles)
+            {
+                if (lushMixed)
                 {
-                    tileFloorLush01 = tileFloorLushLight01;
-                    room.SetFloorType("LushLight01");
+                    tileFloorLush01 = (Random.value < lushMixedDistribution) ? tileFloorLushDark01 : tileFloorLushLight01;
                 }
 
-                bool lushMixed = false;
-                float lushMixedDistribution = Random.Range(0.33f, 0.67f);
-
-                if (Random.value < chanceLushMixed)
-                {
-                    lushMixed = true;
-                    room.SetFloorType("LushMixed");
-                }
-
-                List<Vector3Int> fullTilesFloorFour = room.FloorTileCoordinates;
-                Vector3Int offset = room.GetPosition(); 
-
-                foreach (Vector3Int pos in fullTilesFloorFour)
-                {
-                    if (lushMixed)
-                    {
-                        if (Random.value < lushMixedDistribution)
-                        {
-                            tileFloorLush01 = tileFloorLushDark01;
-                        } else
-                        {
-                            tileFloorLush01 = tileFloorLushLight01;
-                        }
-                    }
-
-                    tilemapFloor.SetTile(pos + offset, tileFloorLush01);
-                }
+                SafeSetFloorTile(room, pos + offset, tileFloorLush01);
             }
         }
     }
@@ -2983,7 +2932,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 }
                 ++step;
 
-                tilemapFloor.SetTile(pos + offset, tileToPlace);
+                SafeSetFloorTile(room, pos + offset, tileToPlace);
             }
         }
     }
@@ -3937,6 +3886,14 @@ public class DungeonGenerationScript01 : MonoBehaviour
         initialRoom.SetType("start");
 
         BuildRooms();
+
+        if (totalAdditionalHallwaysBuilt < 2)
+        {
+            Debug.Log("Dungeon too linear! Only " + totalAdditionalHallwaysBuilt + " extra hallways built. Rerolling...");
+            RestartScene();
+            return; // CRITICAL: Stop executing the rest of the script!
+        }
+
         foreach (Room room in rooms)
         {
             FillRoomWithDoors(room);
@@ -3949,8 +3906,7 @@ public class DungeonGenerationScript01 : MonoBehaviour
                 FillRoomWithFloorFull(room, tileFloorFour01, chanceRoomFloorFourFull);
                 FillRoomWithFloorBig(room, tileFloorBigUpLeft, chanceRoomFloorBig);
 
-                FillRoomWithFloorFull(room, tileFloorShadow01, chanceRoomFloorShadow);
-                FillRoomWithFloorFull(room, tileFloorLushDark01, chanceRoomFloorLush);
+                PaintBiomeFloors(room);
 
                 FillRoomWithBookshelves(room);
                 FillRoomWithBuddha(room);
@@ -4071,6 +4027,54 @@ public class DungeonGenerationScript01 : MonoBehaviour
 
             room1.SetType(type);
             room1.SetSubType(subType);
+
+            if (subType == "library")
+            {
+                room1.SetFloorType("default");
+            }
+            else if (Random.value < chanceRoomFloorLush)
+            {
+                room1.SetFloorType("LushDark01");
+            }
+            else if (Random.value < chanceRoomFloorShadow)
+            {
+                room1.SetFloorType("Shadow01");
+            }
+            else
+            {
+                room1.SetFloorType("default");
+            }
+
+            // EXTENSION LOGIC ---
+            if (Random.value < chanceExtension)
+            {
+                if (!roomTemplate(room1))
+                {
+                    int desiredExtensions = Random.Range(extCountMin, extCountMax + 1);
+
+                    for (int i = 0; i < desiredExtensions; i++)
+                    {
+                        // Roll the dice to see if this specific extension slot spawns
+                        if (Random.value < chanceExtensionStairsHall && room1.GetFloorType() == "default")
+                        {
+                            // Try to add exactly 1 stairs_hall
+                            TryAddExtension(room1, "stairs_hall", 1);
+                        }
+                        else if (Random.value < chanceExtensionDeadendSquare)
+                        {
+                            // We only ever try to add the square deadend
+                            bool success = TryAddExtension(room1, "deadend_square", 1);
+
+                            if (!success)
+                            {
+                                // The room is completely out of valid flat edges. Stop the loop.
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            // --------------------------------------
 
             Room room0 = null;
             bool roomPlaced = false;
@@ -4256,6 +4260,343 @@ public class DungeonGenerationScript01 : MonoBehaviour
         }
     }
 
+    // START Extension Room
+
+    // Helper to rotate a single vector by 90-degree steps (1 = 90 CW, 2 = 180, 3 = 90 CCW)
+    private Vector3Int RotateVector(Vector3Int v, int angleSteps)
+    {
+        int steps = (angleSteps % 4 + 4) % 4; // Ensure positive wrap-around
+        if (steps == 0) return v;
+        if (steps == 1) return new Vector3Int(v.y, -v.x, 0);  // 90 deg Clockwise
+        if (steps == 2) return new Vector3Int(-v.x, -v.y, 0); // 180 deg
+        if (steps == 3) return new Vector3Int(-v.y, v.x, 0);  // 90 deg Counter-Clockwise
+        return v;
+    }
+
+    // Helper to spin the entire room in place
+    private void RotateRoom(Room room, int angleSteps)
+    {
+        if (angleSteps == 0) return;
+
+        List<Vector3Int> newCoords = new List<Vector3Int>();
+        foreach (var tile in room.FloorTileCoordinates)
+        {
+            newCoords.Add(RotateVector(tile, angleSteps));
+        }
+        room.FloorTileCoordinates.Clear();
+        room.FloorTileCoordinates.AddRange(newCoords);
+
+        // Make sure to rotate the ExpandedTiles list too, if it has any!
+        if (room.ExpandedTiles != null && room.ExpandedTiles.Count > 0)
+        {
+            List<Vector3Int> newExpanded = new List<Vector3Int>();
+            foreach (var tile in room.ExpandedTiles)
+            {
+                newExpanded.Add(RotateVector(tile, angleSteps));
+            }
+            room.ExpandedTiles.Clear();
+            room.ExpandedTiles.AddRange(newExpanded);
+        }
+
+        if (room.ExcludedTiles.Count > 0)
+        {
+            List<Vector3Int> newExcluded = new List<Vector3Int>();
+            foreach (var tile in room.ExcludedTiles) newExcluded.Add(RotateVector(tile, angleSteps));
+            room.ExcludedTiles.Clear();
+            room.ExcludedTiles.AddRange(newExcluded);
+        }
+
+        // 2. Rotate Preassigned Tiles Dictionary
+        if (room.PreassignedTiles.Count > 0)
+        {
+            Dictionary<Vector3Int, TileBase> newDict = new Dictionary<Vector3Int, TileBase>();
+            foreach (var kvp in room.PreassignedTiles)
+            {
+                newDict[RotateVector(kvp.Key, angleSteps)] = kvp.Value;
+            }
+            room.PreassignedTiles.Clear();
+            foreach (var kvp in newDict) room.PreassignedTiles.Add(kvp.Key, kvp.Value);
+        }
+    }
+
+    private List<Vector3Int> GetExtensionTemplate(string type, int originalDir, out Dictionary<Vector3Int, TileBase> specificTiles)
+    {
+        List<Vector3Int> template = new List<Vector3Int>();
+        specificTiles = new Dictionary<Vector3Int, TileBase>();
+
+        if (type == "deadend_square")
+        {
+            // 1. Calculate Length with the Vertical Offset
+            bool isVertical = (originalDir == 1 || originalDir == 3);
+            int lengthOffset = isVertical ? 1 : 0;
+            int length = Random.Range(extSquareHallwayMin, extSquareHallwayMax + 1) + lengthOffset;
+
+            // 2. Calculate Width
+            int width = Random.Range(extSquareWidthMin, extSquareWidthMax + 1);
+
+            // 3. Calculate ODD Height
+            // This math takes the min, and adds a random EVEN number to it. 
+            // If min is 3, it will only ever roll 3, 5, 7, etc.
+            int heightChoices = (extSquareHeightMax - extSquareHeightMin) / 2;
+            int height = extSquareHeightMin + (Random.Range(0, heightChoices + 1) * 2);
+
+            // 4. Build the Hallway
+            for (int x = 0; x < length; x++)
+            {
+                template.Add(new Vector3Int(x, 0, 0));
+            }
+
+            // 5. Build the Centered Square
+            // Because height is odd (e.g. 3), height / 2 is exactly 1. 
+            // This gives us perfectly symmetrical Y bounds: -1, 0, 1.
+            int yOffset = height / 2;
+
+            for (int x = length; x < length + width; x++)
+            {
+                for (int y = -yOffset; y <= yOffset; y++)
+                {
+                    template.Add(new Vector3Int(x, y, 0));
+                }
+            }
+        }
+        else if (type == "stairs_hall")
+        {
+            int heightChoices = (extStairsHallHeightMax - extStairsHallHeightMin) / 2;
+            int height = extStairsHallHeightMin + (Random.Range(0, heightChoices + 1) * 2);
+            int width = Random.Range(extStairsHallWidthMin, extStairsHallWidthMax + 1);
+
+            bool isUp = (originalDir == 1);
+
+            // A. Inversăm DOAR stânga/dreapta vizual pentru a repara rotația globală
+            Tile tileY0_01 = isUp ? stairs01_left01 : stairs01_right01;
+            Tile tileY1_01 = isUp ? stairs01_right01 : stairs01_left01;
+
+            Tile tileY0_02 = isUp ? stairs01_left02 : stairs01_right02;
+            Tile tileY1_02 = isUp ? stairs01_right02 : stairs01_left02;
+
+            Tile tileY0_03 = isUp ? stairs01_left03 : stairs01_right03;
+            Tile tileY1_03 = isUp ? stairs01_right03 : stairs01_left03;
+
+            // B. Generăm holul. Dacă e UP, adăugăm tile-ul de offset la -1
+            int xStart = isUp ? -1 : 0;
+            for (int x = xStart; x < 3; x++)
+            {
+                template.Add(new Vector3Int(x, 0, 0));
+                template.Add(new Vector3Int(x, 1, 0));
+            }
+
+            // C. Atribuim tile-urile vizuale cu ordinea INVERSATĂ corect!
+            if (isUp)
+            {
+                // Când urcăm, baza scării (03) e la x = -1 (buza din cameră)
+                specificTiles.Add(new Vector3Int(-1, 0, 0), tileY0_03);
+                specificTiles.Add(new Vector3Int(-1, 1, 0), tileY1_03);
+
+                specificTiles.Add(new Vector3Int(0, 0, 0), tileY0_01);
+                specificTiles.Add(new Vector3Int(0, 1, 0), tileY1_01);
+
+                specificTiles.Add(new Vector3Int(1, 0, 0), tileY0_02);
+                specificTiles.Add(new Vector3Int(1, 1, 0), tileY1_02);
+
+                // Top-ul scării (holul interior)
+                specificTiles.Add(new Vector3Int(2, 0, 0), tileY0_01);
+                specificTiles.Add(new Vector3Int(2, 1, 0), tileY1_01);
+            }
+            else
+            {
+                // Când coborâm, ordinea e normală
+                specificTiles.Add(new Vector3Int(0, 0, 0), tileY0_01);
+                specificTiles.Add(new Vector3Int(0, 1, 0), tileY1_01);
+
+                specificTiles.Add(new Vector3Int(1, 0, 0), tileY0_02);
+                specificTiles.Add(new Vector3Int(1, 1, 0), tileY1_02);
+
+                specificTiles.Add(new Vector3Int(2, 0, 0), tileY0_01);
+                specificTiles.Add(new Vector3Int(2, 1, 0), tileY1_01);
+
+                // Baza scării e la capăt
+                specificTiles.Add(new Vector3Int(3, 0, 0), tileY0_03);
+                specificTiles.Add(new Vector3Int(3, 1, 0), tileY1_03);
+            }
+
+            // D. Generăm pătratul (începe MEREU de la x = 3 pentru ambele direcții)
+            int yMin = -(height / 2) + 1;
+            int yMax = (height / 2);
+
+            for (int x = 3; x < 3 + width; x++)
+            {
+                for (int y = yMin; y <= yMax; y++)
+                {
+                    template.Add(new Vector3Int(x, y, 0));
+                }
+            }
+        }
+
+        return template;
+    }
+
+    // Add 'originalDir' as a parameter
+    private bool CheckExtensionFit(HashSet<Vector3Int> roomTiles, List<Vector3Int> template, Vector3Int startPos, int originalDir)
+    {
+        bool isVertical = (originalDir == 1 || originalDir == 3);
+
+        int xBuffer = isVertical ? 3 : 2;
+        int yBuffer = isVertical ? 2 : 3;
+
+        foreach (var localTile in template)
+        {
+            // --- NOU: Permite offset-ului (x = -1) să se suprapună perfect peste podeaua camerei! ---
+            if (localTile.x < 0) continue;
+            // --------------------------------------------------------------------------------------
+
+            Vector3Int globalTile = startPos + localTile;
+
+            bool isSeam = isVertical ? (localTile.x <= 2) : (localTile.x <= 1);
+            int minXOffset = isSeam ? 0 : -xBuffer;
+            // ----------------------
+
+            int maxXOffset = xBuffer;
+
+            int minYOffset = -yBuffer;
+            int maxYOffset = yBuffer;
+
+            for (int x = minXOffset; x <= maxXOffset; x++)
+            {
+                for (int y = minYOffset; y <= maxYOffset; y++)
+                {
+                    Vector3Int checkPos = globalTile + new Vector3Int(x, y, 0);
+
+                    if (roomTiles.Contains(checkPos))
+                    {
+                        return false; // Buffer collision!
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public bool TryAddExtension(Room room, string extensionType, int offset = 1)
+    {
+        // Directions: 0=Right, 1=Up, 2=Left, 3=Down
+        List<int> directions = new List<int> { 0, 1, 2, 3 };
+        ShuffleList(directions); // Using the updated Unity RNG version!
+
+        foreach (int dir in directions)
+        {
+            if (extensionType == "stairs_hall" && (dir == 0 || dir == 2)) continue;
+
+            // GENERATE TEMPLATE HERE NOW:
+            Dictionary<Vector3Int, TileBase> templatePreassigned;
+            List<Vector3Int> template = GetExtensionTemplate(extensionType, dir, out templatePreassigned);
+            if (template.Count == 0) continue; // Skip if something went wrong
+
+            // 1. Rotate the room
+            int rotationSteps = dir;
+            RotateRoom(room, rotationSteps);
+
+            // 2. Find valid Right-facing edges with the offset rule
+            HashSet<Vector3Int> roomTiles = new HashSet<Vector3Int>(room.FloorTileCoordinates);
+            List<Vector3Int> potentialEdges = new List<Vector3Int>();
+
+            foreach (var tile in roomTiles)
+            {
+                // Must have empty space immediately to the right
+                if (roomTiles.Contains(tile + Vector3Int.right)) continue;
+
+                bool validEdge = true;
+                // Apply the offset rule (Check up and down along the edge ONLY)
+                for (int i = 1; i <= offset; i++)
+                {
+                    // Check edge neighbors (y+i, y-i)
+                    Vector3Int upEdge = tile + new Vector3Int(0, i, 0);
+                    Vector3Int downEdge = tile + new Vector3Int(0, -i, 0);
+
+                    // We removed the 'Inside' checks so 1-tile-thick rooms (like belts) can pass!
+                    if (!roomTiles.Contains(upEdge) || !roomTiles.Contains(downEdge))
+                    {
+                        validEdge = false;
+                        break;
+                    }
+                }
+
+                if (validEdge) potentialEdges.Add(tile);
+            }
+
+            ShuffleList(potentialEdges);
+
+            // 3. Try to place the extension
+            bool successfullyPlaced = false;
+            foreach (var edgeTile in potentialEdges)
+            {
+                // The extension starts exactly 1 unit to the right of the edge tile
+                Vector3Int startPos = edgeTile + Vector3Int.right;
+
+                if (CheckExtensionFit(roomTiles, template, startPos, dir))
+                {
+                    foreach (var localTile in template)
+                    {
+                        Vector3Int globalPos = startPos + localTile;
+
+                        // It immediately becomes a standard room tile
+                        room.FloorTileCoordinates.Add(globalPos);
+
+                        // --- THE MISSING PIECES FOR STAIRS ---
+                        if (extensionType == "stairs_hall")
+                        {
+                            // 1. Exclude it so standard hallways don't break the walls here
+                            room.ExcludedTiles.Add(globalPos);
+
+                            // 2. Remember the specific custom visual tile if one was assigned
+                            if (templatePreassigned.ContainsKey(localTile))
+                            {
+                                room.PreassignedTiles[globalPos] = templatePreassigned[localTile];
+                            }
+                        }
+                        // -------------------------------------
+                    }
+                    successfullyPlaced = true;
+                    break;
+                }
+            }
+
+            // 4. Always rotate the room back to normal!
+            // To undo the rotation, we rotate by the remaining steps to reach 360 (or 4 steps)
+            RotateRoom(room, (4 - rotationSteps) % 4);
+
+            if (successfullyPlaced)
+            {
+                return true;
+            }
+        }
+
+        return false; // Extension didn't fit anywhere in any direction
+    }
+
+    private void SafeSetFloorTile(Room room, Vector3Int globalPos, TileBase tileToPlace)
+    {
+        // 1. Convert the global Unity position back to the room's local math
+        Vector3Int localPos = globalPos - room.GetPosition();
+
+        // 2. Check if this coordinate is protected by our Stairs extension
+        if (room.PreassignedTiles != null && room.PreassignedTiles.ContainsKey(localPos))
+        {
+            // ABORT! Do not overwrite our custom hand-crafted tiles.
+            return;
+        }
+
+        // 3. If it's not protected, paint the tile normally
+        tilemapFloor.SetTile(globalPos, tileToPlace);
+    }
+
+    private bool IsTileProtected(Room room, Vector3Int globalPos)
+    {
+        Vector3Int localPos = globalPos - room.GetPosition();
+        return room.PreassignedTiles != null && room.PreassignedTiles.ContainsKey(localPos);
+    }
+
+    // END Extension Room
+
     private List<int> GetHallwayWidths(float chanceHallwayWidth1)
     {
         List<int> widths = new List<int>();
@@ -4273,13 +4614,13 @@ public class DungeonGenerationScript01 : MonoBehaviour
         return widths;
     }
 
-    private void ShuffleList<T>(List<T> list, int seed = 0)
+    private void ShuffleList<T>(List<T> list)
     {
-        System.Random rng = seed == 0 ? new System.Random() : new System.Random(seed);
-
         for (int i = list.Count - 1; i > 0; i--)
         {
-            int randomIndex = rng.Next(0, i + 1); // Controlled randomness
+            // Use Unity's built-in RNG which doesn't suffer from the time-seed bug
+            int randomIndex = UnityEngine.Random.Range(0, i + 1);
+
             T temp = list[i];
             list[i] = list[randomIndex];
             list[randomIndex] = temp;

@@ -28480,7 +28480,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 5.5
+  orthographic size: 4.2
   m_Depth: 100
   m_CullingMask:
     serializedVersion: 2
@@ -56300,7 +56300,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c8e710563037f149b20fe85b4591d18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRooms: 14
+  numRooms: 10
   maxLHallwayLength: 20
   roomsPlaced: 0
   chanceRoomSpecial: 0.45
@@ -56394,6 +56394,21 @@ MonoBehaviour:
   - 1
   - 1
   - 0.8
+  extCountMin: 1
+  extCountMax: 3
+  chanceExtension: 0.6
+  chanceExtensionDeadendSquare: 0.7
+  chanceExtensionStairsHall: 0.25
+  extSquareHallwayMin: 2
+  extSquareHallwayMax: 4
+  extSquareWidthMin: 3
+  extSquareWidthMax: 3
+  extSquareHeightMin: 3
+  extSquareHeightMax: 3
+  extStairsHallWidthMin: 3
+  extStairsHallWidthMax: 6
+  extStairsHallHeightMin: 4
+  extStairsHallHeightMax: 8
   EnemyPrefab01: {fileID: 3758618160080207739, guid: 373d3e1841104e349ac791928d647abc, type: 3}
   EnemyKnightPrefab: {fileID: 6368015847119204790, guid: c4733161c502dce4b882923ac4d3a8b9, type: 3}
   AntennaePrefab: {fileID: 3758618160080207739, guid: 3030cfc2c735f694d8d7a26db22abe87, type: 3}
@@ -56438,6 +56453,12 @@ MonoBehaviour:
   tileCarpet02Left: {fileID: 11400000, guid: d2aa4ad5feaccca43adec4049c8083bb, type: 2}
   tileCarpet02Right: {fileID: 11400000, guid: 83fa15fa852467640bd9ff966a2da230, type: 2}
   tileCarpet02Full: {fileID: 11400000, guid: fbf11f2b91a1f284aac0ffe195add95f, type: 2}
+  stairs01_left01: {fileID: 11400000, guid: 774c20e88e8bb1f46a99ddd83f8dcfe8, type: 2}
+  stairs01_left02: {fileID: 11400000, guid: 687384812a41d2d419002b398e8a1a40, type: 2}
+  stairs01_left03: {fileID: 11400000, guid: 458067e2173f302458b2bf7f365a8518, type: 2}
+  stairs01_right01: {fileID: 11400000, guid: 90324e7cfff570e4db3f117bd4c03bf9, type: 2}
+  stairs01_right02: {fileID: 11400000, guid: 8fb66d2a8c6505346adbda8f9c228b1d, type: 2}
+  stairs01_right03: {fileID: 11400000, guid: a0a29bf6f2183a443b7c321e427b20ed, type: 2}
   tileWallHorizontal: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpLeft: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpRight: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
@@ -56873,6 +56894,21 @@ MonoBehaviour:
   - 1
   - 1
   - 0.8
+  extCountMin: 1
+  extCountMax: 3
+  chanceExtension: 0.75
+  chanceExtensionDeadendSquare: 0.2
+  chanceExtensionStairsHall: 0.25
+  extSquareHallwayMin: 2
+  extSquareHallwayMax: 4
+  extSquareWidthMin: 3
+  extSquareWidthMax: 5
+  extSquareHeightMin: 3
+  extSquareHeightMax: 5
+  extStairsHallWidthMin: 3
+  extStairsHallWidthMax: 5
+  extStairsHallHeightMin: 2
+  extStairsHallHeightMax: 4
   EnemyPrefab01: {fileID: 3758618160080207739, guid: 373d3e1841104e349ac791928d647abc, type: 3}
   EnemyKnightPrefab: {fileID: 0}
   AntennaePrefab: {fileID: 0}
@@ -56917,6 +56953,12 @@ MonoBehaviour:
   tileCarpet02Left: {fileID: 0}
   tileCarpet02Right: {fileID: 0}
   tileCarpet02Full: {fileID: 0}
+  stairs01_left01: {fileID: 0}
+  stairs01_left02: {fileID: 0}
+  stairs01_left03: {fileID: 0}
+  stairs01_right01: {fileID: 0}
+  stairs01_right02: {fileID: 0}
+  stairs01_right03: {fileID: 0}
   tileWallHorizontal: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpLeft: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
   tileWallHorizontalUpRight: {fileID: 11400000, guid: 2a779ab90c1998443806663f65be595b, type: 2}
